@@ -1,12 +1,12 @@
-from Kaicong import KaicongDevice
+from Kaicong import KaicongInput
 
 # TODO: Make threaded
-class KaicongVideo(KaicongDevice):
+class KaicongVideo(KaicongInput):
     PACKET_SIZE = 1024
     URI = "http://%s:81/livestream.cgi?user=%s&pwd=%s&streamid=3&audio=1&filename="
     
     def __init__(self, domain, callback, user="admin", pwd="123456"):
-        KaicongDevice.__init__(
+        KaicongInput.__init__(
             self, 
             callback,
             domain, 

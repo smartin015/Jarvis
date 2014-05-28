@@ -5,7 +5,7 @@ import time
 import traceback
 
 #TODO: Extend threading.Thread
-class KaicongDevice():
+class KaicongInput():
     
     def __init__(self, callback, domain, uri_format, packet_size, user="admin", pwd="123456"):
         """ domain:   Camera IP address or web domain 
@@ -55,3 +55,16 @@ class KaicongDevice():
         finally:
             if self.stream:
                 self.stream.close()
+                
+                
+                
+class KaicongOutput():
+    
+    def __init__(self, domain, uri_format, user="admin", pwd="123456"):
+        """ domain:   Camera IP address or web domain 
+                      (e.g. 385345.kaicong.info)
+        """
+        self.running = False
+        self.uri = uri_format.format(domain, user, pwd)
+        
+        
