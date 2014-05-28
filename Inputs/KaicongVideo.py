@@ -1,4 +1,4 @@
-from Kaicong import KaicongInput
+from KaicongInput import KaicongInput
 
 # TODO: Make threaded
 class KaicongVideo(KaicongInput):

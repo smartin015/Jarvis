@@ -1,4 +1,4 @@
-from Kaicong import KaicongInput
+from KaicongInput import KaicongInput
 import audioop
 
 class KaicongAudio(KaicongInput):
