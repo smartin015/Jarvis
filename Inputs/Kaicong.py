@@ -15,6 +15,14 @@ class KaicongDevice():
         self.running = False
         self.packet_size = packet_size
         self.uri = uri_format % (domain, user, pwd)
+        self.stream = None
+    
+    def connect(self):
+        print "Opening url: %s" % self.uri
+        self.stream = urllib2.urlopen(self.uri)
+        
+        if not self.stream:
+            raise Exception("Error connecting")
     
     def handle(self, data):
         pass
@@ -23,32 +31,27 @@ class KaicongDevice():
         self.running = False
     
     def read(self):
-        return self.handle(stream.read(self.packet_size))
+        result = None
+        
+        # Loop for things like Video, where multiple reads required to
+        # retrieve a frame.
+        while not result:
+            result = self.handle(self.stream.read(self.packet_size))
+        return result
     
     def run(self):
-        self.running = True
-        while self.running:
-            stream = None
+        try:
+            if self.stream:
+                self.stream.close()
+        
+            self.connect()
+            self.running = True
             
-            try:
-                
-                print "Opening url: %s" % self.uri
-                stream = urllib2.urlopen(self.uri)
-                
-                if not stream:
-                    # TODO: Raise exception here instead
-                    print "Could not connect to audio stream! Exiting..."
-                    return
-                
-                while self.running:
-                    self.callback(self.handle(stream.read(self.packet_size)))
-                    
-            except KeyboardInterrupt:
-                # TODO: Actually capture relevant interrupts!!!
-                raise KeyboardInterrupt
-            except:
-                print "Stream capture error:", traceback.print_exc()
-                print "Retrying in 5 seconds..."
-                time.sleep(5.0)
-            finally: 
-                stream.close()
+            while self.running:
+                result = self.handle(self.stream.read(self.packet_size))
+                if result:
+                    self.callback(result)
+        
+        finally:
+            if self.stream:
+                self.stream.close()

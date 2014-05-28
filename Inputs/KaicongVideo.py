@@ -32,7 +32,7 @@ if __name__ == "__main__":
     import numpy as np
     import cv2
     
-    def show_video(jpg):
+    def show_video(jpg):    
         img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8),cv2.CV_LOAD_IMAGE_COLOR)
         cv2.imshow('i',img)
         
