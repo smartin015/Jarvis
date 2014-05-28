@@ -1,0 +1,1134 @@
+
+<!-- saved from url=(0036)http://192.168.1.252:81/monitor2.htm -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>KaiCong IP Camera</title>
+
+<meta name="keywords" content="camera">
+<style type="text/css">
+body {margin-left: 0px;margin-top: 0px;margin-right: 0px;margin-bottom: 0px;background-color: #999999;}.style2 {font-size: 12px}
+</style>
+<script src="public.js"></script><script src="string.js"></script><script src="oem.js"></script>
+<link rel="stylesheet" type="text/css" href="jquery-ui-1.8.14.custom.css">
+<script type="text/javascript" src="jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.8.18.custom.min.js"></script>
+<script src="login.cgi"></script>
+<script src="get_status.cgi"></script>
+<script src="get_params.cgi"></script>
+<script src="get_camera_params.cgi"></script>
+<script src="get_record.cgi"></script>
+<link rel="stylesheet" href="style.css" type="text/css">
+<script type="text/javascript">	
+var nCurSel=0;//当前选中的控件索引
+var nDClick=0;//当前双击次数
+var w1 = 640;
+var h1 = 480;
+var w4 = (w1/2);
+var w9 = (w1/3);
+var h4 = (h1/2);
+var h9 = (h1/3);
+
+// 云台速度参数
+var PtzSpeed={};
+PtzSpeed.Speed=4;
+PtzSpeed.First=0;
+
+
+// 云台方向
+//var PTZ_STOP=0;
+var PTZ_UP=0;
+var PTZ_UP_STOP=1;
+var PTZ_DOWN=2;
+var PTZ_DOWN_STOP=3;
+var PTZ_LEFT=4;
+var PTZ_LEFT_STOP=5;
+var PTZ_RIGHT=6;
+var PTZ_RIGHT_STOP=7;
+var PTZ_LEFT_UP=90;
+var PTZ_RIGHT_UP=91;
+var PTZ_LEFT_DOWN=92;
+var PTZ_RIGHT_DOWN=93;
+var PTZ_STOP=1;
+ 
+var PTZ_CENTER=25; 
+
+//上下/水平巡视
+var PTZ_VPATROL=26;
+var PTZ_VPATROL_STOP=27;
+var PTZ_HPATROL=28;
+var PTZ_HPATROL_STOP=29;
+ 
+var IO_ON=94;
+var IO_OFF=95;
+
+
+var first_1=true;
+var first_2=true;
+
+
+var n_vpatrol = new Array(); n_vpatrol[0]=n_vpatrol[1]=n_vpatrol[2]=n_vpatrol[3]=n_vpatrol[4]=n_vpatrol[5]=n_vpatrol[6]=n_vpatrol[7]=n_vpatrol[8]=0;
+var n_hpatrol = new Array(); n_hpatrol[0]=n_hpatrol[1]=n_hpatrol[2]=n_hpatrol[3]=n_hpatrol[4]=n_hpatrol[5]=n_hpatrol[6]=n_hpatrol[7]=n_hpatrol[8]=0;
+var n_ir = new Array(); n_ir[0]=n_ir[1]=n_ir[2]=n_ir[3]=n_ir[4]=n_ir[5]=n_ir[6]=n_ir[7]=n_ir[8]=0;;
+var n_osd = new Array(); n_osd[0]=n_osd[1]=n_osd[2]=n_osd[3]=n_osd[4]=n_osd[5]=n_osd[6]=n_osd[7]=n_osd[8]=0;
+var n_typee = new Array(); n_typee[0]=n_typee[1]=n_typee[2]=n_typee[3]=n_typee[4]=n_typee[5]=n_typee[6]=n_typee[7]=n_typee[8]=2;
+function getHttpHost(cgiUrl)
+{
+	//return ("http://192.168.1.126:81/"+cgiUrl+"?loginuse=admin&loginpas=888888");
+	if(nCurSel == 0) { return (cgiUrl+"?loginuse="+loginuser+"&loginpas="+loginpass);}
+	if(nCurSel == 1) { return ("http://"+dev2_host+":"+dev2_port+"/"+cgiUrl+"?loginuse="+dev2_user+"&loginpas="+dev2_pwd) ;}
+	if(nCurSel == 2) { return ("http://"+dev3_host+":"+dev3_port+"/"+cgiUrl+"?loginuse="+dev3_user+"&loginpas="+dev3_pwd) ;}
+	if(nCurSel == 3) { return ("http://"+dev4_host+":"+dev4_port+"/"+cgiUrl+"?loginuse="+dev4_user+"&loginpas="+dev4_pwd) ;}
+	if(nCurSel == 4) { return ("http://"+dev5_host+":"+dev5_port+"/"+cgiUrl+"?loginuse="+dev5_user+"&loginpas="+dev5_pwd) ;}
+	if(nCurSel == 5) { return ("http://"+dev6_host+":"+dev6_port+"/"+cgiUrl+"?loginuse="+dev6_user+"&loginpas="+dev6_pwd) ;}
+	if(nCurSel == 6) { return ("http://"+dev7_host+":"+dev7_port+"/"+cgiUrl+"?loginuse="+dev7_user+"&loginpas="+dev7_pwd) ;}
+	if(nCurSel == 7) { return ("http://"+dev8_host+":"+dev8_port+"/"+cgiUrl+"?loginuse="+dev8_user+"&loginpas="+dev8_pwd) ;}
+	if(nCurSel == 8) { return ("http://"+dev9_host+":"+dev9_port+"/"+cgiUrl+"?loginuse="+dev9_user+"&loginpas="+dev9_pwd) ;}
+}
+
+//云台控制-----------------------------------------------------------------------------------------------------------
+function ptz_control(command)
+{
+var url = getHttpHost("decoder_control.cgi");
+url+='&command='+command;
+url+='&onestep=0';
+url+='&' + new Date().getTime() + Math.random();
+$.getScript(url);
+}
+function camera_control(param,value)
+{
+var url = getHttpHost("camera_control.cgi");
+url+='&param='+param+'&value='+value;
+url+='&' + new Date().getTime() + Math.random();
+//alert(url);
+$.getScript(url);
+}
+
+
+function camera_control2(param,value)
+{
+var contrast1=document.getElementById("contrast");
+var index=contrast1.selectedIndex;
+setcookie("contrast",index);
+var url = getHttpHost("camera_control.cgi");
+url+='&param='+param+'&value='+value;
+url+='&' + new Date().getTime() + Math.random();
+//alert(url);
+$.getScript(url);
+}
+function camera_control1(param,value)
+{
+var brightness=document.getElementById("brightness");
+var index=brightness.selectedIndex;
+setcookie("brightness",index);
+var url = getHttpHost("camera_control.cgi");
+url+='&param='+param+'&value='+value;
+url+='&' + new Date().getTime() + Math.random();
+//alert(url);
+$.getScript(url);
+}
+//设置OSD
+function osd_onchange()
+{
+var url = getHttpHost("set_osd.cgi");
+url+='&osdenable='+($("#osd").attr("checked")=="checked")?1:0;// osd;
+url+='&' + new Date().getTime() + Math.random();
+$.getScript(url);
+}
+
+//调用预置位
+function callpos(cmd){
+var url = getHttpHost("decoder_control.cgi");
+url+='&command='+cmd;
+url+='&onestep=0'+'&sit='+cmd;
+url+='&' + new Date().getTime() + Math.random();
+$.getScript(url);
+}
+
+//设置预置位
+function setpos(cmd){
+var url = getHttpHost("decoder_control.cgi");
+url+='&command='+cmd;
+url+='&onestep=0'+'&sit='+cmd;
+url+='&' + new Date().getTime() + Math.random();
+$.getScript(url);
+}
+
+
+//云台控制-----------------------------------------------------------------------------------------------------------
+function ptz_onmousedown(i)
+{
+	if(i == 0 ) {/*$("#up").attr("src","images/up_down.gif");*/ ptz_control(PTZ_UP);}
+	if(i == 1 ) {/*$("#leftup").attr("src","images/leftup_down.gif");*/ ptz_control(PTZ_LEFT_UP);}
+	if(i == 2 ) {/*$("#rightup").attr("src","images/rightup_down.gif"); */ptz_control(PTZ_RIGHT_UP);}
+	if(i == 3 ) {/*$("#left").attr("src","images/left_down.gif");*/ ptz_control(PTZ_LEFT);}
+	if(i == 4 ) {/*$("#gocenter").attr("src","images/center.gif");*/ ptz_control(PTZ_CENTER);}
+	if(i == 5 ) {/*$("#right").attr("src","images/right_down.gif");*/ ptz_control(PTZ_RIGHT);}
+	if(i == 6 ) {/*$("#leftdown").attr("src","images/leftdown_down.gif");*/ ptz_control(PTZ_LEFT_DOWN);}
+	if(i == 7 ) {/*$("#down").attr("src","images/down_down.gif");*/ ptz_control(PTZ_DOWN);}
+	if(i == 8 ) {/*$("#rightdown").attr("src","images/rightdown_down.gif");*/ ptz_control(PTZ_RIGHT_DOWN);}
+	//开关闭合
+	if(i == 13 ) {/*$("#switchoff").attr("src","images/switchoff_down.gif");*/ ptz_control(IO_OFF);}
+	if(i == 14 ) {/*$("#switchon").attr("src","images/switchon_down.gif");*/ ptz_control(IO_ON);}
+	//
+	if(i == 9 ) {    //上下巡航
+	if(n_vpatrol[nCurSel] == 0){	n_vpatrol[nCurSel] = 1;$("#vpatrol").attr("src","images/vpatrol_down.gif"); ptz_control(PTZ_VPATROL);}
+	else{	n_vpatrol[nCurSel] = 0;$("#vpatrol").attr("src","images/vpatrol_up.gif"); ptz_control(PTZ_VPATROL_STOP);}
+	}
+	if(i == 11 ) {
+	if(n_hpatrol[nCurSel] == 0){	n_hpatrol[nCurSel] = 1;$("#hpatrol").attr("src","images/hpatrol_down.gif"); ptz_control(PTZ_HPATROL);}
+	else{	n_hpatrol[nCurSel] = 0;$("#hpatrol").attr("src","images/hpatrol_up.gif"); ptz_control(PTZ_HPATROL_STOP);}
+	}
+	
+	if(i == 15 ) {
+	if(n_ir[nCurSel] == 0){	n_ir[nCurSel] = 1;$("#ir").attr("src","images/ir_2.gif"); }//ptz_control(PTZ_VPATROL);}
+	else{			n_ir[nCurSel] = 0;$("#ir").attr("src","images/ir_1.gif"); }//ptz_control(PTZ_VPATROL_STOP);}
+	}
+	/*if(i == 16 ) {
+	if(n_osd == 0){	n_osd = 1;$("#osd").attr("src","images/btn_osd_on.gif"); camera_control(10,n_osd);}
+	else{			n_osd = 0;$("#osd").attr("src","images/btn_osd.gif"); camera_control(10,n_osd);}
+	}
+	*/
+	if(i == 16 ) {
+	if(n_osd[nCurSel] == 0){	n_osd[nCurSel] = 1;$("#osd").attr("src","images/btn_osd_on.gif"); video[nCurSel].SetOsd(alias);}
+	else{			n_osd[nCurSel] = 0;$("#osd").attr("src","images/btn_osd.gif"); video[nCurSel].RemoveOsd();}
+	}
+}
+
+function ptz_onmouseup(i)
+{
+	if(i == 0 ) {/*$("#up").attr("src","images/up_up.gif");*/ptz_control(PTZ_UP_STOP);}
+	if(i == 1 ) {/*$("#leftup").attr("src","images/leftup_up.gif");*/ ptz_control(PTZ_STOP);}
+	if(i == 2 ) {/*$("#rightup").attr("src","images/rightup_up.gif"); */ptz_control(PTZ_STOP);}
+	if(i == 3 ) {/*$("#left").attr("src","images/left_up.gif");*/ ptz_control(PTZ_LEFT_STOP);}
+	//if(i == 4 ) {/*$("#gocenter").attr("src","images/center.gif");*/ ptz_control(PTZ_STOP);}
+	if(i == 5 ) {/*$("#right").attr("src","images/right_up.gif");*/ ptz_control(PTZ_RIGHT_STOP);}
+	if(i == 6 ) {/*$("#leftdown").attr("src","images/leftdown_up.gif");*/ ptz_control(PTZ_STOP);}
+	if(i == 7 ) {/*$("#down").attr("src","images/down_up.gif");*/ ptz_control(PTZ_DOWN_STOP);}
+	if(i == 8 ) {/*$("#rightdown").attr("src","images/rightdown_up.gif"); */ptz_control(PTZ_STOP);}
+	//开关闭合
+	if(i == 13 ) {$("#switchoff").attr("src","images/switchoff_up.gif");}
+	if(i == 14 ) {$("#switchon").attr("src","images/switchon_up.gif");}
+}
+
+//翻转-----------------------------------------------------------------------------------------------------------
+var n_reversal =new Array();
+n_reversal[0]=n_reversal[1]=n_reversal[2]=n_reversal[3]=n_reversal[4]=n_reversal[5]=n_reversal[6]=n_reversal[7]=n_reversal[8]=0;
+var n_mirror =new Array();
+n_mirror[0]=n_mirror[1]=n_mirror[2]=n_mirror[3]=n_mirror[4]=n_mirror[5]=n_mirror[6]=n_mirror[7]=n_mirror[8]=0;
+function set_flip(img)
+{
+	if(img.indexOf("img_reversal")!= -1)  /*原话if(img.indexOf("img_reversal")!= -1)*/
+	{   
+		/*原文$("#img_reversal").attr("src",(n_reversal[nCurSel] == 0)?"images/reversal_on.gif":"images/reversal.gif");
+		(n_reversal[nCurSel] == 0)?n_reversal[nCurSel]=1:n_reversal[nCurSel]=0; */
+		
+		$("#img_reversal").attr("src",(n_reversal[nCurSel] == 0)?"images/reversal_on.gif":"images/reversal.gif");
+		(n_reversal[nCurSel] == 0)?n_reversal[nCurSel]=1:n_reversal[nCurSel]=0;
+	}
+	
+	if(img.indexOf("img_mirror")!= -1)
+	{
+		$("#img_mirror").attr("src",(n_mirror[nCurSel] == 0)?"images/mirror_on.gif":"images/mirror.gif");
+		(n_mirror[nCurSel] == 0)?n_mirror[nCurSel]=1:n_mirror[nCurSel]=0;
+	}
+	
+	var value1;
+	if ( (n_reversal[nCurSel]==1) && (n_mirror[nCurSel]==1)){
+		value1 = 3;
+	}
+	else if (n_reversal[nCurSel]==1){
+		value1 = 1;
+	}
+	else if (n_mirror[nCurSel]==1){
+		value1 = 2;
+	}
+	else{
+		value1 = 0;
+	}
+	camera_control(5, value1);
+	//video[nCurSel].SetFlip(value1);
+}
+//视频-----------------------------------------------------------------------------------------------------------
+function changeVideo(param)
+{	
+		if(param == 1){
+		video[nCurSel].StopVideo();
+		if(nCurSel==0) video[nCurSel].PlayVideo(loginuser,	loginpass,	location.hostname, port ,3,1);
+		if((nCurSel==1)&&(dev2_host != '')) {  video[1].PlayVideo(dev2_user,	dev2_pwd,	dev2_host, dev2_port ,3,1);}
+		if((nCurSel==2)&&(dev3_host != '')) {  video[2].PlayVideo(dev3_user,	dev3_pwd,	dev3_host, dev3_port ,3,1);}
+		if((nCurSel==3)&&(dev4_host != '')) {  video[3].PlayVideo(dev4_user,	dev4_pwd,	dev4_host, dev4_port ,3,1);}
+		if((nCurSel==4)&&(dev5_host != '')) {  video[4].PlayVideo(dev5_user,	dev5_pwd,	dev5_host, dev5_port ,3,1);}
+		if((nCurSel==5)&&(dev6_host != '')) {  video[5].PlayVideo(dev6_user,	dev6_pwd,	dev6_host, dev6_port ,3,1);}
+		if((nCurSel==6)&&(dev7_host != '')) {  video[6].PlayVideo(dev7_user,	dev7_pwd,	dev7_host, dev7_port ,3,1);}
+		if((nCurSel==7)&&(dev8_host != '')) {  video[7].PlayVideo(dev8_user,	dev8_pwd,	dev8_host, dev8_port ,3,1);}
+		if((nCurSel==8)&&(dev9_host != '')) {  video[8].PlayVideo(dev9_user,	dev9_pwd,	dev9_host, dev9_port ,3,1);}
+		n_typee[nCurSel]=1;
+	}
+	if(param == 2){
+		video[nCurSel].StopVideo();
+		if(nCurSel==0) video[nCurSel].PlayVideo(loginuser,	loginpass,	location.hostname, port ,3,0);
+		if((nCurSel==1)&&(dev2_host != '')) {  video[1].PlayVideo(dev2_user,	dev2_pwd,	dev2_host, dev2_port ,3,0);}
+		if((nCurSel==2)&&(dev3_host != '')) {  video[2].PlayVideo(dev3_user,	dev3_pwd,	dev3_host, dev3_port ,3,0);}
+		if((nCurSel==3)&&(dev4_host != '')) {  video[3].PlayVideo(dev4_user,	dev4_pwd,	dev4_host, dev4_port ,3,0);}
+		if((nCurSel==4)&&(dev5_host != '')) {  video[4].PlayVideo(dev5_user,	dev5_pwd,	dev5_host, dev5_port ,3,0);}
+		if((nCurSel==5)&&(dev6_host != '')) {  video[5].PlayVideo(dev6_user,	dev6_pwd,	dev6_host, dev6_port ,3,0);}
+		if((nCurSel==6)&&(dev7_host != '')) {  video[6].PlayVideo(dev7_user,	dev7_pwd,	dev7_host, dev7_port ,3,0);}
+		if((nCurSel==7)&&(dev8_host != '')) {  video[7].PlayVideo(dev8_user,	dev8_pwd,	dev8_host, dev8_port ,3,0);}
+		if((nCurSel==8)&&(dev9_host != '')) {  video[8].PlayVideo(dev9_user,	dev9_pwd,	dev9_host, dev9_port ,3,0);}
+		n_typee[nCurSel]=2;
+	}
+	n_osd[nCurSel] = 0;
+	$("#osd").attr("src",(n_osd[nCurSel] == 0)?"images/btn_osd.gif":"images/btn_osd_on.gif");	
+	
+	$("#audio").attr("src",(video[nCurSel].SoundState == 0)?"images/btn_jianting.gif":"images/btn_jianting_on.gif");
+	$("#talk").attr("src",(video[nCurSel].TalkState == 0)?"images/btn_talk.gif":"images/btn_talk_on.gif");
+	$("#record").attr("src",(video[nCurSel].RecordState == 0)?"images/btn_luxiang.gif":"images/btn_luxiang_on.gif");
+}
+//预置位-----------------------------------------------------------------------------------------------------------
+function showppos(panel,btn)
+{
+	if(pri== 1)
+		return;
+	
+	
+	hidep();
+	var left = $("#"+btn).offset().left;//元素相当于窗口的左边的偏移量
+	var top = $("#"+btn).offset().top;//元素相对于窗口的上边的偏移量
+	$( "#"+panel ).css("left",left-86);
+	$( "#"+panel ).css("top",top);
+	$( "#"+panel ).show();
+}
+
+function hideppos(panel)
+{
+	$( "#"+panel ).hide();
+}
+function hidep(){
+	$( "#cp" ).hide();
+	$( "#sp" ).hide();
+}
+
+//helper fun -- start-----------------------------------------------------------------------------------------------------------
+function helper_showParam()
+{
+	//var url = "http://192.168.1.126:81/get_camera_params.cgi?loginuse=admin&loginpas=888888&"+(new Date-0);
+	var url = getHttpHost("get_camera_params.cgi");
+	url += "&"+(new Date-0);//alert(url);
+	$.getScript(url, function(){
+		$( "#mode").val(mode);
+		$( "#vresolution").val(resolution);
+		$( "#cbMaxVideoRate").val(enc_framerate);	
+	//	$( "#brightness" ).val(vbright);
+	//	$( "#contrast" ).val( vcontrast);
+	//	first_1=true;
+//		first_2=true;	
+//		$( "#slider-range-brightness" ).slider( "value" , vbright );
+//		$( "#slider-range-contrast" ).slider( "value" , vcontrast );	
+		
+		$("#brightness").val(vbright);
+		$("brightness").val(vcontrast);
+		
+		if(flip==0) //原文if(flip==0)
+		{		
+			n_reversal[nCurSel] = 0;
+			n_mirror[nCurSel] = 0;
+		}
+		else if(flip==2)
+		{
+			n_reversal[nCurSel] = 0;
+		    n_mirror[nCurSel] = 1; 		
+			
+		}
+		else if(flip==1)
+		{
+	        n_reversal[nCurSel] = 1;
+			n_mirror[nCurSel] = 0;
+			
+			
+		}
+		else if(flip==3) //原文 else if(flip==3)
+		{
+		
+			n_reversal[nCurSel] = 1;
+			n_mirror[nCurSel] = 1;
+		}	
+          
+		
+		$("#img_reversal").attr("src",(n_reversal[nCurSel] == 1)?"images/reversal_on.gif":"images/reversal.gif"); //==1
+		$("#img_mirror").attr("src",(n_mirror[nCurSel] == 1)?"images/mirror_on.gif":"images/mirror.gif");         //==1
+		
+	});
+}
+//焦点控件改变-----------------------------------------------------------------------------------------------------------
+
+//单击或双击某个视频控件会调用该函数
+
+function helper_ChangeFocus(index)
+{
+	for (i=0;i<9;++i){			
+		if(i == index) continue;	
+		video[i].SetFocus(0);//取消其他控件焦点
+	} 
+	nCurSel = index;
+	//还原图标状态
+	$("#vpatrol").attr("src",(n_vpatrol[nCurSel] == 0)?"images/vpatrol_up.gif":"images/vpatrol_down.gif");
+	$("#hpatrol").attr("src",(n_hpatrol[nCurSel] == 0)?"images/hpatrol_up.gif":"images/hpatrol_down.gif");
+//	$("#osd").attr("src",(n_osd[nCurSel] == 0)?"images/btn_osd.gif":"images/btn_osd_on.gif");	
+//	$("#ir").attr("src",(n_ir[nCurSel] == 0)?"images/ir_1.gif":"images/ir_2.gif");
+
+	$("#img_reversal").attr("src",(n_reversal[nCurSel] == 0)?"images/reversal.gif":"images/reversal_on.gif"); //==0
+	$("#img_mirror").attr("src",(n_mirror[nCurSel] == 0)?"images/mirror.gif":"images/mirror_on.gif");         //==0
+
+	$("#audio").attr("src",(video[nCurSel].SoundState == 0)?"images/btn_jianting.gif":"images/btn_jianting_on.gif");
+	$("#talk").attr("src",(video[nCurSel].TalkState == 0)?"images/btn_talk.gif":"images/btn_talk_on.gif");
+	$("#record").attr("src",(video[nCurSel].RecordState == 0)?"images/btn_luxiang.gif":"images/btn_luxiang_on.gif");
+	
+	//$("#videoStyle").val(n_typee[nCurSel]);
+	//还原数据
+	helper_showParam();
+}
+
+//双击-----------------------------------------------------------------------------------------------------------
+function helper_DbClick(index)
+{
+	if ((n_x == 1)&&(resolution == 0))//VGA,一画面
+	{
+		//1 DoubleClick   一画面的时候第一次双击最大话
+		if(nDClick == 0)
+			video[index].ShowMax();   //视频画面最大化
+		//2 DoubleClick
+		if(nDClick == 1){
+			video[index].ShowNormal();        //第二次双击的话还原视频画面
+			x_onclick(n_x);
+		}
+		nDClick = nDClick + 1;
+		if(nDClick >= 2) nDClick = 0;      //最大化后将双击的次数还原默认值
+	}
+	else
+	{
+		//1 DoubleClick    第一次双击
+		if(nDClick == 0)
+		{
+			for (i=0;i<9;i++){
+			video[i].style.width=0;
+			video[i].style.height=0;
+			}
+			video[index].style.width=w1;
+			video[index].style.height=h1;	
+		}
+		//2 DoubleClick    第二次双击
+		if(nDClick == 1){
+			video[index].ShowMax();
+		}
+		//3 DoubleClick
+		if(nDClick == 2){    //第三次双击还原
+			video[index].ShowNormal();
+			x_onclick(n_x);
+		}
+		nDClick = nDClick + 1;
+		if(nDClick >= 3)
+		nDClick = 0;		
+	}
+
+}
+
+/*
+
+作用：鼠标左键按下事件
+参数：
+lType： 0: //单击控件
+1://双击控件
+2://断线重连
+parame：无效
+返回值：
+空
+
+*/
+//helper fun -- end
+function ipcam_MessageNotify(index,type,parame) 
+{
+	switch(type)
+	{
+		///////////////////////////////////////////////////////////////
+		case 0://单击选中了某个控件
+		{
+			helper_ChangeFocus(index);   
+		}
+		break;
+		///////////////////////////////////////////////////////////////
+		case 1://双击击选中了某个控件
+		{
+			helper_ChangeFocus(index);
+			helper_DbClick(index);//最大化当前窗口
+		}
+		break;
+		///////////////////////////////////////////////////////////////
+		case 2://断线重连，录像停止
+		{
+			if(video[nCurSel].RecordState == 1){
+				if(video[nCurSel].StopRecord()!=-1)	
+					$("#record").attr("src","images/btn_luxiang.gif");
+			}
+		}		
+		
+		break;
+	}
+}
+
+//屏幕分割-----------------------------------------------------------------------------------------------------------
+var n_x = 0;
+var nWidth;
+function x_onclick(index) {
+   
+   n_x = index;
+	for (i=0;i<9;i++)
+	{
+		video[i].style.width=0;
+		video[i].style.height=0;
+		video[i].UpdataSize();
+	}
+	$("#x1").attr("src","images/x1_off.gif");
+	$("#x4").attr("src","images/x4_off.gif");
+	$("#x9").attr("src","images/x9_off.gif");
+	if (index == 1){
+		//if(!bSingleFull)
+		helper_ChangeFocus(0);    //焦点控件改变
+		video[0].SetFocus(1);      //SetFocus(Long bFocus) 作用：焦点显示（红框）  参数：bFocus：【IN】1：红框0：正常
+	 
+		//helper_showParam();
+		
+		{
+		if(resolution == 0)
+		{			
+			video[0].style.width=w1;//640;
+			video[0].style.height=h1;//480;	
+			nWidth=w1;
+		}
+		else
+		{
+			video[0].style.width=320;
+			video[0].style.height=240;	
+			nWidth=320;
+		}
+		}
+		
+		$("#x1").attr("src","images/x1_on.gif");
+		document.getElementById("ipcamdiv").style.width=nWidth;
+		
+	}	
+	else if(index == 4){
+		for (i=0;i<4;++i){				
+			video[i].style.width= w4;
+			video[i].style.height=h4;
+			
+			video[i].UpdataSize();
+			//alert("sdfs");
+			document.getElementById("ipcamdiv").style.width=w4*2;
+			
+		} 
+		$("#x4").attr("src","images/x4_on.gif");
+	}
+	else{
+		for (i=0;i<9;++i){				
+			video[i].style.width= w9;
+			video[i].style.height=h9;
+			video[i].UpdataSize();
+			nWidth=w9*3;
+		} 	
+		
+		$("#x9").attr("src","images/x9_on.gif");
+		document.getElementById("ipcamdiv").style.width=nWidth;
+	}
+	
+    setcookie('split',index,720);
+}
+
+/*$(function() {
+$( "#slider-range-brightness" ).slider({
+min: 1,
+max: 255,
+step: 1,
+slide: function( event, ui ) {
+$( "#brightness" ).val( ui.value );
+},
+change: function(event, ui) {
+if(!first_1)
+	camera_control(1,ui.value);
+first_1 = false;
+//alert("s");
+}
+});
+$( "#slider-range-contrast" ).slider({
+min: 1,
+max: 255,
+step: 1,
+slide: function( event, ui ) {
+$( "#contrast" ).val( ui.value );
+},
+change: function(event, ui) {
+if(!first_2)
+camera_control(2,ui.value);
+first_2 = false;
+//alert("s");
+}
+});	
+});*/
+function enablePtzCtl(bCanPtz)
+{
+
+
+//	$("#leftup").attr("disabled",bCanPtz?"":"disabled");
+//	$("#up").attr("disabled",bCanPtz?"":"disabled");
+//	$("#rightup").attr("disabled",bCanPtz?"":"disabled");
+//	$("#left").attr("disabled",bCanPtz?"":"disabled");
+//	$("#center").attr("disabled",bCanPtz?"":"disabled");
+//	$("#right").attr("disabled",bCanPtz?"":"disabled");
+//	$("#leftdown").attr("disabled",bCanPtz?"":"disabled");
+//	$("#down").attr("disabled",bCanPtz?"":"disabled");
+	//$("#rightdown").attr("disabled",bCanPtz?"":"disabled");
+	$("#ptzpanel").removeAttr("usemap"); //取消usemap的属性
+	$("#ptzpanel").attr("disabled",bCanPtz?"":"disabled");
+	$("#vpatrol").attr("disabled",bCanPtz?"":"disabled");
+	$("#hpatrol").attr("disabled",bCanPtz?"":"disabled");
+	$("#switchon").attr("disabled",bCanPtz?"":"disabled");
+	$("#switchoff").attr("disabled",bCanPtz?"":"disabled");
+	//$("#ir").attr("disabled",bCanPtz?"":"disabled");
+	$("#osd").attr("disabled",bCanPtz?"":"disabled");
+	$("#img_reversal").attr("disabled",bCanPtz?"":"disabled");
+	$("#img_mirror").attr("disabled",bCanPtz?"":"disabled");
+	
+	$("#mode").attr("disabled",bCanPtz?"":"disabled");
+	$("#cbMaxVideoRate").attr("disabled",bCanPtz?"":"disabled");
+//	$("#videoStyle").attr("disabled",bCanPtz?"":"disabled");
+	
+//	$("#slider-range-brightness").attr("disabled",bCanPtz?"":"disabled");
+//	$("#slider-range-contrast").attr("disabled",bCanPtz?"":"disabled");
+	//$("#slider-range-Saturation").attr("disabled",bCanPtz?"":"disabled");
+	//$("#slider-range-Chroma").attr("disabled",bCanPtz?"":"disabled");
+//	$("#btncallpos").attr("disabled",bCanPtz?"":"disabled");
+//	$("#btnsetpos").attr("disabled",bCanPtz?"":"disabled");	
+//	$("#videodefault").attr("disabled",bCanPtz?"":"disabled");
+	$("#vresolution").attr("disabled",bCanPtz?"":"disabled");
+	$("#brightness").attr("disabled",bCanPtz?"":"disabled");
+	$("#contrast").attr("disabled",bCanPtz?"":"disabled");
+	$("#audio").attr("disabled",bCanPtz?"":"disabled");
+	$("#talk").attr("disabled",bCanPtz?"":"disabled");
+	$("#record").attr("disabled",bCanPtz?"":"disabled");
+	$("#snapshot").attr("disabled",bCanPtz?"":"disabled");
+	$("#setting").attr("disabled",bCanPtz?"":"disabled");
+}
+
+
+function body_onload()
+{
+   /*亮度对比度设置*/
+	var brightness=document.getElementById("brightness");
+	var contrast=document.getElementById("contrast");
+	var brightnessindex=getcookie("brightness");  //获取亮度设置的cookie值
+	var contrastindex=getcookie("contrast");
+		if(pri == 1)
+		{
+		 // alert("参观者登陆。。。。。。");
+			enablePtzCtl(false);
+		}
+	
+	
+	helper_showParam();
+	
+	
+	$("#cbMaxVideoRate").empty();
+	for(var x=30;x>0;x--)   
+	{   
+	$("#cbMaxVideoRate").append("<option value='"+x+"'>"+x+"</option>");
+	}
+	$( "#cbMaxVideoRate").val(enc_framerate);
+	
+	
+	try{
+	if(video[0].RecordState==undefined)
+	{
+		return;
+	}
+	}
+	catch(exception){
+		return;
+	}
+nSplit =getcookie('split');
+	
+if(nSplit !=1 && nSplit!=4 && nSplit != 9)
+
+nSplit=1;
+
+	if (nSplit == '9')
+	{
+		  $("#x1").src="images/x9_on.gif";
+	}
+	else if (nSplit == '4')
+	{
+		$("#x4").src="images/x4_on.gif";
+	}
+	else
+	{
+		$("#x9").src="images/x1_on.gif";
+	}
+	x_onclick(nSplit);
+	$("#videoStyle").val(2);
+	video[0].SetFocus(1);
+	var i = video[0].PlayVideo(loginuser,	loginpass,	location.hostname, port ,3,0);
+	//if(i<0)
+	//alert(str_failtoplayvideo);//open video error
+	if(dev2_host != '') {  video[1].PlayVideo(dev2_user,	dev2_pwd,	dev2_host, dev2_port ,3,0);}
+	if(dev3_host != '') {  video[2].PlayVideo(dev3_user,	dev3_pwd,	dev3_host, dev3_port ,3,0);}
+	if(dev4_host != '') {  video[3].PlayVideo(dev4_user,	dev4_pwd,	dev4_host, dev4_port ,3,0);}
+	if(dev5_host != '') {  video[4].PlayVideo(dev5_user,	dev5_pwd,	dev5_host, dev5_port ,3,0);}
+	if(dev6_host != '') {  video[5].PlayVideo(dev6_user,	dev6_pwd,	dev6_host, dev6_port ,3,0);}
+	if(dev7_host != '') {  video[6].PlayVideo(dev7_user,	dev7_pwd,	dev7_host, dev7_port ,3,0);}
+	if(dev8_host != '') {  video[7].PlayVideo(dev8_user,	dev8_pwd,	dev8_host, dev8_port ,3,0);}
+	if(dev9_host != '') {  video[8].PlayVideo(dev9_user,	dev9_pwd,	dev9_host, dev9_port ,3,0);}
+	
+	
+	//设置亮度对比度的值
+				if(brightnessindex!='undefinded'||brightnessindex!=nullcontrastindex!=''){
+				
+			//	   alert("进来设置brightness");
+				   brightness.selectedIndex=brightnessindex;
+				  
+				
+				
+				}
+				//第一次进来的时候设置亮度对不度的默认值
+				if(brightnessindex==null||brightnessindex==''){
+				 
+				    setDefaultbrightness();	
+					brightness.selectedIndex=0;			
+				
+				}
+				if(contrastindex!='undefinded'||contrastindex!=null||contrastindex!='')
+				{
+				
+				   contrast.selectedIndex=contrastindex;
+				  
+				
+				}if(contrastindex==null||contrastindex==''){
+				//   alert("contrastindex:"+contrastindex);
+				   setDefaultContrast();   //设置对比度的默认值
+				   contrast.selectedIndex=13;
+				
+				
+				}
+
+}
+
+function setDefaultbrightness()
+{
+
+   camera_control(7,0);
+   setTimeout('helper_showParam()',1000);
+
+}
+function setDefaultContrast()
+{
+
+   camera_control(7,0);
+   setTimeout('helper_showParam()',1000);
+
+}
+function body_onunload()
+{
+	for (i=0;i<9;++i)
+	{				
+		video[i].StopVideo();
+	} 
+}
+
+function showhint(str){
+hint_span.innerText=str;
+}
+function body_onunload(){
+
+ for (i=0;i<9;++i)
+	{				
+		video[i].StopVideo();
+	} 
+
+}
+
+
+/*function video_OnMonitorConnectResult(index,result,pri) {
+if (result){
+device_status.src="images/yellow.gif";
+if (cameras.retry_times[index]==0){
+	if(index==0){
+		showerror(cameras.alias[index],_failtoconnect,result);
+		location.href='index.htm';
+	}
+}else{
+	cameras.retry_times[index] --;
+	setTimeout('connect_camera('+index+')',30000);
+}
+}else{
+cameras.pri[index]=pri;		
+var bOpe = cameras.pri[index]>PRI_VISITOR;  //参观者
+var bAdmin = cameras.pri[index]>PRI_OPERATOR; 
+if(!bOpe){
+	ptzpanel.style.display='none';
+	hpatrol.style.display='none';
+	vpatrol.style.display='none';
+	image_reversal.style.display='none';
+	image_mirror.style.display='none';
+	bvoption.style.display='none';
+	img_option.style.display='none';			
+	img_switchon.style.display='none';			
+	img_switchoff.style.display='none';		
+	tdspeed.style.display='none';	
+}else if(!bAdmin){
+	img_option.style.display='none';		
+	tdspeed.style.display='none';
+}
+*/
+
+function talk_onclick()
+{
+if(video[nCurSel].TalkState == 0) {if(video[nCurSel].StartTalk()!=-1)	$("#talk").attr("src","images/btn_talk_on.gif");}
+else								{if(video[nCurSel].StopTalk()!=-1)	$("#talk").attr("src","images/btn_talk.gif");}
+}
+function audio_onclick()
+{
+if(video[nCurSel].SoundState == 0) 	{if(video[nCurSel].OpenSound()!=-1)	$("#audio").attr("src","images/btn_jianting_on.gif");}
+else								{if(video[nCurSel].CloseSound()!=-1)	$("#audio").attr("src","images/btn_jianting.gif");}
+}
+function record_onclick()
+{
+if(video[nCurSel].RecordState == 0) 	{	if(video[nCurSel].StartRecord()!=-1)$("#record").attr("src","images/btn_luxiang_on.gif");}
+else									{	if(video[nCurSel].StopRecord()!=-1)	$("#record").attr("src","images/btn_luxiang.gif");}
+}
+
+function snapshotPic()
+{
+	if(pri == 1) return;
+	
+	//var url = getHttpHost("snapshot.htm");
+	//window.open(url);
+	window.open("snapshot.htm");
+}
+function settingurl()
+{
+	if(pri!= 255) return;
+	//alert("sd");
+	location="admin1.htm";
+}
+
+function changeRes()
+{
+	var url = getHttpHost("get_camera_params.cgi");
+	url += "&"+(new Date-0);//alert(url);
+	$.getScript(url, function(){
+		if(n_x == 1) 
+			x_onclick(n_x);	
+		if(video[nCurSel].RecordState == 1){if(video[nCurSel].StopRecord()!=-1)	$("#record").attr("src","images/btn_luxiang.gif");}		
+	});
+}
+</script>
+<script for="video" event="MessageNotify(type,parame)">ipcam_MessageNotify(this.name,type,parame)</script>
+</head>
+<body align="center" onload="body_onload()" onunload="body_onunload()">
+<table width="100%" height="100%" border="0" cellpadding="0" cellspacing="0">
+  <tbody><tr>
+    <td align="right" valign="middle" height="100%" onclick="hidep();"><table width="320" height="281" border="0" cellpadding="0" cellspacing="0" onclick="hidep()">
+        <tbody><tr>
+          <td><img src="2_10.gif" width="35" height="20"></td>
+          <td width="424" height="20" background="2_11.gif"></td>
+          <td width="24"><img src="2_12.gif" width="11" height="20"></td>
+        </tr>
+        <tr>
+          <td valign="top" background="2_26.gif" style="background-repeat:repeat-y"><img src="2_13.gif" width="35" height="30"><br>
+            <br>
+          </td>
+          <td rowspan="3"><div name="ipcamdiv" id="ipcamdiv" align="center">
+              <iframe marginheight="0" marginwidth="0" width="587" height="485" frameborder="0" scrolling="no" name="main" id="main" src="live.htm"></iframe>
+              <script>
+try{
+   if(video[0].RecordState==undefined)
+{
+video[0].style.width=0;
+		video[0].style.height=0;
+	document.write("<FONT COLOR=red SIZE=4>" + str_ocx_til + "&nbsp;&nbsp;<a href='oPlayer.zip'>" + str_here + "</a></FONT>");
+}
+
+}
+catch(exception){		
+        video[0].style.width=0;
+		video[0].style.height=0;	
+document.write("<FONT COLOR=red SIZE=4>" + _noocx + "<a href='oPlayer.zip'>" + _here + "</a>" + _download + "</FONT>");
+}
+  </script>
+            </div></td>
+          <td rowspan="3" valign="top" background="2_27.gif" style="background-repeat:repeat-y">&nbsp;</td>
+        </tr>
+        <tr>
+          <td background="2_26.gif" style="background-repeat:repeat-y"><img src="2_16.gif" width="35" height="166"></td>
+        </tr>
+        <tr>
+          <td background="2_26.gif" style="background-repeat:repeat-y">&nbsp;</td>
+        </tr>
+        <tr>
+          <td background="2_18.gif"></td>
+          <td background="2_19.gif"></td>
+          <td background="2_20.gif" style="background-repeat:repeat-y">&nbsp;</td>
+        </tr>
+      </tbody></table></td>
+    <td valign="middle"><table border="0" cellspacing="0" cellpadding="0">
+        <tbody><tr>
+          <td><img src="2_08.gif" width="209" height="30"></td>
+        </tr>
+        <tr>
+          <td align="center" bordercolor="0" style="background-repeat:repeat-y,repeat-x"><table width="100%" height="42" border="0" cellpadding="0" cellspacing="0" background="2_07.gif">
+              <tbody><tr>
+                <td valign="top"><div align="center" onclick="hidep()"><img id="img_logo" src="logo_en.gif" width="174" height="34"></div></td>
+              </tr>
+              <tr>
+                <td><div align="center"><img src="line.gif" width="192" height="2"></div></td>
+              </tr>
+            </tbody></table>
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" background="2_09.gif">
+              <tbody><tr id="cameratitle" style="display:none">
+                <td height="20" align="center" onclick="hidep()"><strong><span class="style2" id="cameratitle_span"></span></strong></td>
+              </tr>
+              <tr>
+                <td align="center" onclick="hidep()"><img id="ptzpanel" src="btn_circle.gif" width="105" height="105" border="0" usemap="#Map7MapMap">
+                  <map name="Map7MapMap">
+                    <!--原来的方向云台  <area shape="circle" id="center" coords="53,52,28" href="#" onClick="ptz_onmousedown(4)">
+    <area shape="rect" id="left" coords="7,33,23,73" href="#" onMouseDown="ptz_onmousedown(5)" onMouseUp="ptz_onmouseup(5)">
+    <area shape="rect" id="down" coords="31,84,75,100" href="#" onMouseDown="ptz_onmousedown(7)" onMouseUp="ptz_onmouseup(0)">
+    <area shape="rect" id="right" coords="83,31,98,72" href="#" onMouseDown="ptz_onmousedown(3)" onMouseUp="ptz_onmouseup(3)">
+    <area shape="rect" id="up" coords="32,6,77,21" href="#" onMouseDown="ptz_onmousedown(0)" onMouseUp="ptz_onmouseup(7)">   -->
+                    <area shape="circle" id="center" coords="53,52,28" href="http://192.168.1.252:81/monitor2.htm#" onclick="ptz_onmousedown(4)" alt="Turn to center">
+                    <area shape="rect" id="left" coords="10,32,26,72" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="ptz_onmousedown(3)" onmouseup="ptz_onmouseup(5)" alt="Turn to left">
+                    <area shape="rect" id="down" coords="31,83,75,99" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="ptz_onmousedown(7)" onmouseup="ptz_onmouseup(7)" alt="Turn to down">
+                    <area shape="rect" id="right" coords="83,31,98,72" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="ptz_onmousedown(5)" onmouseup="ptz_onmouseup(3)" alt="Turn to right">
+                    <area shape="rect" id="up" coords="33,6,78,21" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="ptz_onmousedown(0)" onmouseup="ptz_onmouseup(0)" alt="Turn to up">
+                  </map></td>
+              </tr>
+              <tr>
+                <td height="32" align="center"><table border="0" cellpadding="0" cellspacing="0">
+                    <tbody><tr>
+                      <td><img src="hpatrol_up.gif" width="24" height="23" border="0" class="cs" id="hpatrol" onmousedown="ptz_onmousedown(11)" onmouseover="showhint(_hori_par)" onmouseout="showhint(&#39;&#39;)"></td>
+                      <td><img src="vpatrol_up.gif" width="24" height="23" border="0" class="cs" id="vpatrol" onmousedown="ptz_onmousedown(9)" onmouseover="showhint(_ver_par)" onmouseout="showhint(&#39;&#39;)"></td>
+                    </tr>
+                  </tbody></table>
+                  <img src="reversal.gif" width="24" height="23" border="0" class="cs" id="img_reversal" onclick="set_flip(&#39;img_reversal&#39;)" onmouseover="showhint(_rev)" onmouseout="showhint(&#39;&#39;)"> <img src="mirror.gif" width="24" height="23" border="0" class="cs" id="img_mirror" onclick="set_flip(&#39;img_mirror&#39;)" onmouseover="showhint(_mirror)" onmouseout="showhint(&#39;&#39;)"><img src="switchon_up.gif" width="24" height="23" border="0" class="cs" id="switchon" onmousedown="ptz_onmousedown(14)" onmouseup="ptz_onmouseup(14)" onmouseover="showhint(_switchon)" onmouseout="showhint(&#39;&#39;)"><img id="switchoff" src="switchoff_up.gif" class="cs" onmousedown="ptz_onmousedown(13)" onmouseup="ptz_onmouseup(13)" onmouseover="showhint(_switchoff)" onmouseout="showhint(&#39;&#39;)"></td>
+              </tr>
+              <tr>
+                <td height="90" align="center"><table id="bvoption" border="0" cellspacing="0" cellpadding="0">
+                    <tbody><tr>
+                      <td><span class="style2">
+                        <script>document.write(_resolution);</script>Resolution:
+                        </span> </td>
+                      <td><select style="width=80" id="vresolution" name="vresolution" class="s4" onchange="camera_control(0,this.value);setTimeout(&#39;changeRes()&#39;,1000);">
+                          <option value="0">640*480</option>
+                          <option value="1">320*240</option>
+                        </select></td>
+                    </tr>
+                    <tr>
+                      <td><span class="style2">
+                        <script>document.write(_mode);</script>Mode:
+                        </span> </td>
+                      <td><select style="width=80" id="mode" name="mode" class="s4" onchange="camera_control(3,this.value);">
+                          <option value="0">60
+                          HZ</option>
+                          <option value="1">50
+                          HZ</option>
+                        </select></td>
+                    </tr>
+                    <tr>
+                      <td><span class="style2">
+                        <script>document.write(_brightness);</script>Brightness:
+                        </span></td>
+                      <td><select style="width=40" id="brightness" class="s4" onchange="camera_control1(1,this.value);" name="brightness">
+                          <option value="1">1</option>
+                          <option value="5">2</option>
+                          <option value="8">3</option>
+                          <option value="15">4</option>
+                          <option value="20">5</option>
+                          <option value="30">6</option>
+                          <option value="40">7</option>
+                          <option value="45">8</option>
+                          <option value="50">9</option>
+                          <option value="60">10</option>
+                          <option value="75">11</option>
+                          <option value="90">12</option>
+                          <option value="105">13</option>
+                          <option value="128">14</option>
+                          <option value="145">15</option>
+                          <option value="160">16</option>
+                          <option value="175">17</option>
+                          <option value="190">18</option>
+                          <option value="205">19</option>
+                          <option value="220">20</option>
+                          <option value="235">21</option>
+                          <option value="255">22</option>
+                        </select></td>
+                    </tr>
+                    <tr>
+                      <td><span class="style2">
+                        <script>document.write(_contrast);</script>Contrast:
+                        </span></td>
+                      <td><select style="width=40" id="contrast" class="s4" onchange="camera_control2(2,this.value);" name="contrast">
+                          <option value="0">1</option>
+                          <option value="5">2</option>
+                          <option value="10">3</option>
+                          <option value="15">4</option>
+                          <option value="20">5</option>
+                          <option value="30">6</option>
+                          <option value="40">7</option>
+                          <option value="45">8</option>
+                          <option value="50">9</option>
+                          <option value="60">10</option>
+                          <option value="75">11</option>
+                          <option value="90">12</option>
+                          <option value="105">13</option>
+                          <option value="128">14</option>
+                          <option value="145">15</option>
+                          <option value="160">16</option>
+                          <option value="175">17</option>
+                          <option value="190">18</option>
+                          <option value="205">19</option>
+                          <option value="220">20</option>
+                          <option value="235">21</option>
+                          <option value="255">22</option>
+                        </select></td>
+                    </tr>
+                    <tr>
+                      <td><span class="style2">
+                        <script>document.write(_pic_speed);</script>Max FPS:
+                        </span></td>
+                      <td><select style="width=80" id="cbMaxVideoRate" class="s4" onchange="camera_control(6,this.value);" name="cbMaxVideoRate"><option value="30">30</option><option value="29">29</option><option value="28">28</option><option value="27">27</option><option value="26">26</option><option value="25">25</option><option value="24">24</option><option value="23">23</option><option value="22">22</option><option value="21">21</option><option value="20">20</option><option value="19">19</option><option value="18">18</option><option value="17">17</option><option value="16">16</option><option value="15">15</option><option value="14">14</option><option value="13">13</option><option value="12">12</option><option value="11">11</option><option value="10">10</option><option value="9">9</option><option value="8">8</option><option value="7">7</option><option value="6">6</option><option value="5">5</option><option value="4">4</option><option value="3">3</option><option value="2">2</option><option value="1">1</option></select></td>
+                    </tr>
+                    <tr height="20">
+                      <td valign="bottom"><span class="style2">
+                        <script>document.write(_ppos);</script>Preset:
+                        </span></td>
+                      <td valign="bottom"><span id="btncallpos" class="style2 cs2" onclick="hideppos(&#39;sp&#39;);showppos(&#39;cp&#39;,&#39;btncallpos&#39;)">
+                        <script>document.write(_call);</script>Call
+                        </span>&nbsp; &nbsp;<span id="btnsetpos" class="style2 cs2" onclick="hideppos(&#39;cp&#39;);showppos(&#39;sp&#39;,&#39;btnsetpos&#39;)">
+                        <script>document.write(_set);</script>Set
+                        </span>
+                        <div id="cp" style="display: none; position: absolute; left: 100px; top: 100px; width: 101px; height: 104px; z-index: 1;">
+                          <table border="1" cellpadding="0" cellspacing="0" bgcolor="#993333">
+                            <tbody><tr>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:callpos(31)">&nbsp;1&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:callpos(33)">&nbsp;2&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:callpos(35)">&nbsp;3&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:callpos(37)">4</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="hideppos(&#39;cp&#39;)">X</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(39)">&nbsp;5&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(41)">&nbsp;6&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(43)">&nbsp;7&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(45)">8</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(47)">&nbsp;9&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(49)">&nbsp;10&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(51)">&nbsp;11&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(53)">12&nbsp;</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(55)">&nbsp;13&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(57)">&nbsp;14&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(59)">&nbsp;15&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:callpos(61)">16&nbsp;</span></div></td>
+                            </tr>
+                          </tbody></table>
+                        </div>
+                        <div id="sp" style="display: none; position: absolute; left: 100px; top: 100px; width: 101px; height: 104px; z-index: 1;">
+                          <table border="1" cellpadding="0" cellspacing="0" bgcolor="#993333">
+                            <tbody><tr>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:setpos(30);hideppos(&#39;sp&#39;)">&nbsp;1&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:setpos(32);hideppos(&#39;sp&#39;)">&nbsp;2&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:setpos(34);hideppos(&#39;sp&#39;)">&nbsp;3&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="javascript:setpos(36);hideppos(&#39;sp&#39;)">&nbsp;4&nbsp;</span></div></td>
+                              <td width="20"><div align="center"><span class="cs3" onclick="hideppos(&#39;sp&#39;)">X</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(38);hideppos(&#39;sp&#39;)">&nbsp;5&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(40);hideppos(&#39;sp&#39;)">&nbsp;6&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(42);hideppos(&#39;sp&#39;)">&nbsp;7&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(44);hideppos(&#39;sp&#39;)">8</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(46);hideppos(&#39;sp&#39;)">&nbsp;9&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(48);hideppos(&#39;sp&#39;)">&nbsp;10&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(50);hideppos(&#39;sp&#39;)">&nbsp;11&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(52);hideppos(&#39;sp&#39;)">12&nbsp;</span></div></td>
+                            </tr>
+                            <tr>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(54);hideppos(&#39;sp&#39;)">&nbsp;13&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(56);hideppos(&#39;sp&#39;)">&nbsp;14&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(58);hideppos(&#39;sp&#39;)">&nbsp;15&nbsp;</span></div></td>
+                              <td><div align="center"><span class="cs3" onclick="javascript:setpos(60);hideppos(&#39;sp&#39;)">16&nbsp;</span></div></td>
+                            </tr>
+                          </tbody></table>
+                        </div></td>
+                    </tr>
+                  </tbody></table></td>
+              </tr>
+              <tr>
+                <td height="45" align="center" valign="bottom" onclick="hidep()"><img src="btn_luxiang.gif" hspace="6" border="0" class="cs" id="record" onclick="record_onclick()" onmouseover="showhint(_record)" onmouseout="showhint(&#39;&#39;)"><img id="snapshot" class="cs" src="btn_paizhao.gif" onclick="snapshotPic()" hspace="6" border="0" onmouseover="showhint(_snapshot)" onmouseout="showhint(&#39;&#39;)"></td>
+              </tr>
+              <tr>
+                <td height="45" align="center" onclick="hidep()"><img id="audio" class="cs" src="btn_jianting.gif" onclick="audio_onclick()" onmouseover="showhint(_listen)" onmouseout="showhint(&#39;&#39;)" width="60" height="34" hspace="6" border="0"><img id="talk" class="cs" src="btn_talk.gif" onclick="talk_onclick()" onmouseover="showhint(_talk)" onmouseout="showhint(&#39;&#39;)" width="60" height="34" hspace="6" border="0"></td>
+              </tr>
+              <tr>
+                <td height="15" align="center" onclick="hidep();"><span class="style2" id="hint_span"></span></td>
+              </tr>
+              <tr>
+                <td height="15" align="center" class="xiao kaicong2" onclick="monitorDetail();"><script>document.write(kc_jkxx);</script>Monitoring interface details</td>
+              </tr>
+            </tbody></table></td>
+        </tr>
+        <tr>
+          <td height="34" align="center" background="2_24.gif"><img id="setting" src="btn_shezhi.gif" width="189" height="38" border="0" onmouseover="showhint(_setting)" onmouseout="showhint(&#39;&#39;)" onclick="settingurl();" class="cs"></td>
+        </tr>
+      </tbody></table></td>
+  </tr>
+</tbody></table>
+<map name="Map7Map">
+  <area shape="circle" id="ptz_center" coords="53,52,28" href="http://192.168.1.252:81/monitor2.htm#" onclick="if (!ptz_type) callcmd(PTZ_CENTER)">
+  <area shape="rect" id="ptz_left" coords="6,33,22,73" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="left_onmousedown();" onmouseup="left_onmouseup();">
+  <area shape="rect" id="ptz_down" coords="32,83,76,99" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="down_onmousedown();" onmouseup="down_onmouseup();">
+  <area shape="rect" id="ptz_right" coords="85,32,100,73" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="right_onmousedown();" onmouseup="right_onmouseup();">
+  <area shape="rect" id="ptz_up" coords="30,6,75,21" href="http://192.168.1.252:81/monitor2.htm#" onmousedown="up_onmousedown();" onmouseup="up_onmouseup();">
+</map>
+<script src="logo.js"></script>
+<script>
+document.getElementById("center").alt=_ptz_center;
+document.getElementById("left").alt=_ptz_left;
+document.getElementById("down").alt=_ptz_down;
+document.getElementById("right").alt=_ptz_right;
+document.getElementById("up").alt=_ptz_up;
+document.getElementById("osd").alt=_osd_set;
+
+
+</script>
+<object id="sound_player" classid="clsid:6BF52A52-394A-11d3-B153-00C04F79FAA6" type="application/x-oleobject" width="0" height="0">
+  <param name="url" value="images/alarm.wav">
+  <param name="autoStart" value="false">
+  <param name="playCount" value="1">
+  <param name="rate" value="1">
+</object>
+<iframe id="action_zone" name="action_zone" style="display:none"></iframe>
+
+
+<!--<script type="text/javascript">    
+var browser = navigator.appName;
+if (browser == "Microsoft Internet Explorer")
+{
+	if(DetectActiveX("VIDEO.VideoCtrl.1") == false)
+	{
+		document.write($("<meta>").attr("http-equiv", "refresh").attr("content", "0; URL=http://www.easyn.cn/download/video.exe").wrap("<div>").parent().html());
+	}
+}
+</script> 
+<noscript><meta http-equiv="refresh" content="0;url=http://www.easyn.cn/download/video.exe" /></noscript>-->
+</body></html>

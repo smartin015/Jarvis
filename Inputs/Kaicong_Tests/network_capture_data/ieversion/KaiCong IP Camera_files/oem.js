@@ -1,0 +1,41 @@
+// JavaScript Document
+var _ipcam="KaiCong IP Camera";
+var _options="IP Camera Options";
+var _ddns_service_list='<option value=0>None</option><option value=7>IPCam</option><option value=1>Oray.net</option><option value=2>DynDns.org(dyndns)</option><option value=3>DynDns.org(statdns)</option><option value=4>DynDns.org(custom)</option><option value=8>3322.org(dyndns)</option><option value=9>3322.org(statdns)</option>';
+var _anonymous='KaiCong IP Camera';
+var _m_iphone='No Plug-In Mode(For Smartphnoe Browser--JPEG)';
+var _easysite='Official website';
+var _onhelp='Online Support';
+var _app='Surveillance Platform';
+var _bbs='Technology Forum';
+var _htmltitle='KaiCong Network Cameras - What More Important Than Safety!'
+var _link1='KaiCong Official Website';
+var _link2='KaiCong Technology Forum';
+var _link3='Lookfor IP';
+var _link4='Where I Am';
+
+var kc_jkxx='Monitoring interface details';
+var kc_sbxx='Device information detailed interface description';
+var kc_szxx='Clock setting detailed interface description';
+var kc_yfxx='User Settings screen with the detailed description';
+var kc_dhmxx='Multi-screen setup screen with the detailed description';
+var kc_wxxx='Wireless Settings screen with the detailed description';
+var kc_yxxx='Mail Service Settings screen with the detailed description';
+var kc_ftpxx='FTP Service Settings screen with the detailed description';
+var kc_bjxx='Alarm Service Settings screen with the detailed description';
+var kc_xjxx='Equipment upgrades detailed interface description';
+var kc_ipcam='KaiCong IP Camera';
+var kc_website='KaiCong Official Website';
+var kc_forum='KaiCong Technology Forum';
+var kc_wlxx='Network Settings screen with the detailed description';
+var kc_ycfw='Remote access to detailed interface description';
+var kc_dszp='Timing to capture detailed interface description';
+var kc_dslx='Timer recording detailed interface description';
+var kc_ydzc='Motion Detection detailed interface description';
+var kc_bjsj='Alarm time setting detailed interface description';
+var kc_txcs='Image parameters detailed interface description';
+var kc_spcs='Video parameters detailed interface description';
+var kc_sblx='Video settings screen with the detailed description';
+var kc_ypt='KaiCong cloud platform';
+var kc_fxs='Application Distributor';
+var kc_whereiam='See where I am';
