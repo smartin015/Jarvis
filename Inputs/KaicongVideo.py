@@ -1,6 +1,4 @@
 from Kaicong import KaicongDevice
-import numpy as np
-import cv2
 
 # TODO: Make threaded
 class KaicongVideo(KaicongDevice):
@@ -26,14 +24,16 @@ class KaicongVideo(KaicongDevice):
         if a!=-1 and b!=-1:
             jpg = self.bytes[a:b+2]
             self.bytes = self.bytes[b+2:]
-            img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8),cv2.CV_LOAD_IMAGE_COLOR)
-            self.callback(img)
+            return jpg
             
             
 if __name__ == "__main__":
     #Demo of kaicong video 
+    import numpy as np
+    import cv2
     
-    def show_video(img):
+    def show_video(jpg):
+        img = cv2.imdecode(np.fromstring(jpg, dtype=np.uint8),cv2.CV_LOAD_IMAGE_COLOR)
         cv2.imshow('i',img)
         
         # Note: this actually pushes the image out to screen

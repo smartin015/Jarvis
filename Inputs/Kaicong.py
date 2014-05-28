@@ -21,7 +21,10 @@ class KaicongDevice():
         
     def shutdown(self):
         self.running = False
-                
+    
+    def read(self):
+        return self.handle(stream.read(self.packet_size))
+    
     def run(self):
         self.running = True
         while self.running:
@@ -33,12 +36,16 @@ class KaicongDevice():
                 stream = urllib2.urlopen(self.uri)
                 
                 if not stream:
+                    # TODO: Raise exception here instead
                     print "Could not connect to audio stream! Exiting..."
                     return
                 
                 while self.running:
-                    self.handle(stream.read(self.packet_size))
-            
+                    self.callback(self.handle(stream.read(self.packet_size)))
+                    
+            except KeyboardInterrupt:
+                # TODO: Actually capture relevant interrupts!!!
+                raise KeyboardInterrupt
             except:
                 print "Stream capture error:", traceback.print_exc()
                 print "Retrying in 5 seconds..."
