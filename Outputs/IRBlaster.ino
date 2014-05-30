@@ -2,11 +2,11 @@ short incomingByte = 0;   // for incoming serial data
 short startVar = 32766;
 short stopVar = 32765;
 
-int arrLength = 1000;
+int arrLength = 150;
 int flag = arrLength + 1;
-short temp[1000];
+short temp[150];
 
-int IRledPin =  12;    // LED connected to digital pin 13
+int IRledPin =  13;    // LED connected to digital pin 13
 
 boolean arr = false;
 void setup() {
@@ -37,11 +37,12 @@ void loop() {
       else if(incomingByte == stopVar)
       {
         flag = arrLength + 1;
-        SendCode(temp);
+        SendCode();
+        Serial.print("\n");
       }
      
     }
-  
+   
 }
 
 
@@ -66,7 +67,6 @@ void pulseIR(long microsecs) {
     // 38 kHz is about 13 microseconds high and 13 microseconds low
      
    digitalWrite(IRledPin, HIGH);  // this takes about 3 microseconds to happen
-  
    delayMicroseconds(10);         // hang out for 10 microseconds, you can also change this to 9 if its not working
    digitalWrite(IRledPin, LOW);   // this also takes about 3 microseconds
    delayMicroseconds(10);         // hang out for 10 microseconds, you can also change this to 9 if its not working
@@ -78,21 +78,21 @@ void pulseIR(long microsecs) {
   sei();  // this turns them back on
 }
  
-void SendCode(short tempArr[]) {
+void SendCode() {
   
   //pulseIR(200000);
  
-  for (int i = 0; i < sizeof(tempArr) - 1; i++){
+  for (int i = 0; i < sizeof(temp) - 1; i++){
    
     
     if (i%2 == 0) {
      
-     pulseIR((int)tempArr[i]);
+     pulseIR((int)temp[i]);
     }
     else
     {
     
-      delayMicroseconds((int)tempArr[i]);
+      delayMicroseconds((int)temp[i]);
     }
     
   }
