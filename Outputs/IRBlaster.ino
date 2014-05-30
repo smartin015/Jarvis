@@ -2,9 +2,9 @@ short incomingByte = 0;   // for incoming serial data
 short startVar = 32766;
 short stopVar = 32765;
 
-int arrLength = 150;
+int arrLength = 200;
 int flag = arrLength + 1;
-short temp[150];
+short temp[200];
 
 int IRledPin =  13;    // LED connected to digital pin 13
 
