@@ -1,0 +1,13 @@
+var resolution=0;
+var vbright=1;
+var vcontrast=128;
+var vhue=0;
+var vsaturation=0;
+var OSDEnable=0;
+var mode=0;
+var flip=0;
+var enc_framerate=30;
+var sub_enc_framerate=15;
+var speed=2;
+var enc_bitrate=2048;
+var ircut=1;
