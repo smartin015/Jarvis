@@ -1,11 +1,13 @@
+from Controller import Controller
 
-class RecordingController():
+class RecordingController(Controller):
 
   def __init__(self, kaicong_ip):
+    Controller.__init__(self)
     self.ip = kaicong_ip
   
   def begin(self, nsecs = None):
-    pass
+    self.logger.error("TODO: begin recording")
 
   def end(self):
-    pass
+    self.logger.error("TODO: end recording")

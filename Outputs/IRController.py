@@ -1,11 +1,15 @@
-from ArduinoController import ArduinoController
+from Controller import Controller
 
-class IRController(ArduinoController):
+class IRController(Controller):
   BEGIN = 32766
   END = 32765
 
+  def __init__(self, ser):
+    Controller.__init__(self)
+    self.ser = ser
+  
   def send(self, fil):
-    with f as open(fil):
+    with open(fil, "r") as f:
       self.lines = f.read().split(', ')
 
     self.ser.write(struct.pack('>h', IRController.BEGIN))
@@ -15,8 +19,10 @@ class IRController(ArduinoController):
 
     # TODO: Make optional
     print self.ser.readline()
+    self.logger.debug("Sent %s command" % (fil))
 
   def repeat(self, fil, ntimes):
+    self.logger.debug("Sending %s, %d times" % (fil, ntimes))
     assert ntimes > 0
     for i in xrange(ntimes):
       self.send(fil)

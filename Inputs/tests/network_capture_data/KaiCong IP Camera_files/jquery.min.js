@@ -1,4 +1,0 @@
-<html><head><title>Document Error: Site or Page Not Found</title></head>
-		<body><h2>Access Error: Site or Page Not Found</h2>
-		<p>Cannot open URL</p></body></html>
-

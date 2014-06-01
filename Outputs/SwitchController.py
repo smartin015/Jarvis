@@ -1,9 +1,10 @@
-from ArduinoController import ArduinoController
+from Controller import Controller
 
-class SwitchController(ArduinoController):
+class SwitchController(Controller):
   
   def __init__(self, ser):
-    ArduinoController.__init__(self, ser)
+    Controller.__init__(self)
+    self.ser = ser
     self.off()
 
   def is_on(self):
