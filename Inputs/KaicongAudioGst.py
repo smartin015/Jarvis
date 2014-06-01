@@ -45,13 +45,7 @@ class KaicongAudioSource(gst.BaseSrc):
         print "do_create", len(buf)
         return gst.FLOW_OK, buf
         
-gobject.type_register(KaicongAudioSource)
-gst.element_register(KaicongAudioSource, 'kaicongaudiosrc', gst.RANK_MARGINAL)
 
-def gen_kaicong_audio_src(ip):
-  src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
-  src.set_property("ip", sys.argv[1])
-  return src
 
 if __name__ == "__main__":
   import sys
@@ -64,7 +58,11 @@ if __name__ == "__main__":
 
   pipeline = gst.Pipeline("pipe")
 
-  src = gen_kaicong_audio_src(sys.argv[1])
+  gobject.type_register(KaicongAudioSource)
+  gst.element_register(KaicongAudioSource, 'kaicongaudiosrc', gst.RANK_MARGINAL)
+
+  src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
+  src.set_property("ip", sys.argv[1])
   conv = gst.element_factory_make("audioconvert", "audioconv")
   res = gst.element_factory_make("audioresample", "audioresamp")
   sink = gst.element_factory_make("autoaudiosink", "audiosink")

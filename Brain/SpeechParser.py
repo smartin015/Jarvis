@@ -6,7 +6,17 @@ import gst
 
 from JarvisBase import JarvisBase
 
-class SpeechParser(JarvisBase):
+class DummySpeechParser(JarvisBase):
+  def __init__(self, audiosrc, callback):
+    JarvisBase.__init__(self)
+
+    self.audiosrc = audiosrc
+    self.callback = callback
+    
+  def inject(self, text):
+    self.callback([word.strip(string.punctuation) for word in text.split()])
+
+class SpeechParser(DummySpeechParser):
   # Here's where you edit the vocabulary.
   # Point these variables to your *.lm and *.dic files. A default exists, 
   # but new models can be created for better accuracy. See instructions at:
@@ -30,8 +40,8 @@ class SpeechParser(JarvisBase):
     vader.set_property("auto-threshold", True)
     
     asr = gst.element_factory_make("pocketsphinx", "asr")
-    asr.connect('partial_result', asr_partial_result)
-    asr.connect('result', asr_result)
+    asr.connect('partial_result', self.asr_partial_result)
+    asr.connect('result', self.asr_result)
     
     # Set the language model and dictionary.
     asr.set_property('lm', SpeechParser.LM_PATH)
@@ -59,9 +69,6 @@ class SpeechParser(JarvisBase):
     self.logger.debug(text)
     self.inject(text)
     
-  def inject(self, text):
-    self.callback([word.strip(string.punctuation) for word in text.split()])
-
 if __name__ == "__main__":
   import gobject 
   gobject.threads_init()
