@@ -1,5 +1,4 @@
-import logging
+from JarvisBase import JarvisBase
 
-class Controller():
-  def __init__(self):
-    self.logger = logging.getLogger(type(self).__name__)
+class Controller(JarvisBase):
+  pass

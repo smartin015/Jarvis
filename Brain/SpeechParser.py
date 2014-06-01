@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import string
+
 import pygst
 pygst.require('0.10')
 import gst
@@ -25,12 +27,9 @@ class SpeechParser(DummySpeechParser):
   DICT_PATH = '/home/semartin/Documents/gstreamer_pocketsphinx_demo/9812.dic'
 
   def __init__(self, audiosrc, callback):
-    JarvisBase.__init__(self)
+    DummySpeechParser.__init__(audiosrc, callback)
     
-    self.audiosrc = audiosrc
-    self.callback = callback
-    
-    # TODO: Make pipeline
+    self.logger.info("Creating audio pipeline")
     pipeline = gst.Pipeline()
     
     conv = gst.element_factory_make("audioconvert", "audioconv")
@@ -66,6 +65,7 @@ class SpeechParser(DummySpeechParser):
     """ This function is called when pocketsphinx gets a 
         full result (spoken command with a pause)
     """
+
     self.logger.debug(text)
     self.inject(text)
     

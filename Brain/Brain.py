@@ -1,8 +1,8 @@
-import logging
+from JarvisBase import JarvisBase
 
-class BinaryObject:
+class BinaryObject(JarvisBase):
   def __init__(self):
-    logging.info("Initializing " + self.name)
+    JarvisBase.__init__(self)
     self.state = 0
     self.turnOff() # On init, resets everything to off (since can't guess current state)
       
@@ -18,17 +18,17 @@ class BinaryObject:
       self.updateState()
       
   def updateState(self):
-    logging.info("Default updateState called for " + self.name)
+    self.logger.info("Default updateState called for " + self.name)
     if self.state:
       self.turnOn()
     else:
       self.turnOff()
       
   def turnOn(self):
-    logging.error("TODO (ON) for " + self.name)
+    self.logger.error("TODO (ON) for " + self.name)
       
   def turnOff(self):
-    logging.error("TODO (OFF) for " + self.name)
+    self.logger.error("TODO (OFF) for " + self.name)
 
 
 class Projector(BinaryObject):
@@ -53,9 +53,10 @@ class PartyMode(ModeObject):
     
         
 # JARVIS CENTRAL PROCESSING
-class JarvisBrain:
+class JarvisBrain(JarvisBase):
   def __init__(self):
-    logging.info("Initializing Jarvis Virtual Control Matrix")
+    JarvisBase.__init__(self)
+    self.logger.info("Initializing Jarvis Virtual Control Matrix")
     
     # object name -> synonyms
     self.objectMap = {
@@ -76,7 +77,7 @@ class JarvisBrain:
     for word in input:
       for k in self.objectMap.keys():
         if word in self.objectMap[k]:
-          logging.info("Commanding " + word)
+          self.logger.info("Commanding " + word)
           self.objects[word].parse(room, input)
           return True
     # TODO if no command detected, keep listening?

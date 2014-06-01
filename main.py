@@ -76,13 +76,6 @@ global_ctx = {
 # Initialize the brain
 brain = JarvisBrain()
 
-# Initialize input devices and attach callbacks (with contexts)
-def gen_callback(ctx):
-  joined_ctx = dict(global_ctx.items() + ctx.items())
-  def cb(input):
-    brain.processInput(joined_ctx, input)
-  return cb
-
 # TODO: We're probably going to have to figure out how to run 
 # multiple gstreamer streams within a single 
 logger.info("Spooling up audio pipelines")
@@ -100,6 +93,14 @@ def gen_kaicong_audio_src(ip):
   src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
   src.set_property("ip", ip)
   return src
+
+# Initialize input devices and attach callbacks (with contexts)
+def gen_callback(ctx):
+  joined_ctx = dict(global_ctx.items() + ctx.items())
+  def cb(input):
+    # TODO: Buffer until "Jarvis" is spoken. Command parser class?
+    brain.processInput(joined_ctx, input)
+  return cb
 
 audio_sources = {
   "livingroom": DummySpeechParser(
@@ -123,6 +124,15 @@ g_loop.daemon = True
 g_loop.start()
 
 # TODO: Setup and run CV stuff as well
+running = True
+while running:
+  #cmd = raw_input("ROOM:")
+  cmd = raw_input("CMD: ")
 
+  if cmd == "quit":
+    print "Exiting..."
+    running = False
+  else:
+    audio_sources['livingroom'].inject(cmd)
 
 
