@@ -6,7 +6,7 @@ int arrLength = 200;
 int flag = arrLength + 1;
 short temp[200];
 
-int IRledPin =  13;    // LED connected to digital pin 13
+int IRledPin =  9;    // LED connected to digital pin 13
 
 boolean arr = false;
 void setup() {
