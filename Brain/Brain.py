@@ -56,11 +56,12 @@ class JarvisBrain(JarvisBase):
     # object name -> synonyms
     self.objectMap = {
         'party': ['party', 'fiesta', 'rave'],
-        'movie': ['movie', 'film', 'video', 'tv'] ,
+        'movie': ['movie', 'film', 'video', 'tv', 'television'],
+        'sleep': ['sleep', 'night', 'bed'],
       'lights': ['lights', 'light', 'lighting'],
       'projector': ['projector', 'screen'],
       'music': ['music', 'song', 'audio', 'sound'],
-      'environment': ['warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'AC', 'heater', 'fan']
+      'environment': ['temperature', 'warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'AC', 'heater', 'fan']
     }
     
     # object name -> actual object to command
