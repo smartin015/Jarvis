@@ -35,11 +35,11 @@ class KaicongAudio(KaicongInput):
 if __name__ == "__main__":
     #Demo of kaicong audio
     import numpy as np
-    from ..Outputs.Speaker import Speaker
+    from Outputs.Speaker import Speaker
     spkr = Speaker()    
     def play(data):
         spkr.play(np.fromstring(data, dtype=np.int16))
-    audio = KaicongAudio("192.168.1.15", play)
+    audio = KaicongAudio("192.168.1.19", play, user="jarvis_admin", pwd="oakdale43")
     audio.run()
     
         

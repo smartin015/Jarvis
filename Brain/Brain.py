@@ -1,45 +1,40 @@
 from JarvisBase import JarvisBase
+import time
 
 class BinaryObject(JarvisBase):
   def __init__(self):
     JarvisBase.__init__(self)
     self.state = 0
-    self.turnOff() # On init, resets everything to off (since can't guess current state)
       
   def parse(self, room, input):
     oldState = self.state
     if 'on' in input:
-      self.state = 1
+      self.turnOn(room)
     elif 'off' in input:
-      self.state = 0
-    
-    # Only run change state if state has changed
-    if self.state != oldState:
-      self.updateState()
+      self.turnOff(room)
       
-  def updateState(self):
-    self.logger.info("Default updateState called for " + self.name)
-    if self.state:
-      self.turnOn()
-    else:
-      self.turnOff()
-      
-  def turnOn(self):
-    self.logger.error("TODO (ON) for " + self.name)
-      
-  def turnOff(self):
-    self.logger.error("TODO (OFF) for " + self.name)
+  def turnOff(self, room):
+    self.logger.error("TODO: Implement turnOff")
 
+  def turnOn(self, room):
+    self.logger.error("TODO: Implement turnOn")
 
+      
 class Projector(BinaryObject):
   name = "Projector"
-      
-  def updateState(self):
-    if self.state:
-      self.turnOn()
-    else:
-      self.turnOff()
-    
+ 
+  def powerbtn(self, room):
+    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
+
+  def turnOff(self, room):
+    self.play_sound("Outputs/VoiceFiles/confirm.wav")
+    self.powerbtn(room)
+    self.powerbtn(room)
+
+  def turnOn(self, room):
+    self.play_sound("Outputs/VoiceFiles/confirm2.wav")
+    self.powerbtn(room)
+
 
 # MODE OBJECTS
 class ModeObject(BinaryObject):
@@ -80,8 +75,8 @@ class JarvisBrain(JarvisBase):
           self.logger.info("Commanding " + word)
           self.objects[word].parse(room, input)
           return True
-    # TODO if no command detected, keep listening?
 
+    return False
         
 if __name__ == "__main__":
   # Interactive console

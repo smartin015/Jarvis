@@ -3,13 +3,13 @@ import serial
 import struct
 
 
-text_file = open("filename.txt", "r")
+text_file = open("IRCommandFiles/ProjectorPower.txt", "r")
 lines = text_file.read().split(', ')
 print lines
 print len(lines)
 text_file.close()
 
-ser = serial.Serial('COM5', 9600)
+ser = serial.Serial('/dev/ttyUSB0', 9600)
  
 time.sleep(0.5)
 

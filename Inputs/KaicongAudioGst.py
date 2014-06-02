@@ -5,6 +5,8 @@ import pygst
 pygst.require('0.10')
 import gst
 
+import gobject
+
 from KaicongAudio import KaicongAudio
 
 class KaicongAudioSource(gst.BaseSrc):
@@ -20,24 +22,34 @@ class KaicongAudioSource(gst.BaseSrc):
                           gst.PAD_ALWAYS,
                           gst.caps_new_any()
                     )
-  
+
+    __gsignals__ = {
+      'packet_received' : (gobject.SIGNAL_RUN_LAST, gobject.TYPE_NONE, ())
+    }  
+
     __gsttemplates__ = (_src_template,)
 
     def __init__(self, *args, **kwargs):
+        self.caps = gst.caps_from_string('audio/x-raw-int, rate=7600, endianness=1234, channels=1, width=16, depth=16, signed=true')
         gst.BaseSrc.__init__(self)
         gst.info("Creating Kaicong src pad")
         self.src_pad = gst.Pad(self._src_template)
         self.src_pad.use_fixed_caps()
 
-        self.caps = gst.caps_from_string('audio/x-raw-int, rate=7600, endianness=1234, channels=1, width=16, depth=16, signed=true')
-
     def set_property(self, name, value):
         if name == 'ip':
-            self.audio = KaicongAudio(value)
+            self.ip = value
+        elif name == 'user':
+            self.user = value
+        elif name == "pwd":
+            self.pwd = value
+        elif name == "on" and value:
+            self.audio = KaicongAudio(self.ip, user=self.user, pwd=self.pwd)
             self.audio.connect()
             gst.info("Connected audio")
 
     def do_create(self, offset, size):
+        self.emit("packet_received")
         assert self.audio
         data = self.audio.read()
         buf = gst.Buffer(data)

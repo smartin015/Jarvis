@@ -9,7 +9,7 @@ from Inputs.KaicongAudioGst import KaicongAudioSource
 from Inputs.KaicongVideo import KaicongVideo
 
 from Brain.Brain import JarvisBrain
-from Brain.SpeechParser import SpeechParser, DummySpeechParser
+from Brain.CommandParser import CommandParser, DummyCommandParser
 
 from Outputs.ArduinoSerial import ArduinoSerial
 from Outputs.RFSerial import RFSerial
@@ -25,7 +25,7 @@ from Outputs.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = TestSerial("LR", 9600) #serial.Serial("COM2", 9600)
+LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 9600) #serial.Serial("COM2", 9600)
 TRACKLIGHT = TestSerial("TL", 9600) #serial.Serial("COM4", 9600)
 RF_BROADCAST = TestSerial("RF", 9600) #serial.Serial("COM1", 9600)
 
@@ -92,6 +92,9 @@ gst.element_register(KaicongAudioSource, 'kaicongaudiosrc', gst.RANK_MARGINAL)
 def gen_kaicong_audio_src(ip):
   src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
   src.set_property("ip", ip)
+  src.set_property("user", "jarvis_admin")
+  src.set_property("pwd", "oakdale43")
+  src.set_property("on", True)
   return src
 
 # Initialize input devices and attach callbacks (with contexts)
@@ -99,11 +102,11 @@ def gen_callback(ctx):
   joined_ctx = dict(global_ctx.items() + ctx.items())
   def cb(input):
     # TODO: Buffer until "Jarvis" is spoken. Command parser class?
-    brain.processInput(joined_ctx, input)
+    return brain.processInput(joined_ctx, input)
   return cb
 
 audio_sources = {
-  "livingroom": DummySpeechParser(
+  "livingroom": CommandParser(
     gen_kaicong_audio_src(KAICONG_LIVINGROOM), gen_callback(livingroom_ctx)
   ),  
 #  "kitchen": SpeechParser(
@@ -134,5 +137,6 @@ while running:
     running = False
   else:
     audio_sources['livingroom'].inject(cmd)
+    audio_sources['livingroom'].send()
 
 
