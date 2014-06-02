@@ -62,7 +62,7 @@ class JarvisBrain(JarvisBase):
     self.objectMap = {
         'party': ['party', 'fiesta', 'rave'],
         'movie': ['movie', 'film', 'video', 'tv', 'television'],
-        'sleep': ['sleep', 'night', 'bed']
+        'sleep': ['sleep', 'night', 'bed'],
       'lights': ['lights', 'light', 'lighting'],
       'projector': ['projector', 'screen'],
       'music': ['music', 'song', 'audio', 'sound'],
