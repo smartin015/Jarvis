@@ -25,7 +25,7 @@ from Outputs.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 9600) #serial.Serial("COM2", 9600)
+LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 9600) #ArduinoSerial("/dev/ttyUSB0", 9600) 
 TRACKLIGHT = TestSerial("TL", 9600) #serial.Serial("COM4", 9600)
 RF_BROADCAST = TestSerial("RF", 9600) #serial.Serial("COM1", 9600)
 
@@ -97,6 +97,10 @@ def gen_kaicong_audio_src(ip):
   src.set_property("on", True)
   return src
 
+def gen_microphone_src(*args, **kwargs):
+  src = gst.element_factory_make("autoaudiosrc", "audiosrc")
+  return src
+
 # Initialize input devices and attach callbacks (with contexts)
 def gen_callback(ctx):
   joined_ctx = dict(global_ctx.items() + ctx.items())
@@ -107,7 +111,7 @@ def gen_callback(ctx):
 
 audio_sources = {
   "livingroom": CommandParser(
-    gen_kaicong_audio_src(KAICONG_LIVINGROOM), gen_callback(livingroom_ctx)
+    gen_microphone_src(KAICONG_LIVINGROOM), gen_callback(livingroom_ctx)
   ),  
 #  "kitchen": SpeechParser(
 #    gen_kaicong_audio_src(KAICONG_KITCHEN), gen_callback(kitchen_ctx)

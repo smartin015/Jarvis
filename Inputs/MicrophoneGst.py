@@ -9,7 +9,7 @@ import gobject
 
 from KaicongAudio import KaicongAudio
 
-class KaicongAudioSource(gst.BaseSrc):
+class MicrophoneSource(gst.BaseSrc):
     __gstdetails__ = (
         "Kaicong Audio src plugin",
         "KaicongAudioGst.py",
@@ -60,32 +60,25 @@ class KaicongAudioSource(gst.BaseSrc):
 
 
 if __name__ == "__main__":
-  import sys
   import gobject 
   gobject.threads_init()
 
-  if len(sys.argv) != 4:
-    print "Usage: %s <ip_address> <user> <pass>" % sys.argv[0]
-    sys.exit(-1)
-
   pipeline = gst.Pipeline("pipe")
 
-  gobject.type_register(KaicongAudioSource)
-  gst.element_register(KaicongAudioSource, 'kaicongaudiosrc', gst.RANK_MARGINAL)
-
-  src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
-  src.set_property("ip", sys.argv[1])
-  src.set_property("user", sys.argv[2])
-  src.set_property("pwd", sys.argv[3])
-  src.set_property("on", True)
+  src = gst.element_factory_make("autoaudiosrc", "audiosrc")
   conv = gst.element_factory_make("audioconvert", "audioconv")
+  conv.set_property("noise-shaping", 4)
+  cheb = gst.element_factory_make("audiocheblimit")
+  cheb.set_property("mode", "high-pass")
+  cheb.set_property("cutoff", 200)
+  cheb.set_property("poles", 4)
   amp = gst.element_factory_make("audioamplify", "audioamp")
-  amp.set_property("amplification", 20)
+  amp.set_property("amplification", 40)
   res = gst.element_factory_make("audioresample", "audioresamp")
   sink = gst.element_factory_make("autoaudiosink", "audiosink")
   
-  pipeline.add(src, conv, amp, res, sink)
-  gst.element_link_many(src, conv, amp, res, sink)
+  pipeline.add(src, conv, cheb, amp, res, sink)
+  gst.element_link_many(src, conv, cheb, amp, res, sink)
   pipeline.set_state(gst.STATE_PLAYING)
 
   main_loop = gobject.MainLoop()

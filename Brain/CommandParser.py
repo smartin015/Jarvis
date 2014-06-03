@@ -73,9 +73,18 @@ class CommandParser(DummyCommandParser):
     pipeline = gst.Pipeline()
     
     self.heartbeat_count = 0
-    audiosrc.connect('packet_received', self.heartbeat)
 
     conv = gst.element_factory_make("audioconvert", "audioconv")
+    conv.set_property("noise-shaping", 4)
+
+    cheb = gst.element_factory_make("audiocheblimit")
+    cheb.set_property("mode", "high-pass")
+    cheb.set_property("cutoff", 200)
+    cheb.set_property("poles", 4)
+
+
+    amp = gst.element_factory_make("audioamplify", "audioamp")
+    amp.set_property("amplification", 60)
     res = gst.element_factory_make("audioresample", "audioresamp")
     
     vader = gst.element_factory_make("vader", "vad")
@@ -94,8 +103,8 @@ class CommandParser(DummyCommandParser):
     
     sink = gst.element_factory_make("fakesink", "fs")
     
-    pipeline.add(audiosrc, conv, res, vader, asr, sink)
-    gst.element_link_many(audiosrc, conv, res, vader, asr, sink)
+    pipeline.add(audiosrc, conv, amp, res, vader, asr, sink)
+    gst.element_link_many(audiosrc, conv, amp, res, vader, asr, sink)
     pipeline.set_state(gst.STATE_PLAYING)
     
   def heartbeat(self, asrc):

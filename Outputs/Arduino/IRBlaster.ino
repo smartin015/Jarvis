@@ -12,7 +12,7 @@ boolean arr = false;
 void setup() {
           //pinMode(ledPin, OUTPUT); 
 
-        Serial.begin(9600);     // opens serial port, sets data rate to 9600 bps
+        Serial.begin(115200);     // opens serial port, sets data rate to 9600 bps
         Serial.print('A');
 }
 
