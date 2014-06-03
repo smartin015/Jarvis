@@ -10,8 +10,9 @@ class IRController(Controller):
     self.ser = ser
   
   def send(self, fil):
+    self.logger.debug("Initializing serial")
     self.ser.init()
-
+    self.logger.debug("Serial ready, sending file")
     with open(fil, "r") as f:
       lines = f.read().split(', ')
 
@@ -21,7 +22,6 @@ class IRController(Controller):
     
     self.ser.write(struct.pack('>h', IRController.END))
 
-    # TODO: Make optional
-    print self.ser.readline()
-    self.logger.debug("Sent %s command" % (fil))
+    response = self.ser.readline()
+    self.logger.debug("Sent %s command, response %s" % (fil, response))
 

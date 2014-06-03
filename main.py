@@ -25,7 +25,7 @@ from Outputs.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 9600) #ArduinoSerial("/dev/ttyUSB0", 9600) 
+LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 115200) #ArduinoSerial("/dev/ttyUSB0", 9600) 
 TRACKLIGHT = TestSerial("TL", 9600) #serial.Serial("COM4", 9600)
 RF_BROADCAST = TestSerial("RF", 9600) #serial.Serial("COM1", 9600)
 
