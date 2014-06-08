@@ -1,25 +1,34 @@
 import time
 import serial
 import struct
+import sys
 
 
 text_file = open("IRCommandFiles/ProjectorPower.txt", "r")
 lines = text_file.read().split(', ')
-print lines
-print len(lines)
 text_file.close()
 
 ser = serial.Serial('/dev/ttyUSB0', 9600)
- 
+r = ser.read(1)
+print r
+assert (r == 'X')
 time.sleep(0.5)
 
+START = 32766
+END = 32765
 
-if ser.read(1) == "A":
-     ser.write(struct.pack('>h', 32766))
-     
-     for x in range(0, len(lines)-1):
-         ser.write(struct.pack('>h', int(float(lines[x]))))
-     
-     ser.write(struct.pack('>h', 32765))
+lines = [START] + lines + [END]
 
-print ser.readline()
+for x in lines:
+   val = int(float(x))
+   ser.write(struct.pack('<h', val))
+   resp = struct.unpack('<h', ser.read(2))[0]
+   assert(val == resp)
+
+ser.flush()
+
+print "Data sent, reading..."
+
+while True:
+  sys.stdout.write(ser.read(1))
+

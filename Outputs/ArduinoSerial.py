@@ -1,20 +1,16 @@
 import serial 
 
 class ArduinoSerial(serial.Serial):
-
-  def __init__(self, port, baud):
-    serial.Serial.__init__(self, port, baud)
-    self.init()
  
-  def init(self):
+  def open(self):
     self.close()
-    self.open()
+    serial.Serial.open(self)
 
     # TODO: Call-response style ping?
-    if self.read(1) == "A":
-      print "Serial connection established"
-    else:
-      raise Exception("Invalid serial connection")
+    c = self.read(1)
+    if c != "A":
+      self.close()
+      raise Exception("Invalid serial connection - starting bit was %s" % c)
 
 
 

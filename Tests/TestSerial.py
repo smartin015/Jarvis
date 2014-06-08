@@ -12,6 +12,12 @@ class TestSerial():
     logging.debug("%s: reading character")
     return "A"
     
+  def close(self):
+    pass
+
+  def open(self):
+    pass
+
   def readline(self):
     return self.read()
     

@@ -1,0 +1,14 @@
+
+
+
+
+
+.build/nano328/src/IRBlaster.cpp : src/IRBlaster.ino
+	@mkdir -p .build/nano328/src
+	@echo [93msrc/IRBlaster.ino[0m
+	@/usr/local/bin/ino preproc  -o $@ $^
+
+
+all : .build/nano328/src/IRBlaster.cpp
+	@true
+

@@ -1,60 +1,55 @@
-short incomingByte = 0;   // for incoming serial data
-short startVar = 32766;
-short stopVar = 32765;
+#include <Arduino.h>
+
+void setup();
+void loop();
+void pulseIR(long microsecs);
+void SendCode();
+#line 1 "src/IRBlaster.ino"
+int incomingByte = 0;   // for incoming serial data
+int startVar = 32766;
+int stopVar = 32765;
 
 int arrLength = 200;
 int flag = arrLength + 1;
-short temp[200];
+int temp[200];
 
-int IRledPin =  9;    // LED connected to digital pin 13
+#define IRledPin 4
+#define LED 13
 
 boolean arr = false;
 void setup() {
-          //pinMode(ledPin, OUTPUT); 
-
-        Serial.begin(115200);     // opens serial port, sets data rate to 9600 bps
-        Serial.print('A');
+  pinMode(IRledPin, OUTPUT);
+  pinMode(LED, OUTPUT);
+  digitalWrite(IRledPin, LOW);
+  digitalWrite(LED, LOW);
+  Serial.begin(9600);     // opens serial port, sets data rate to 9600 bps
+  Serial.print('X');
 }
 
 void loop() {
-  
-    if (Serial.available() >= 2) {
-      //incomingByte = Serial.read();
-      incomingByte = word(Serial.read(),Serial.read());
-      
-      if(flag <= arrLength)
-     {
-       temp[flag] = incomingByte;
-       flag++;
-     }
-     
-      //Serial.println(incomingByte);
-      if (incomingByte == startVar)
-      {
-        //Serial.println(temp[0]);
-        flag = 0;
-      }
-      else if(incomingByte == stopVar)
-      {
-        flag = arrLength + 1;
-        SendCode();
-        Serial.print("\n");
-      }
-     
+  if (Serial.available() >= 2) {
+
+    byte lo = Serial.read();
+    byte hi = Serial.read();
+    incomingByte = word(hi, lo);
+    Serial.write(lo);
+    Serial.write(hi);
+    
+    if (incomingByte == startVar) {
+      digitalWrite(LED, HIGH);
+      flag = 0;
     }
-   
+    else if(incomingByte == stopVar) {
+      digitalWrite(LED, LOW);
+      SendCode(); 
+    }
+    else if (flag <= arrLength) {
+      temp[flag] = incomingByte;
+      flag++;
+    }
+    
+  }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 // This procedure sends a 38KHz pulse to the IRledPin 
 // for a certain # of microseconds. We'll use this whenever we need to send codes
@@ -79,23 +74,14 @@ void pulseIR(long microsecs) {
 }
  
 void SendCode() {
-  
-  //pulseIR(200000);
- 
   for (int i = 0; i < sizeof(temp) - 1; i++){
-   
-    
     if (i%2 == 0) {
-     
-     pulseIR((int)temp[i]);
+      pulseIR((int)temp[i]);
     }
     else
     {
-    
       delayMicroseconds((int)temp[i]);
     }
-    
   }
   Serial.println("DONE");
-  
 }

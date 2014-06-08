@@ -1,16 +1,22 @@
 from JarvisBase import JarvisBase
 import time
+import threading
+
+from Outputs.RGBController import RGBState
 
 class BinaryObject(JarvisBase):
   def __init__(self):
     JarvisBase.__init__(self)
     self.state = 0
-      
-  def parse(self, room, input):
+  
+  def isValid(self, words):
+   return ('on' in words) or ('off' in words)
+     
+  def parse(self, room, words):
     oldState = self.state
-    if 'on' in input:
+    if 'on' in words:
       self.turnOn(room)
-    elif 'off' in input:
+    elif 'off' in words:
       self.turnOff(room)
       
   def turnOff(self, room):
@@ -23,22 +29,23 @@ class BinaryObject(JarvisBase):
 class Projector(BinaryObject):
   name = "Projector"
  
-  def powerbtn(self, room):
-    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
+  def isValid(self, words):
+    return True
 
-  def turnOff(self, room):
+  def parse(self, room, words):
+    room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
     self.play_sound("Outputs/VoiceFiles/confirm.wav")
     self.powerbtn(room)
     self.powerbtn(room)
 
-  def turnOn(self, room):
-    self.play_sound("Outputs/VoiceFiles/confirm2.wav")
-    self.powerbtn(room)
+  def powerbtn(self, room):
+    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
+    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
 
 
 # MODE OBJECTS
 class ModeObject(BinaryObject):
-  def parse(self, room, input):
+  def parse(self, room, words):
     self.state = not self.state
     self.updateState()
         
@@ -69,15 +76,28 @@ class JarvisBrain(JarvisBase):
     self.objects['projector'] = Projector()
     self.objects['party'] = PartyMode()
 
-  def processInput(self, room, input):
-    for word in input:
+  def findTarget(self, command):
+    # TODO: Flatten the mapping (word -> key, not key -> words)
+    for word in command:
       for k in self.objectMap.keys():
         if word in self.objectMap[k]:
-          self.logger.info("Commanding " + word)
-          self.objects[word].parse(room, input)
-          return True
+          return word
+    return None
 
-    return False
+  def isValid(self, command):
+    target = self.findTarget(command)
+    return (target is not None and self.objects[target].isValid(command))
+
+  def processInput(self, room, command):
+    target = self.findTarget(command)
+    if target:
+      self.logger.info("Commanding " + target)
+      t = threading.Thread(target=self.objects[target].parse, args=(room, command))
+      t.daemon = True
+      t.start()
+      return True
+    else:
+      return False
         
 if __name__ == "__main__":
   # Interactive console

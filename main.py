@@ -16,6 +16,7 @@ from Outputs.RFSerial import RFSerial
 
 from Outputs.IRController import IRController
 from Outputs.SwitchController import SwitchController
+from Outputs.RGBController import RGBController, RGBState
 
 from Outputs.RecordingController import RecordingController
 from Outputs.GMusicController import GMusicController
@@ -25,9 +26,10 @@ from Outputs.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = ArduinoSerial("/dev/ttyUSB0", 115200) #ArduinoSerial("/dev/ttyUSB0", 9600) 
+LIVINGROOM_IR = TestSerial("LR", 9600)#ArduinoSerial("/dev/ttyUSB0", 115200, timeout=2) 
 TRACKLIGHT = TestSerial("TL", 9600) #serial.Serial("COM4", 9600)
 RF_BROADCAST = TestSerial("RF", 9600) #serial.Serial("COM1", 9600)
+RGBLIGHT = ArduinoSerial("/dev/ttyACM0", 9600, timeout=4)
 
 MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
 HACKSPACE_IR = RFSerial(RF_BROADCAST, "HACKIR")
@@ -41,6 +43,7 @@ KAICONG_HACKSPACE = "192.168.1.19"
 KAICONG_TODDROOM = "192.168.1.20"
 
 logging.debug("Initializing room contexts")
+# TODO: Per-room voice
 livingroom_ctx = {
   "AC": IRController(LIVINGROOM_IR),
   "projector": IRController(LIVINGROOM_IR),
@@ -71,13 +74,13 @@ global_ctx = {
   "lockitron": LockitronController(),
   "timer": TimerController(),
   "scripts": ScriptController(),
+  "tower": RGBController(RGBLIGHT, default=RGBState.STATE_FADE),
 }
+
 
 # Initialize the brain
 brain = JarvisBrain()
 
-# TODO: We're probably going to have to figure out how to run 
-# multiple gstreamer streams within a single 
 logger.info("Spooling up audio pipelines")
 import gobject 
 gobject.threads_init()
@@ -105,13 +108,20 @@ def gen_microphone_src(*args, **kwargs):
 def gen_callback(ctx):
   joined_ctx = dict(global_ctx.items() + ctx.items())
   def cb(input):
-    # TODO: Buffer until "Jarvis" is spoken. Command parser class?
     return brain.processInput(joined_ctx, input)
   return cb
 
+# Here's where you edit the vocabulary.
+# Point these variables to your *.lm and *.dic files. A default exists, 
+# but new models can be created for better accuracy. See instructions at:
+# http://cmusphinx.sourceforge.net/wiki/tutoriallm
+LM_PATH = '/home/jarvis/Jarvis/Brain/9812.lm'
+DICT_PATH = '/home/jarvis/Jarvis/Brain/9812.dic'
+
 audio_sources = {
   "livingroom": CommandParser(
-    gen_microphone_src(KAICONG_LIVINGROOM), gen_callback(livingroom_ctx)
+    gen_microphone_src(KAICONG_LIVINGROOM), 
+    LM_PATH, DICT_PATH, brain.isValid, gen_callback(livingroom_ctx)
   ),  
 #  "kitchen": SpeechParser(
 #    gen_kaicong_audio_src(KAICONG_KITCHEN), gen_callback(kitchen_ctx)
@@ -141,6 +151,5 @@ while running:
     running = False
   else:
     audio_sources['livingroom'].inject(cmd)
-    audio_sources['livingroom'].send()
 
 

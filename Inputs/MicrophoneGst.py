@@ -72,13 +72,19 @@ if __name__ == "__main__":
   cheb.set_property("mode", "high-pass")
   cheb.set_property("cutoff", 200)
   cheb.set_property("poles", 4)
+
+  cheb2 = gst.element_factory_make("audiocheblimit")
+  cheb2.set_property("mode", "low-pass")
+  cheb2.set_property("cutoff", 3000)
+  cheb2.set_property("poles", 4)
+
   amp = gst.element_factory_make("audioamplify", "audioamp")
-  amp.set_property("amplification", 40)
+  amp.set_property("amplification", 25)
   res = gst.element_factory_make("audioresample", "audioresamp")
   sink = gst.element_factory_make("autoaudiosink", "audiosink")
   
-  pipeline.add(src, conv, cheb, amp, res, sink)
-  gst.element_link_many(src, conv, cheb, amp, res, sink)
+  pipeline.add(src, conv, cheb, cheb2, amp, res, sink)
+  gst.element_link_many(src, conv, amp, cheb, cheb2, res, sink)
   pipeline.set_state(gst.STATE_PLAYING)
 
   main_loop = gobject.MainLoop()

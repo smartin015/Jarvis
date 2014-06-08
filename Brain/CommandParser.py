@@ -3,6 +3,7 @@
 import time
 import string
 from collections import deque
+import threading
 
 import pygst
 pygst.require('0.10')
@@ -12,62 +13,89 @@ import gst
 from JarvisBase import JarvisBase
 
 class DummyCommandParser(JarvisBase):
-  CLEAR_INTERVAL = 3
+  SILENCE_INTERVAL = 2.0 #Seconds
 
-  def __init__(self, audiosrc, callback, trigger="jarvis", maxlength=10):
+  def __init__(self, audiosrc, isValid, callback, trigger="jarvis", maxlength=10):
     JarvisBase.__init__(self)
 
     self.trigger = trigger
     self.audiosrc = audiosrc
     self.callback = callback
+    self.isValid = isValid
 
     self.maxlen = maxlength
-    self.wordbuffer = deque(maxlen = self.maxlen)
-
-    self.active_listen_mode = False
+    self.buf = deque(maxlen = self.maxlen)
 
     self.last_injection = int(time.time())
 
-  def send(self):
-    """ Triggers sending a command - whatever's in the word buffer """
-    command_slice = list(self.wordbuffer)
-    self.wordbuffer.clear()
-    self.logger.info("Sending command: %s" % (" ".join(command_slice)))
-    result = self.callback(command_slice)
+    timerthread = threading.Thread(target=self.worker_thread)
+    timerthread.daemon = True
+    timerthread.start()
 
   def buffer_and_send(self, text):
-    # Automatically timeout old words
-    currtime = int(time.time())
-    if currtime > (self.last_injection + DummyCommandParser.CLEAR_INTERVAL):
-      self.send()
-    self.last_injection = currtime
+    self.buf.extend(text)
+    self.logger.debug(list(self.buf))
+    last_injection = int(time.time())
 
-    self.wordbuffer.extend(text)
-    self.logger.debug(list(self.wordbuffer))
+  def extract_command(self):
+    ntrigs = self.buf.count(self.trigger)
 
-    # Commands only ever valid if the trigger is at the very start or end,
-    # Thus we basically have a CSV of commands by trigger value separator
-    while self.trigger in list(self.wordbuffer):
-      # See if the command evaluates with the trigger as an ending word
-      trigger_idx = list(self.wordbuffer).index(self.trigger)
-      command_slice = [self.wordbuffer.popleft() for _i in xrange(trigger_idx)]
-      self.wordbuffer.popleft() # Pop the trigger
-      self.logger.info("Sending command: %s" % (" ".join(command_slice)))
-      result = self.callback(command_slice)
-    
+    # Pull out all words prefixing a trigger
+    # And attempt to run them as a command.
+    # Leaves a single trigger at the head 
+    # of our buffer on failure, and removes it on success
+    if ntrigs > 0:
+      command_slice = []
+      while self.buf[0] != self.trigger:
+        command_slice.append(self.buf.popleft())
+      if self.isValid(command_slice):
+        self.callback(command_slice)
+        assert(self.buf.popleft() == self.trigger)
+        return True
+
+    # If the above fails and there is more 
+    # than one trigger in our buffer, pop the head trigger
+    # so that we can run the next command
+    if ntrigs > 1:
+      assert(self.buf.popleft() == self.trigger)
+      return True
+    else:
+      # Leave the trigger alone - wait until a pause before running
+      return False
+
+  def worker_thread(self):
+    # Periodically check for pauses in transcription.
+    # Send if a pause follows a target command,
+    # Else expire if too much time elapses
+
+    while True:
+      time.sleep(0.5)
+
+      # Try to pull out commands
+      while self.extract_command():
+        continue
+
+      # If a pause occurs and a trigger is at the start of the word list, 
+      # Try to run what remains as a command
+      currtime = int(time.time())
+      timeout = self.last_injection + DummyCommandParser.SILENCE_INTERVAL
+      if currtime > timeout and len(self.buf):
+        if self.buf[0] == self.trigger:
+          command_slice = [self.buf.popleft() for i in xrange(len(self.buf))]
+          if self.isValid(command_slice):
+            self.callback(command_slice)
+        else:
+          # Discard old stuff
+          for i in xrange(len(self.buf)):
+            self.buf.popleft()
+
   def inject(self, text):
     self.buffer_and_send([word.strip(string.punctuation).lower() for word in text.split()])
 
 class CommandParser(DummyCommandParser):
-  # Here's where you edit the vocabulary.
-  # Point these variables to your *.lm and *.dic files. A default exists, 
-  # but new models can be created for better accuracy. See instructions at:
-  # http://cmusphinx.sourceforge.net/wiki/tutoriallm
-  LM_PATH = '/home/jarvis/Jarvis/Brain/9812.lm'
-  DICT_PATH = '/home/jarvis/Jarvis/Brain/9812.dic'
 
-  def __init__(self, audiosrc, callback):
-    DummyCommandParser.__init__(self, audiosrc, callback)
+  def __init__(self, audiosrc, lm_path, dict_path, isValid, callback):
+    DummyCommandParser.__init__(self, audiosrc, isValid, callback)
     
     self.logger.info("Creating audio pipeline")
     pipeline = gst.Pipeline()
@@ -75,16 +103,21 @@ class CommandParser(DummyCommandParser):
     self.heartbeat_count = 0
 
     conv = gst.element_factory_make("audioconvert", "audioconv")
-    conv.set_property("noise-shaping", 4)
+    #conv.set_property("noise-shaping", 4)
 
     cheb = gst.element_factory_make("audiocheblimit")
     cheb.set_property("mode", "high-pass")
     cheb.set_property("cutoff", 200)
     cheb.set_property("poles", 4)
-
+  
+    cheb2 = gst.element_factory_make("audiocheblimit")
+    cheb2.set_property("mode", "low-pass")
+    cheb2.set_property("cutoff", 3000)
+    cheb2.set_property("poles", 4)
 
     amp = gst.element_factory_make("audioamplify", "audioamp")
-    amp.set_property("amplification", 60)
+    amp.set_property("amplification", 25)
+
     res = gst.element_factory_make("audioresample", "audioresamp")
     
     vader = gst.element_factory_make("vader", "vad")
@@ -95,30 +128,23 @@ class CommandParser(DummyCommandParser):
     asr.connect('result', self.asr_result)
     
     # Set the language model and dictionary.
-    asr.set_property('lm', CommandParser.LM_PATH)
-    asr.set_property('dict', CommandParser.DICT_PATH)
+    asr.set_property('lm', lm_path)
+    asr.set_property('dict', dict_path)
 
     # Now tell gstreamer and pocketsphinx to start converting speech!
     asr.set_property('configured', True)
     
     sink = gst.element_factory_make("fakesink", "fs")
     
-    pipeline.add(audiosrc, conv, amp, res, vader, asr, sink)
+    pipeline.add(audiosrc, conv, cheb, cheb2, amp, res, vader, asr, sink)
     gst.element_link_many(audiosrc, conv, amp, res, vader, asr, sink)
     pipeline.set_state(gst.STATE_PLAYING)
     
-  def heartbeat(self, asrc):
-    # Send if enough of a pause elapses
-    self.heartbeat_count += 1
-    if self.heartbeat_count > 15:
-      self.heartbeat_count = 0
-      self.send()
-
   def asr_partial_result(self, asr, text, uttid):
     """ This function is called when pocketsphinx gets a partial
         transcription of spoken audio. 
     """
-    self.heartbeat_count = 0
+    # TODO: Send activity to the brain
     #self.logger.debug("%sP: %s" % (uttid, text))
     
   def asr_result(self, asr, text, uttid):
