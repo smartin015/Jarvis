@@ -8,14 +8,16 @@ void setup()
 
 void loop()
 {
+
   if (Serial.available() > 0) {
     char cmd = Serial.read();
+    Serial.write(cmd);
     switch (cmd) {
       case 'T':
-        pinMode(AC_PIN, HIGH);
+        digitalWrite(AC_PIN, HIGH);
         break;
       case 'F':
-        pinMode(AC_PIN, LOW);
+        digitalWrite(AC_PIN, LOW);
         break;
       default:
         break;

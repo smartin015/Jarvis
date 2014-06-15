@@ -101,6 +101,11 @@ def gen_kaicong_audio_src(ip):
   return src
 
 def gen_microphone_src(*args, **kwargs):
+  src = gst.element_factory_make("pulsesrc", "src")
+  src.set_property("device", 7)
+  return src
+
+def gen_auto_src(*args, **kwargs):
   src = gst.element_factory_make("autoaudiosrc", "audiosrc")
   return src
 
@@ -141,14 +146,13 @@ g_loop.daemon = True
 g_loop.start()
 
 # TODO: Setup and run CV stuff as well
-running = True
 while running:
   #cmd = raw_input("ROOM:")
   cmd = raw_input("CMD: ")
 
   if cmd == "quit":
     print "Exiting..."
-    running = False
+    break
   else:
     audio_sources['livingroom'].inject(cmd)
 

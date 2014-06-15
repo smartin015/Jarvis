@@ -116,7 +116,7 @@ class CommandParser(DummyCommandParser):
     cheb2.set_property("poles", 4)
 
     amp = gst.element_factory_make("audioamplify", "audioamp")
-    amp.set_property("amplification", 25)
+    amp.set_property("amplification", 10)
 
     res = gst.element_factory_make("audioresample", "audioresamp")
     
