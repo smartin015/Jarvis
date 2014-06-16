@@ -1,0 +1,29 @@
+import time
+import serial
+import struct
+import sys
+
+
+text_file = open(sys.argv[1], "r")
+lines = text_file.read().split(', ')
+
+text_file.close()
+
+ser = serial.Serial('COM20', 9600)
+
+time.sleep(0.5)
+ser.flushInput()
+
+
+
+
+
+if ser.read(1) == "A":
+     ser.write(struct.pack('>h', 32766))
+     
+     for x in lines:
+         ser.write(struct.pack('>h', int(x)))
+     
+     ser.write(struct.pack('>h', 32765))
+
+print ser.readline()
