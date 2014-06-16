@@ -5,8 +5,9 @@ logger.setLevel(logging.DEBUG)
 
 from Tests.TestSerial import TestSerial
 
-from Inputs.KaicongAudioGst import KaicongAudioSource
-from Inputs.KaicongVideo import KaicongVideo
+from Inputs.USBDiscovery import get_connected_usb_devices
+from Inputs.Kaicong.KaicongAudioGst import KaicongAudioSource
+from Inputs.Kaicong.KaicongVideo import KaicongVideo
 
 from Brain.Brain import JarvisBrain
 from Brain.CommandParser import CommandParser, DummyCommandParser
@@ -19,16 +20,18 @@ from Outputs.IRController import IRController
 from Outputs.RelayController import RelayController
 from Outputs.RGBController import RGBController, RGBState
 
-from Outputs.RecordingController import RecordingController
-from Outputs.GMusicController import GMusicController
-from Outputs.LockitronController import LockitronController
-from Outputs.TimerController import TimerController
-from Outputs.ScriptController import ScriptController
+# TODO: Implement these!
+from Outputs.UNIMPLEMENTED.RecordingController import RecordingController
+from Outputs.UNIMPLEMENTED.GMusicController import GMusicController
+from Outputs.UNIMPLEMENTED.LockitronController import LockitronController
+from Outputs.UNIMPLEMENTED.TimerController import TimerController
+from Outputs.UNIMPLEMENTED.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
 # TODO: Do by bus ID
+# TODO: Startup speech indicating which devices missing, plus new devices
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = TestSerial("LR", 9600)#ArduinoSerial("/dev/ttyUSB0", 115200, timeout=2) 
+LIVINGROOM_IR = TestSerial("LR", 9600)
 TRACKLIGHT = Serial("/dev/ttyUSB0", 9600)
 RF_BROADCAST = TestSerial("RF", 9600) 
 RGBLIGHT = ArduinoSerial("/dev/ttyACM0", 9600, timeout=4)
@@ -77,7 +80,6 @@ global_ctx = {
   "scripts": ScriptController(),
   "tower": RGBController(RGBLIGHT, default=RGBState.STATE_FADE),
 }
-
 
 # Initialize the brain
 brain = JarvisBrain()

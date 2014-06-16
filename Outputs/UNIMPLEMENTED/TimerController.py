@@ -1,4 +1,4 @@
-from Controller import Controller
+from Outputs.Controller import Controller
 
 class TimerController(Controller):
   def __init__(self):

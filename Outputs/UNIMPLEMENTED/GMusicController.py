@@ -1,4 +1,4 @@
-from Controller import Controller
+from Outputs.Controller import Controller
 
 class GMusicController(Controller):
   def __init__(self):
