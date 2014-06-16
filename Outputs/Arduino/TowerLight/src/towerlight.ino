@@ -2,6 +2,7 @@
 
 #define PIN 6
 #define NLIGHTS 105
+#define NRING 24
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -10,7 +11,7 @@
 //   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
 //   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NLIGHTS, PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NLIGHTS+NRING, PIN, NEO_GRB + NEO_KHZ800);
 
 // IMPORTANT: To reduce NeoPixel burnout risk, add 1000 uF capacitor across
 // pixel power leads, add 300 - 500 Ohm resistor on first pixel's data input
@@ -108,13 +109,13 @@ void update_party() {
 
 void init_off() {}
 void update_off() {
-  for(int i=0; i < strip.numPixels(); i++) {
+  for(int i=0; i < NLIGHTS; i++) {
     strip.setPixelColor(i, 0);
   }
 }
 
 void init_light() {
-  for(int i=0; i < strip.numPixels(); i++) {
+  for(int i=0; i < NLIGHTS; i++) {
     strip.setPixelColor(i, 120, 128, 128);
   }
 }
@@ -128,11 +129,11 @@ void init_sparkle() {
 }
 void update_sparkle() {
   if (on) {
-    for (int i=0; i < strip.numPixels(); i=i+3) {
+    for (int i=0; i < NLIGHTS; i=i+3) {
       strip.setPixelColor(i+j, 0, 0, 255);
     }
   } else {
-    for (int i=0; i < strip.numPixels(); i=i+3) {
+    for (int i=0; i < NLIGHTS; i=i+3) {
       strip.setPixelColor(i+j, 0);
     }
 
@@ -149,7 +150,7 @@ void init_chase() {
   j = 0;
 }
 void update_chase() {
-  for (int i=0; i < strip.numPixels(); i=i+3) {
+  for (int i=0; i < NLIGHTS; i=i+3) {
     strip.setPixelColor(i+j, 0);
   }
 
@@ -158,7 +159,7 @@ void update_chase() {
     j = 0;
   }
 
-  for (int i=0; i < strip.numPixels(); i=i+3) {
+  for (int i=0; i < NLIGHTS; i=i+3) {
     strip.setPixelColor(i+j, 0, 0, 255);
   }
 }
@@ -192,7 +193,7 @@ void init_rainbow() {
   j = 0; 
 }
 void update_rainbow() {
-  for(int i=0; i<strip.numPixels(); i++) {
+  for(int i=0; i<NLIGHTS; i++) {
     strip.setPixelColor(i, Wheel((i+j) & 255));
   }
   j++;
@@ -205,14 +206,14 @@ void init_rainbowchase() {
 }
 //Theatre-style crawling lights with rainbow effect
 void update_rainbowchase() {
-  for (int i=0; i < strip.numPixels(); i=i+4) {
+  for (int i=0; i < NLIGHTS; i=i+4) {
     strip.setPixelColor(i+k, 0);       
   }
   
   j++;
   k = (k + 1) % 4;
 
-  for (int i=0; i < strip.numPixels(); i=i+4) {
+  for (int i=0; i < NLIGHTS; i=i+4) {
     strip.setPixelColor(i+k, Wheel( (i+j) % 255));    //turn every third pixel on
   }
 }
@@ -224,7 +225,7 @@ void init_flash() {
 }
 void update_flash() {
   // Flash from purple to reddish and back
-  for(int i=0; i < strip.numPixels(); i++) {
+  for(int i=0; i < NLIGHTS; i++) {
     strip.setPixelColor(i, j, 0, j);
   }
 
@@ -302,7 +303,7 @@ void init_fade() {
   }
 
   // And finally clear the strip
-  for(int i=0; i < strip.numPixels(); i++) {
+  for(int i=0; i < NLIGHTS; i++) {
     strip.setPixelColor(i, 0);
   }
 

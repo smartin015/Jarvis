@@ -1,0 +1,71 @@
+Language model created by QuickLM on Tue May 13 09:43:37 EDT 2014
+Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
+
+The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
+
+The code that was used to produce this language model is available in Open Source.
+Please visit http://www.speech.cs.cmu.edu/tools/ for more information
+
+The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
+This model based on a corpus of 8 sentences and 14 words
+
+\data\
+ngram 1=14
+ngram 2=20
+ngram 3=14
+
+\1-grams:
+-0.8751 </s> -0.3010
+-0.8751 <s> -0.2389
+-1.7782 BACKWARD -0.2389
+-1.7782 BROWSER -0.2389
+-1.7782 E-MAIL -0.2389
+-1.7782 FORWARD -0.2389
+-1.7782 JARVIS -0.2389
+-1.7782 LAST -0.2863
+-1.7782 MUSIC -0.2937
+-1.7782 NEW -0.2937
+-1.7782 NEXT -0.2863
+-1.4771 OPEN -0.2863
+-1.7782 PLAYER -0.2389
+-1.4771 WINDOW -0.2389
+
+\2-grams:
+-1.2041 <s> BACKWARD 0.0000
+-1.2041 <s> FORWARD 0.0000
+-1.2041 <s> JARVIS 0.0000
+-1.2041 <s> LAST 0.0000
+-1.2041 <s> NEW 0.0000
+-1.2041 <s> NEXT 0.0000
+-0.9031 <s> OPEN 0.0000
+-0.3010 BACKWARD </s> -0.3010
+-0.3010 BROWSER </s> -0.3010
+-0.3010 E-MAIL </s> -0.3010
+-0.3010 FORWARD </s> -0.3010
+-0.3010 JARVIS </s> -0.3010
+-0.3010 LAST WINDOW 0.0000
+-0.3010 MUSIC PLAYER 0.0000
+-0.3010 NEW E-MAIL 0.0000
+-0.3010 NEXT WINDOW 0.0000
+-0.6021 OPEN BROWSER 0.0000
+-0.6021 OPEN MUSIC 0.0000
+-0.3010 PLAYER </s> -0.3010
+-0.3010 WINDOW </s> -0.3010
+
+\3-grams:
+-0.3010 <s> BACKWARD </s>
+-0.3010 <s> FORWARD </s>
+-0.3010 <s> JARVIS </s>
+-0.3010 <s> LAST WINDOW
+-0.3010 <s> NEW E-MAIL
+-0.3010 <s> NEXT WINDOW
+-0.6021 <s> OPEN BROWSER
+-0.6021 <s> OPEN MUSIC
+-0.3010 LAST WINDOW </s>
+-0.3010 MUSIC PLAYER </s>
+-0.3010 NEW E-MAIL </s>
+-0.3010 NEXT WINDOW </s>
+-0.3010 OPEN BROWSER </s>
+-0.3010 OPEN MUSIC PLAYER
+
+\end\

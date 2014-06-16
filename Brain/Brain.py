@@ -25,6 +25,13 @@ class BinaryObject(JarvisBase):
   def turnOn(self, room):
     self.logger.error("TODO: Implement turnOn")
 
+class MainLight(BinaryObject):
+  def isValid(self, words):
+    return True
+
+  def parse(self, room, words):
+    room['tracklight'].toggle()
+    print "Toggled"
       
 class Projector(BinaryObject):
   name = "Projector"
@@ -75,13 +82,14 @@ class JarvisBrain(JarvisBase):
     self.objects = {}
     self.objects['projector'] = Projector()
     self.objects['party'] = PartyMode()
+    self.objects['lights'] = MainLight()
 
   def findTarget(self, command):
     # TODO: Flatten the mapping (word -> key, not key -> words)
     for word in command:
       for k in self.objectMap.keys():
         if word in self.objectMap[k]:
-          return word
+          return k
     return None
 
   def isValid(self, command):

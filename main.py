@@ -11,11 +11,12 @@ from Inputs.KaicongVideo import KaicongVideo
 from Brain.Brain import JarvisBrain
 from Brain.CommandParser import CommandParser, DummyCommandParser
 
+from serial import Serial
 from Outputs.ArduinoSerial import ArduinoSerial
 from Outputs.RFSerial import RFSerial
 
 from Outputs.IRController import IRController
-from Outputs.SwitchController import SwitchController
+from Outputs.RelayController import RelayController
 from Outputs.RGBController import RGBController, RGBState
 
 from Outputs.RecordingController import RecordingController
@@ -25,10 +26,11 @@ from Outputs.TimerController import TimerController
 from Outputs.ScriptController import ScriptController
 
 # Spool up output devices, create room contexts
+# TODO: Do by bus ID
 logging.debug("Initializing serial devices")
 LIVINGROOM_IR = TestSerial("LR", 9600)#ArduinoSerial("/dev/ttyUSB0", 115200, timeout=2) 
-TRACKLIGHT = TestSerial("TL", 9600) #serial.Serial("COM4", 9600)
-RF_BROADCAST = TestSerial("RF", 9600) #serial.Serial("COM1", 9600)
+TRACKLIGHT = Serial("/dev/ttyUSB0", 9600)
+RF_BROADCAST = TestSerial("RF", 9600) 
 RGBLIGHT = ArduinoSerial("/dev/ttyACM0", 9600, timeout=4)
 
 MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
@@ -49,21 +51,20 @@ livingroom_ctx = {
   "projector": IRController(LIVINGROOM_IR),
   "speakers": IRController(LIVINGROOM_IR),
   "projectorscreen": IRController(LIVINGROOM_IR),
-  "mainlight": SwitchController(MAINLIGHT),
-  "tracklight": SwitchController(TRACKLIGHT),
+  "tracklight": RelayController(TRACKLIGHT),
 }
 
 kitchen_ctx = {
-  "mainlight": SwitchController(KITCHEN),
-  "speakers": SwitchController(KITCHEN),
+  "mainlight": RelayController(KITCHEN),
+  "speakers": RelayController(KITCHEN),
 }
 
 toddroom_ctx = {
-  "mainlight": SwitchController(TODDROOM),
+  "mainlight": RelayController(TODDROOM),
 }
 
 hackspace_ctx = {
-  "mainlight": SwitchController(HACKSPACE),
+  "mainlight": RelayController(HACKSPACE),
   "recording": RecordingController(KAICONG_HACKSPACE),
   "AC": IRController(HACKSPACE_IR),
   "projector": IRController(HACKSPACE_IR),
@@ -120,12 +121,12 @@ def gen_callback(ctx):
 # Point these variables to your *.lm and *.dic files. A default exists, 
 # but new models can be created for better accuracy. See instructions at:
 # http://cmusphinx.sourceforge.net/wiki/tutoriallm
-LM_PATH = '/home/jarvis/Jarvis/Brain/9812.lm'
-DICT_PATH = '/home/jarvis/Jarvis/Brain/9812.dic'
+LM_PATH = '/home/jarvis/Jarvis/Brain/commands.lm'
+DICT_PATH = '/home/jarvis/Jarvis/Brain/commands.dic'
 
 audio_sources = {
   "livingroom": CommandParser(
-    gen_microphone_src(KAICONG_LIVINGROOM), 
+    gen_auto_src(KAICONG_LIVINGROOM), 
     LM_PATH, DICT_PATH, brain.isValid, gen_callback(livingroom_ctx)
   ),  
 #  "kitchen": SpeechParser(
@@ -146,7 +147,7 @@ g_loop.daemon = True
 g_loop.start()
 
 # TODO: Setup and run CV stuff as well
-while running:
+while True:
   #cmd = raw_input("ROOM:")
   cmd = raw_input("CMD: ")
 

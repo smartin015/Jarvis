@@ -1,0 +1,11 @@
+open browser
+new e-mail
+forward
+backward
+next window
+last window
+open music player
+jarvis
+turn on the lights
+turn the lights on
+light
