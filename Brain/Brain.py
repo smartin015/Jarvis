@@ -1,6 +1,7 @@
 from JarvisBase import JarvisBase
 import time
 import threading
+import datetime
 
 from Outputs.RGBController import RGBState
 
@@ -63,8 +64,12 @@ class PartyMode(ModeObject):
         
 # JARVIS CENTRAL PROCESSING
 class JarvisBrain(JarvisBase):
+  ABSORB_MS = 1000
+
   def __init__(self):
     JarvisBase.__init__(self)
+    self.l = threading.Lock()
+    self.last_command_time = datetime.datetime.now()
     self.logger.info("Initializing Jarvis Virtual Control Matrix")
     
     # object name -> synonyms
@@ -96,15 +101,24 @@ class JarvisBrain(JarvisBase):
     target = self.findTarget(command)
     return (target is not None and self.objects[target].isValid(command))
 
+  def timeDelta(self):
+    c = datetime.datetime.now() - self.last_command_time 
+    return (c.days * 24 * 60 * 60 + c.seconds) * 1000 + c.microseconds / 1000.0
+
   def processInput(self, room, command):
     target = self.findTarget(command)
-    if target:
+    #TODO: Potential concurrency issues - should really be using a lock here.
+    self.l.acquire(True)
+    if target and self.timeDelta() > JarvisBrain.ABSORB_MS:
+      self.last_command_time = datetime.datetime.now()
+      self.l.release()
       self.logger.info("Commanding " + target)
       t = threading.Thread(target=self.objects[target].parse, args=(room, command))
       t.daemon = True
       t.start()
       return True
     else:
+      self.l.release()
       return False
         
 if __name__ == "__main__":

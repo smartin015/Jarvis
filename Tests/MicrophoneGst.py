@@ -4,12 +4,15 @@
 import pygst
 pygst.require('0.10')
 import gst
+import gobject
 
 gobject.threads_init()
 
 pipeline = gst.Pipeline("pipe")
 
-src = gst.element_factory_make("autoaudiosrc", "audiosrc")
+src = gst.element_factory_make("pulsesrc", "audiosrc")
+src.set_property("device", 9)
+#src = gst.element_factory_make("autoaudiosrc", "audiosrc")
 conv = gst.element_factory_make("audioconvert", "audioconv")
 conv.set_property("noise-shaping", 4)
 cheb = gst.element_factory_make("audiocheblimit")

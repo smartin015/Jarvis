@@ -94,13 +94,13 @@ class DummyCommandParser(JarvisBase):
 
 class CommandParser(DummyCommandParser):
 
-  def __init__(self, audiosrc, lm_path, dict_path, isValid, callback):
+  def __init__(self, name, audiosrc, lm_path, dict_path, isValid, callback):
     DummyCommandParser.__init__(self, audiosrc, isValid, callback)
     
     self.logger.info("Creating audio pipeline")
     pipeline = gst.Pipeline()
     
-    self.heartbeat_count = 0
+    self.name = name
 
     conv = gst.element_factory_make("audioconvert", "audioconv")
     #conv.set_property("noise-shaping", 4)
@@ -145,7 +145,7 @@ class CommandParser(DummyCommandParser):
         transcription of spoken audio. 
     """
     # TODO: Send activity to the brain
-    #self.logger.debug("%sP: %s" % (uttid, text))
+    self.logger.debug("%s %sP: %s" % (self.name, uttid, text))
     
   def asr_result(self, asr, text, uttid):
     """ This function is called when pocketsphinx gets a 

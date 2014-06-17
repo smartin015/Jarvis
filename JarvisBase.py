@@ -16,6 +16,7 @@ class JarvisBase():
 
   def play_sound(self, fil):
     # TODO: should probably safeguard this to prevent hijacking
+    # TODO: Specify standard directory
     t1 = threading.Thread(target=self._play_sound_process, args=(fil,))
     t1.daemon = True
     t1.start()
