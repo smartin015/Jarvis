@@ -1,5 +1,8 @@
 import time
 
+NLIGHTS = 105
+NRING = 24
+
 class RGBState():
   STATE_OFF = 0
   STATE_LIGHT = 1
@@ -28,6 +31,7 @@ class RGBMultiController():
 
   def setState(self, state):
     self.ser.write(chr(state))
+    time.sleep(0.015)
 
   def manual_update(self):
     self.manual_write(RGBState.CMD_UPDATE, [0]*3)
@@ -50,15 +54,12 @@ if __name__ == "__main__":
 
   con = RGBMultiController(ser)
   con.setState(RGBState.STATE_MANUAL)
-  time.sleep(0.1)
-  print "set manual"
-  N = 105
   for j in xrange(55):
-    for i in xrange(N):
+    for i in xrange(NLIGHTS+NRING):
       con.manual_write(i, [j, 0, 0])  
     con.manual_update()
   for j in xrange(55, -1, -1):
-    for i in xrange(N):
+    for i in xrange(NLIGHTS+NRING):
       con.manual_write(i, [j, 0, 0])
     con.manual_update()
 
