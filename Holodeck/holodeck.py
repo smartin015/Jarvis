@@ -15,7 +15,7 @@ class Pipe():
 
   @classmethod
   def items(self):
-    return self.__dict__.values()
+    return [a for a in self.__dict__.values() if type(a) is str and not a.startswith("__")]
 
 class Holodeck():
   
@@ -82,9 +82,11 @@ class Holodeck():
     #
     # See self.effectClasses for a full list
 
+    state_delta = {}
     for (req, turn_on) in request.items():
       req = self._cmd_to_key(req)
       if turn_on:
+        state_delta[req] = True
         if req in self.activeEffects:
           raise Exception("Effect already in effect")
         
@@ -96,23 +98,28 @@ class Holodeck():
         for badclass in blacklist:
           badeffect = self.activeEffects.get(badclass.__name__, None)
           badeffect.request_exit()
+          state_delta[badclass.__name__] = False
 
         # Inject the new effect into the pipeline
         self.activeEffects[req].inject_into(self.pipelines)
       else:
         self.activeEffects[req].request_exit()
 
-    # TODO: Write back the full state
+    # Write back the change in state
+    return state_delta
+
 
 
 
 if __name__ == "__main__":
+  from serial import Serial
   from Tests.TestSerial import TestSerial
   from Outputs.RelayController import RelayController
   from Outputs.RGBSingleController import RGBSingleController
   from Outputs.RGBMultiController import RGBMultiController
   from Outputs.IRController import IRController
   from effects import *
+  import time
 
   # TODO: Use getmembers?
   effect_list = [
@@ -123,26 +130,26 @@ if __name__ == "__main__":
     # TODO: All effects
   ]
 
-  controls = {
-    "RGBSingle_Window": RGBSingleController(TestSerial("window")),
-    "RGBSingle_Couch": RGBSingleController(TestSerial("couch")),
+  window = RGBSingleController(Serial("/dev/ttyUSB1", 9600))
+  couch = RGBSingleController(Serial("/dev/ttyUSB0", 9600))
     #"RGBMulti_Tower": RGBMultiController(TestSerial("tower")),
     #"IR_AC": IRController(TestSerial("AC")),
-    "Relay_Lights": RelayController(TestSerial("tracklights")),
-  }
+  lights = RelayController(Serial("/dev/ttyUSB2", 9600))
+  time.sleep(1.5) # Need delay at least this long for arduino to startup
 
   def update_room(env):
+    #for (k,v) in env.items():
+    #  print k, v
     # Update the room to match the environment
-    controls['RGBSingle_Window'].write(
+    window.write(
       env[Pipe.WINDOWTOP],
       env[Pipe.WINDOWBOT],
     )
-    controls['RGBSingle_Couch'].write(env[Pipe.FLOOR])
+    couch.write(env[Pipe.FLOOR])
     #controls['RGBMulti_Tower'].write(env['tower']+env['towerRing'])
 
-
     #controls['IR_AC'].setState(env['temp'])
-    controls['Relay_Lights'].set_state(env[Pipe.LIGHTS])
+    lights.set_state(env[Pipe.LIGHTS])
     # TODO: Video screens
 
   # Start up the holdeck

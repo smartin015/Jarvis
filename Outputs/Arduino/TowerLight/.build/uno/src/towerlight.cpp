@@ -2,6 +2,8 @@
 #include <Adafruit_NeoPixel.h>
 void setup();
 void loop();
+void init_manual();
+void update_manual();
 void init_party();
 void update_party();
 void init_off();
@@ -28,9 +30,12 @@ uint32_t Wheel(byte WheelPos);
 #line 1 "src/towerlight.ino"
 //#include <Adafruit_NeoPixel.h>
 
+#define LED 13
 #define PIN 6
 #define NLIGHTS 105
 #define NRING 24
+#define DEFAULT_STATE STATE_FADE
+#define MANUAL_DROPOUT_MS 1000
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -51,7 +56,6 @@ byte j;
 byte k;
 bool on;
 
-
 typedef enum State {
   STATE_OFF,
   STATE_LIGHT,
@@ -62,9 +66,10 @@ typedef enum State {
   STATE_RAINBOW,
   STATE_RAINBOWCHASE,
   STATE_PARTY, 
+  STATE_MANUAL,
   NSTATES
 };
-State state = STATE_FADE;
+State state = DEFAULT_STATE;
 
 typedef void (* FuncPtr)();
 const FuncPtr updaters[NSTATES] = {
@@ -76,7 +81,8 @@ const FuncPtr updaters[NSTATES] = {
   update_triwipe,
   update_rainbow,
   update_rainbowchase,
-  update_party
+  update_party,
+  update_manual
 };
 const FuncPtr initializers[NSTATES] = {
   init_off,
@@ -86,21 +92,19 @@ const FuncPtr initializers[NSTATES] = {
   init_flash, 
   init_triwipe,
   init_rainbow,
-  update_rainbowchase,
-  init_party
+  init_rainbowchase,
+  init_party,
+  init_manual,
 };
 
 void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
-  
-  for (int i = 0; i < NRING; i++) {
-    strip.setPixelColor(i+NLIGHTS, 255, 255, 255);
-  }
-  strip.show();
 
+  pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
 
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.print('A');
   initializers[state]();
 }
@@ -117,6 +121,49 @@ void loop() {
   strip.show();
   delay(dt);
 }
+
+void init_manual() {
+  digitalWrite(LED, HIGH);
+  // We want to stay in init until manual mode finishes.
+  char IRGB[3];
+  while (true) {
+    //if (Serial.available() < 4) 
+    //  continue;
+
+    strip.setPixelColor(5, 255, 255, 255);
+    strip.show();
+    delay(50);
+
+    while (Serial.available())
+      Serial.read();
+
+    /*
+    Serial.readBytes(IRGB, 4);
+    switch (IRGB[0]) {
+      case char(0xff):
+        strip.setPixelColor(5, 255, 255, 255);
+        strip.show();
+        continue;
+      case char(0xfe):
+        strip.setPixelColor(5, 0, 0, 255);
+        strip.show();
+        return;
+      default:
+        //strip.setPixelColor(IRGB[0], IRGB[1], IRGB[2], IRGB[3]);
+        strip.setPixelColor(5, 0, 255, 0);
+        strip.show();
+        
+    }*/
+  }
+  digitalWrite(LED, LOW);
+}
+
+void update_manual() {
+  // Transition back to default state
+  state = DEFAULT_STATE;
+  initializers[DEFAULT_STATE]();
+}
+
 
 int substate;
 int ctr;

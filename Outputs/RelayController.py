@@ -30,3 +30,18 @@ class RelayController(Controller):
       self.off()
     else:
       self.on()
+
+
+if __name__ == "__main__":
+  import serial
+  import time
+  ser = serial.Serial("/dev/ttyUSB2", 9600)
+  time.sleep(1.5)
+  
+  con = RelayController(ser)
+
+  print "Lights on"
+  con.on()
+  time.sleep(1.0)
+  print "Lights off"
+  con.off()

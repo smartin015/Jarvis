@@ -61,6 +61,9 @@ class BattleEffect(Effect):
 class DayEffect(Effect):
 
   def inject_into(self, pipes):
-    pass
+    pipes[P.LIGHTS].insert((self.lights, 1))
+
+  def lights(self, prev):
+    return False
 
 

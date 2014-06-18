@@ -44,6 +44,7 @@ if __name__ == "__main__":
     writeColor(c2)
      
 
+  """
   while True:
     writeGradient()
 
@@ -72,4 +73,4 @@ if __name__ == "__main__":
     writeColor([0, 0, 255])
     time.sleep(0.5)
 
-
+  """

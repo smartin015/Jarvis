@@ -11,9 +11,10 @@ void setup()
 
 void loop()
 {
-
   if (Serial.available() > 0) {
     char cmd = Serial.read();
+    Serial.write(cmd);
+
     switch (cmd) {
       case 'T':
         digitalWrite(AC_PIN, HIGH);
