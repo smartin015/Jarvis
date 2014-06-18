@@ -1,4 +1,5 @@
 from Holodeck.holodeck import Pipe as P
+from Outputs.RGBMultiController import NLIGHTS, NRING
 
 class Effect():
   META = {
@@ -32,6 +33,9 @@ class Effect():
 
 class ForestEffect(Effect):
   
+  def __init__(self):
+    self.counter = 0
+
   def inject_into(self, pipes):
     pipes[P.FLOOR].insert((self.floor, 1))
     pipes[P.WINDOWTOP].insert((self.window_top, 1))
@@ -46,10 +50,20 @@ class ForestEffect(Effect):
   def window_bot(self, prev):
     return [100, 50, 20]
 
+  def post_render(self, holodeck):
+    self.counter += 1
+
 class RainEffect(Effect):
 
   def inject_into(self, pipes):
-    pass
+    pipes[P.TOWER].insert((self.tower, 1))
+    pipes[P.RING].insert((self.ring, 1))
+
+  def tower(self, prev):
+    return [[0, 0, 255]]*105
+
+  def ring(self, prev):
+    return [[128, 128, 255]]*24
 
 
 class BattleEffect(Effect):

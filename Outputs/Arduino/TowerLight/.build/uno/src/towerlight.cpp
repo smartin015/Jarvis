@@ -33,7 +33,7 @@ uint32_t Wheel(byte WheelPos);
 #define LED 13
 #define PIN 6
 #define NLIGHTS 105
-#define NRING 24
+#define NRING 25
 #define DEFAULT_STATE STATE_FADE
 #define MANUAL_DROPOUT_MS 1000
 

@@ -2,7 +2,7 @@ from string import capitalize
 from SortedCollection import SortedCollection
 
 class Pipe():
-  TOWERRING = "towerRing"
+  RING = "towerRing"
   TOWER = "tower"
   LIGHTS = "lights"
   WINDOWIMG = "windowimg"
@@ -116,7 +116,7 @@ if __name__ == "__main__":
   from Tests.TestSerial import TestSerial
   from Outputs.RelayController import RelayController
   from Outputs.RGBSingleController import RGBSingleController
-  from Outputs.RGBMultiController import RGBMultiController
+  from Outputs.RGBMultiController import RGBMultiController, RGBState
   from Outputs.IRController import IRController
   from effects import *
   import time
@@ -132,10 +132,13 @@ if __name__ == "__main__":
 
   window = RGBSingleController(Serial("/dev/ttyUSB1", 9600))
   couch = RGBSingleController(Serial("/dev/ttyUSB0", 9600))
-    #"RGBMulti_Tower": RGBMultiController(TestSerial("tower")),
+  tower = RGBMultiController(Serial("/dev/ttyACM0", 115200))
     #"IR_AC": IRController(TestSerial("AC")),
   lights = RelayController(Serial("/dev/ttyUSB2", 9600))
-  time.sleep(1.5) # Need delay at least this long for arduino to startup
+  time.sleep(2.5) # Need delay at least this long for arduino to startup
+
+  tower.setState(RGBState.STATE_MANUAL)
+  time.sleep(1.0)
 
   def update_room(env):
     #for (k,v) in env.items():
@@ -146,8 +149,11 @@ if __name__ == "__main__":
       env[Pipe.WINDOWBOT],
     )
     couch.write(env[Pipe.FLOOR])
-    #controls['RGBMulti_Tower'].write(env['tower']+env['towerRing'])
-
+    
+    if env[Pipe.TOWER] and env[Pipe.RING]:
+      for (i,c) in enumerate(env[Pipe.TOWER]+env[Pipe.RING]):
+        tower.manual_write(i, c)
+      tower.manual_update()
     #controls['IR_AC'].setState(env['temp'])
     lights.set_state(env[Pipe.LIGHTS])
     # TODO: Video screens
@@ -158,3 +164,5 @@ if __name__ == "__main__":
   # Test to see what the deck does
   print deck.handle({'day': True, 'rain': True, 'forest': True})
   deck.update()
+
+  time.sleep(3.0)
