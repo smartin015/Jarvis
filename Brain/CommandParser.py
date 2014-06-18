@@ -13,7 +13,7 @@ import gst
 from JarvisBase import JarvisBase
 
 class DummyCommandParser(JarvisBase):
-  SILENCE_INTERVAL = 2.0 #Seconds
+  SILENCE_INTERVAL = 2.5 #Seconds
 
   def __init__(self, audiosrc, isValid, callback, trigger="jarvis", maxlength=10):
     JarvisBase.__init__(self)
@@ -112,11 +112,11 @@ class CommandParser(DummyCommandParser):
   
     cheb2 = gst.element_factory_make("audiocheblimit")
     cheb2.set_property("mode", "low-pass")
-    cheb2.set_property("cutoff", 3000)
+    cheb2.set_property("cutoff", 2500)
     cheb2.set_property("poles", 4)
 
     amp = gst.element_factory_make("audioamplify", "audioamp")
-    amp.set_property("amplification", 10)
+    amp.set_property("amplification", 15)
 
     res = gst.element_factory_make("audioresample", "audioresamp")
     

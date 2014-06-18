@@ -3,7 +3,7 @@ import time
 import threading
 import datetime
 
-from Outputs.RGBController import RGBState
+from Outputs.RGBStateController import RGBState
 
 class BinaryObject(JarvisBase):
   def __init__(self):
@@ -32,6 +32,7 @@ class MainLight(BinaryObject):
 
   def parse(self, room, words):
     room['tracklight'].toggle()
+    #self.play_sound("Outputs/VoiceFiles/confirm2.wav")
     print "Toggled"
       
 class Projector(BinaryObject):
@@ -42,13 +43,13 @@ class Projector(BinaryObject):
 
   def parse(self, room, words):
     room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
-    self.play_sound("Outputs/VoiceFiles/confirm.wav")
+    #self.play_sound("Outputs/VoiceFiles/confirm.wav")
     self.powerbtn(room)
     self.powerbtn(room)
 
   def powerbtn(self, room):
-    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
-    room['projector'].send("/home/jarvis/Jarvis/Outputs/IRCommandFiles/ProjectorPower.txt")
+    room['projector'].send("ProjectorPower.txt")
+    room['projector'].send("ProjectorPower.txt")
 
 
 # MODE OBJECTS
@@ -56,11 +57,47 @@ class ModeObject(BinaryObject):
   def parse(self, room, words):
     self.state = not self.state
     self.updateState()
+       
+
+class PartyMode(BinaryObject):
+
+  def __init__(self):
+    BinaryObject.__init__(self)
+    self.partying = False
+
+  def isValid(self, words):
+    return True
+
+  def parse(self, room, words):
+    if self.partying:
+      self.partying = False
+      print "Stopping the party :("
+      return
+
+    print "Partying..."
+    self.partying = True
+    t = threading.Thread(target=self.party, args=(room,))
+    t.start()
+
+    #self.play_sound("Outputs/VoiceFiles/confirm.wav")
+  def party(self, room):
+    import random
+    self.play_sound("Outputs/VoiceFiles/mariachi.wav")
+
+    while self.partying:
+      cols = [random.randint(0, 255) for i in xrange(3)]
+      cols2 = [random.randint(0, 255) for i in xrange(3)]
+      room['windowlight'].write(cols, cols2)
+  
+      cols3 = [random.randint(0, 255) for i in xrange(3)]
+      room['couchlight'].write(cols3)
+      time.sleep(0.1)
+
+    # Turn things off
+    room['windowlight'].clear()
+    room['couchlight'].clear()
+
         
-        
-class PartyMode(ModeObject):
-  name = "Party Mode"
-    
         
 # JARVIS CENTRAL PROCESSING
 class JarvisBrain(JarvisBase):

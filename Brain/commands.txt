@@ -1,11 +1,7 @@
-open browser
-new e-mail
-forward
-backward
-next window
-last window
-open music player
+music
 jarvis
-turn on the lights
-turn the lights on
+lights
 light
+projector
+party
+fiesta

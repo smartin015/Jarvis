@@ -1,7 +1,7 @@
 import logging
 
 class TestSerial():
-  def __init__(self, port, baud):
+  def __init__(self, port, baud=None):
     logging.debug("Test Serial: %s @ %s" % (port, baud))
     self.port = port
 

@@ -1,4 +1,4 @@
-Language model created by QuickLM on Mon Jun 16 16:43:30 EDT 2014
+Language model created by QuickLM on Tue Jun 17 18:15:19 EDT 2014
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -7,89 +7,47 @@ The code that was used to produce this language model is available in Open Sourc
 Please visit http://www.speech.cs.cmu.edu/tools/ for more information
 
 The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
-This model based on a corpus of 11 sentences and 19 words
+This model based on a corpus of 7 sentences and 9 words
 
 \data\
-ngram 1=19
-ngram 2=30
-ngram 3=23
+ngram 1=9
+ngram 2=14
+ngram 3=7
 
 \1-grams:
--0.9128 </s> -0.3010
--0.9128 <s> -0.2444
--1.9542 BACKWARD -0.2444
--1.9542 BROWSER -0.2444
--1.9542 E-MAIL -0.2444
--1.9542 FORWARD -0.2444
--1.9542 JARVIS -0.2444
--1.9542 LAST -0.2913
--1.9542 LIGHT -0.2444
--1.6532 LIGHTS -0.2333
--1.9542 MUSIC -0.2962
--1.9542 NEW -0.2962
--1.9542 NEXT -0.2913
--1.6532 ON -0.2333
--1.6532 OPEN -0.2913
--1.9542 PLAYER -0.2444
--1.6532 THE -0.2913
--1.6532 TURN -0.2813
--1.6532 WINDOW -0.2444
+-0.7782 </s> -0.3010
+-0.7782 <s> -0.2218
+-1.6232 FIESTA -0.2218
+-1.6232 JARVIS -0.2218
+-1.6232 LIGHT -0.2218
+-1.6232 LIGHTS -0.2218
+-1.6232 MUSIC -0.2218
+-1.6232 PARTY -0.2218
+-1.6232 PROJECTOR -0.2218
 
 \2-grams:
--1.3424 <s> BACKWARD 0.0000
--1.3424 <s> FORWARD 0.0000
--1.3424 <s> JARVIS 0.0000
--1.3424 <s> LAST 0.0000
--1.3424 <s> LIGHT 0.0000
--1.3424 <s> NEW 0.0000
--1.3424 <s> NEXT 0.0000
--1.0414 <s> OPEN 0.0000
--1.0414 <s> TURN 0.0000
--0.3010 BACKWARD </s> -0.3010
--0.3010 BROWSER </s> -0.3010
--0.3010 E-MAIL </s> -0.3010
--0.3010 FORWARD </s> -0.3010
+-1.1461 <s> FIESTA 0.0000
+-1.1461 <s> JARVIS 0.0000
+-1.1461 <s> LIGHT 0.0000
+-1.1461 <s> LIGHTS 0.0000
+-1.1461 <s> MUSIC 0.0000
+-1.1461 <s> PARTY 0.0000
+-1.1461 <s> PROJECTOR 0.0000
+-0.3010 FIESTA </s> -0.3010
 -0.3010 JARVIS </s> -0.3010
--0.3010 LAST WINDOW 0.0000
 -0.3010 LIGHT </s> -0.3010
--0.6021 LIGHTS </s> -0.3010
--0.6021 LIGHTS ON -0.1761
--0.3010 MUSIC PLAYER 0.0000
--0.3010 NEW E-MAIL 0.0000
--0.3010 NEXT WINDOW 0.0000
--0.6021 ON </s> -0.3010
--0.6021 ON THE 0.0000
--0.6021 OPEN BROWSER 0.0000
--0.6021 OPEN MUSIC 0.0000
--0.3010 PLAYER </s> -0.3010
--0.3010 THE LIGHTS 0.0000
--0.6021 TURN ON -0.1761
--0.6021 TURN THE 0.0000
--0.3010 WINDOW </s> -0.3010
+-0.3010 LIGHTS </s> -0.3010
+-0.3010 MUSIC </s> -0.3010
+-0.3010 PARTY </s> -0.3010
+-0.3010 PROJECTOR </s> -0.3010
 
 \3-grams:
--0.3010 <s> BACKWARD </s>
--0.3010 <s> FORWARD </s>
+-0.3010 <s> FIESTA </s>
 -0.3010 <s> JARVIS </s>
--0.3010 <s> LAST WINDOW
 -0.3010 <s> LIGHT </s>
--0.3010 <s> NEW E-MAIL
--0.3010 <s> NEXT WINDOW
--0.6021 <s> OPEN BROWSER
--0.6021 <s> OPEN MUSIC
--0.6021 <s> TURN ON
--0.6021 <s> TURN THE
--0.3010 LAST WINDOW </s>
--0.3010 LIGHTS ON </s>
--0.3010 MUSIC PLAYER </s>
--0.3010 NEW E-MAIL </s>
--0.3010 NEXT WINDOW </s>
--0.3010 ON THE LIGHTS
--0.3010 OPEN BROWSER </s>
--0.3010 OPEN MUSIC PLAYER
--0.6021 THE LIGHTS </s>
--0.6021 THE LIGHTS ON
--0.3010 TURN ON THE
--0.3010 TURN THE LIGHTS
+-0.3010 <s> LIGHTS </s>
+-0.3010 <s> MUSIC </s>
+-0.3010 <s> PARTY </s>
+-0.3010 <s> PROJECTOR </s>
 
 \end\

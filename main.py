@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import threading
 import logging
 logger = logging.getLogger('simple_example')
@@ -18,7 +20,8 @@ from Outputs.RFSerial import RFSerial
 
 from Outputs.IRController import IRController
 from Outputs.RelayController import RelayController
-from Outputs.RGBController import RGBController, RGBState
+from Outputs.RGBSingleController import RGBSingleController
+from Outputs.RGBStateController import RGBStateController, RGBState
 
 # TODO: Implement these!
 from Outputs.UNIMPLEMENTED.RecordingController import RecordingController
@@ -31,29 +34,12 @@ from Outputs.UNIMPLEMENTED.ScriptController import ScriptController
 # TODO: Do by bus ID
 # TODO: Startup speech indicating which devices missing, plus new devices
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = TestSerial("LR", 9600)
-TRACKLIGHT = Serial("/dev/ttyUSB0", 9600)
-RF_BROADCAST = TestSerial("RF", 9600) 
-RGBLIGHT = TestSerial("/dev/ttyACM0", 9600)#, timeout=4)
-
-MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
-HACKSPACE_IR = RFSerial(RF_BROADCAST, "HACKIR")
-HACKSPACE = RFSerial(RF_BROADCAST, "HACK")
-KITCHEN = RFSerial(RF_BROADCAST, "KITCHEN")
-TODDROOM = RFSerial(RF_BROADCAST, "TODD")
-
-KAICONG_LIVINGROOM = "192.168.1.19"
-KAICONG_KITCHEN = "192.168.1.17"
-KAICONG_HACKSPACE = "192.168.1.19"
-KAICONG_TODDROOM = "192.168.1.20"
-
-logging.debug("Initializing room contexts")# TODO: Do by bus ID
-# TODO: Startup speech indicating which devices missing, plus new devices
-logging.debug("Initializing serial devices")
-LIVINGROOM_IR = TestSerial("LR", 9600)
-TRACKLIGHT = Serial("/dev/ttyUSB0", 9600)
-RF_BROADCAST = TestSerial("RF", 9600) 
-RGBLIGHT = ArduinoSerial("/dev/ttyACM0", 9600, timeout=4)
+LIVINGROOM_IR = TestSerial("LR")
+TRACKLIGHT = Serial("/dev/ttyUSB2", 9600)
+RF_BROADCAST = TestSerial("RF") 
+RGBLIGHT = TestSerial("/dev/ttyACM0")#, timeout=4)
+WINDOWLIGHT = Serial("/dev/ttyUSB1", 9600)
+COUCHLIGHT = Serial("/dev/ttyUSB0", 9600)
 
 MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
 HACKSPACE_IR = RFSerial(RF_BROADCAST, "HACKIR")
@@ -75,6 +61,8 @@ livingroom_ctx = {
   "speakers": IRController(LIVINGROOM_IR),
   "projectorscreen": IRController(LIVINGROOM_IR),
   "tracklight": RelayController(TRACKLIGHT),
+  "windowlight": RGBSingleController(WINDOWLIGHT),
+  "couchlight": RGBSingleController(COUCHLIGHT)
 }
 
 
@@ -99,7 +87,7 @@ global_ctx = {
   "lockitron": LockitronController(),
   "timer": TimerController(),
   "scripts": ScriptController(),
-  "tower": RGBController(RGBLIGHT, default=RGBState.STATE_FADE),
+  "tower": RGBStateController(RGBLIGHT, default=RGBState.STATE_FADE),
 }
 
 # Initialize the brain
@@ -151,11 +139,11 @@ livingroom_cb = gen_callback(livingroom_ctx)
 
 audio_sources = {
   "livingroom": CommandParser("lr",
-    gen_microphone_src(9), 
+    gen_microphone_src(3), 
     LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
   ), 
   "livingroom_desks": CommandParser("lrd",
-    gen_microphone_src(15),
+    gen_microphone_src(5),
     LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
   ),
 #  "kitchen": SpeechParser(

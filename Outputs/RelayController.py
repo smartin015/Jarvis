@@ -11,6 +11,12 @@ class RelayController(Controller):
   def is_on(self):
     return self.is_on
 
+  def set_state(self, isOn):
+    if isOn:
+      self.on()
+    else:
+      self.off()
+
   def on(self):
     self.ser.write('T')
     self.is_on = True
