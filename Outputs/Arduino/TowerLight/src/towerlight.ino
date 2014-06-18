@@ -75,7 +75,6 @@ void setup() {
   digitalWrite(LED, HIGH);
 
   Serial.begin(115200);
-  Serial.print('A');
   initializers[state]();
 }
 
@@ -93,37 +92,31 @@ void loop() {
 }
 
 void init_manual() {
+  char i = 0;
   digitalWrite(LED, HIGH);
   // We want to stay in init until manual mode finishes.
   char IRGB[3];
+
+  while (Serial.available()) Serial.read();
+
   while (true) {
-    //if (Serial.available() < 4) 
-    //  continue;
 
-    strip.setPixelColor(5, 255, 255, 255);
-    strip.show();
-    delay(50);
+    while (Serial.available()) {
+      IRGB[i++] = Serial.read();
+      
+      if (i != 4) continue;
 
-    while (Serial.available())
-      Serial.read();
-
-    /*
-    Serial.readBytes(IRGB, 4);
-    switch (IRGB[0]) {
-      case char(0xff):
-        strip.setPixelColor(5, 255, 255, 255);
-        strip.show();
-        continue;
-      case char(0xfe):
-        strip.setPixelColor(5, 0, 0, 255);
-        strip.show();
-        return;
-      default:
-        //strip.setPixelColor(IRGB[0], IRGB[1], IRGB[2], IRGB[3]);
-        strip.setPixelColor(5, 0, 255, 0);
-        strip.show();
-        
-    }*/
+      i = 0;
+      switch (IRGB[0]) {
+        case char(0xff):
+          strip.show();
+          continue;
+        case char(0xfe):
+          return;
+        default:
+          strip.setPixelColor(IRGB[0], IRGB[1], IRGB[2], IRGB[3]);
+      }
+    }
   }
   digitalWrite(LED, LOW);
 }

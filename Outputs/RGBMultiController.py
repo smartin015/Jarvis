@@ -30,39 +30,37 @@ class RGBMultiController():
     self.ser.write(chr(state))
 
   def manual_update(self):
-    self.ser.write(chr(RGBState.CMD_UPDATE)*4)
+    self.manual_write(RGBState.CMD_UPDATE, [0]*3)
+    # Delay determined empirically. 
+    # This is the lowest we could get before inconsistencies showed up
+    time.sleep(0.0095) 
 
   def manual_write(self, i, rgb):
-    rgb = [chr(c) for c in rgb]
-    self.ser.write(chr(i) + "".join(rgb))
+    cmd = chr(i) + "".join([chr(c) for c in rgb])
+    self.ser.write(cmd)
 
   def manual_exit(self):
-    self.ser.write(chr(RGBState.CMD_EXIT_MANUAL)*4)
+    self.manual_write(RGBState.CMD_EXIT_MANUAL, [0]*3)
 
 if __name__ == "__main__":
   import serial
   import time
   ser = serial.Serial("/dev/ttyACM0", 115200)
-  time.sleep(1.5)
+  time.sleep(3.0)
 
   con = RGBMultiController(ser)
-
-  #while True:
-  #  sstr = raw_input("State: ")
-  #  con.setState(int(sstr))
-
-
   con.setState(RGBState.STATE_MANUAL)
+  time.sleep(0.1)
   print "set manual"
-  time.sleep(2.0)
-  con.manual_write(5, [255, 0, 0])
-  con.manual_update()
-  print "wrote R"
-  time.sleep(2.0)
-  con.manual_write(5, [0, 255, 0])
-  con.manual_update()
-  print "wrote G"
-  time.sleep(2.0)
+  N = 105
+  for j in xrange(55):
+    for i in xrange(N):
+      con.manual_write(i, [j, 0, 0])  
+    con.manual_update()
+  for j in xrange(55, -1, -1):
+    for i in xrange(N):
+      con.manual_write(i, [j, 0, 0])
+    con.manual_update()
 
   con.manual_exit()
     

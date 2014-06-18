@@ -38,10 +38,10 @@ class ForestEffect(Effect):
     pipes[P.WINDOWBOT].insert((self.window_bot, 1))
 
   def floor(self, prev):
-    return [0, 255, 0]
+    return [55, 155, 55]
 
   def window_top(self, prev):
-    return [0, 0, 255]
+    return [158, 158, 255]
 
   def window_bot(self, prev):
     return [100, 50, 20]
@@ -64,6 +64,6 @@ class DayEffect(Effect):
     pipes[P.LIGHTS].insert((self.lights, 1))
 
   def lights(self, prev):
-    return False
+    return True
 
 
