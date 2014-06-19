@@ -36,57 +36,36 @@ def blur_blit(img, last, curr, ghost=0.25):
 
 def sweep(img1, img2):
   start = 0
+  mid = 60
+  overlap = 10
   end = 100
   delta = DELTA
-  fade_delay = 20
-  end_movement = 40
   ghost = 0.50
+  alpha_end = 150
 
   img1_start = float(-delta)
-  img2_start = float(-1.5*delta)
+  img2_start = float(-2*delta)
 
   #screen.blit(img2,(img2_start,0))
   screen.blit(img1,(img1_start,0))
   pygame.display.flip()
   time.sleep(2.0)
-  
 
-  img2.set_alpha(255)
-  last_v1 = 0
-  last_v2 = 0
   for i in xrange(start, end):
-    v1 = easeInOutQuad(i, start, delta, end)
-    v2 = easeInOutQuad(i, start+40, delta/2, end)
+    v = easeInOutQuad(i, start, delta, end) 
 
-    if i > end - end_movement:
-      alpha = 255
-    elif i > fade_delay:
-      alpha = (i-fade_delay) * (255.0/float(end-fade_delay-end_movement))
-    else:
-      alpha = 0
-
-    #img2.set_alpha(alpha)
-    #screen.blit(img2,(img2_start+v2,0)) #image 2 in background
-
-    #img1.set_alpha((255-alpha)*ghost)
-    #screen.blit(img1,(img1_start+last_v1,0))
-    img1.set_alpha((255-alpha))
-    screen.blit(img1,(img1_start+v1,0))
+    if i < mid+overlap:
+      alpha = i * (alpha_end/float(mid+overlap))  
+      img1.set_alpha((alpha_end-alpha))
+      screen.blit(img1,(img1_start+v,0))
     
-
-    
+    if i > mid-overlap:
+      alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
+      img2.set_alpha(alpha)
+      screen.blit(img2,(img2_start+v,0))
+  
     pygame.display.flip()
-
-    last_v1 = v1
-    last_v2 = v2
     clock.tick(30)
-
-
-  time.sleep(1.0)
-
-
-    
-
 
 def loadimg(path):
   img = pygame.image.load(path).convert()
