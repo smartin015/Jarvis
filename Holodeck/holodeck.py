@@ -113,6 +113,7 @@ def create_deck():
     RainEffect,
     BattleEffect,
     DayEffect,
+    PaulEffect,
     # TODO: All effects
   ]
 
@@ -156,6 +157,6 @@ if __name__ == "__main__":
   deck = create_deck()
 
   # Test to see what the deck does
-  print deck.handle({'day': True, 'rain': True, 'forest': True})
+  print deck.handle({'paul': True})
   deck.update()
 

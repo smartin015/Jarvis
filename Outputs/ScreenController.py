@@ -7,7 +7,7 @@ import threading
 
 PORT = 9808
 SW,SH = 1920, 1080
-DELTA = 400
+DELTA = 500
 SCALE_DELTA = 10
 VSTART = 0
 IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
@@ -46,7 +46,6 @@ class ScreenServer(threading.Thread):
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
 
-    img1 = loadimg("Assets/Images/grassland.jpg")
     last_img = None
     while True:
       c, addr = self.s.accept()     # Establish connection with client.
@@ -85,9 +84,9 @@ class ScreenServer(threading.Thread):
 
   def sweep(self, img1, img2):
     start = 0
-    mid = 60
+    mid = 50
     overlap = 10
-    end = 100
+    end = 120
     alpha_end = 150
     img1_start = float(-self.delta)
     img2_start = float(-2*self.delta)
@@ -146,7 +145,7 @@ class ScreenServer(threading.Thread):
 
       
 
-class ScreenController(threading.Thread):
+class ScreenController():
   def __init__(self, host, port):
     self.host = host
     self.port = port

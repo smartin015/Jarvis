@@ -45,7 +45,7 @@ class ForestEffect(Effect):
     return [55, 155, 55]
 
   def window_top(self, prev):
-    return [158, 158, 255]
+    return [255, 0, 0]
 
   def window_bot(self, prev):
     return [100, 50, 20]
@@ -60,10 +60,10 @@ class RainEffect(Effect):
     pipes[P.RING].insert((self.ring, 1))
 
   def tower(self, prev):
-    return [[0, 0, 255]]*105
+    return [[0, 0, 255]]*NLIGHTS
 
   def ring(self, prev):
-    return [[128, 128, 255]]*24
+    return [[128, 128, 255]]*NRING
 
 
 class BattleEffect(Effect):
@@ -79,5 +79,25 @@ class DayEffect(Effect):
 
   def lights(self, prev):
     return True
+
+class PaulEffect(Effect):
+
+  def inject_into(self, pipes):
+    pipes[P.FLOOR].insert((self.floor, 1))
+    pipes[P.WINDOWTOP].insert((self.window_top, 1))
+    pipes[P.WINDOWBOT].insert((self.window_bot, 1))
+
+  def floor(self, prev):
+    return [80, 180, 0]
+
+  def window_top(self, prev):
+    return [20, 100, 255]
+    #sky blue: return [20, 100, 255]
+	#plains grass: return [80, 180, 0] 
+	#sandish: return [180, 140, 100]
+
+  def window_bot(self, prev):
+    return [100, 50, 20]
+
 
 
