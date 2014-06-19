@@ -1,0 +1,40 @@
+body{ background-color: gray;} 
+
+.tabs {
+    width: 100%;
+	
+	padding: 0px 0px 0px 0px;
+	margin: 0px 0px 0px 0px;
+}
+.tabsli {
+	border: 1px solid black;
+    font-size: 2.5em;
+    float: left;
+    width: 24.5%;
+	text-align: center;
+}
+
+.tabcontentul {
+	width: 100%;
+	margin-top: 6%;
+	padding: 0px 0px 0px 0px;
+	
+	list-style-type: none;
+}
+.tabcontentli {
+	width:24.5%;
+	padding:0px 0px 0px 0px;
+	float:left;
+	height:7%;
+	border:1px solid black;
+    font-size: 2em;
+}
+.tabcontentli:active {
+	width:24.5%;
+	padding:0px 0px 0px 0px;
+	float:left;
+	height:7%;
+	border:1px solid black;
+    font-size: 2em;
+	background-color:blue;
+}
