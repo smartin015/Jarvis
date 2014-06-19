@@ -3,7 +3,7 @@ import time
 import threading
 import datetime
 
-from Outputs.RGBStateController import RGBState
+from Outputs.RGBMultiController import RGBState
 
 class BinaryObject(JarvisBase):
   def __init__(self):

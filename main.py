@@ -21,7 +21,7 @@ from Outputs.RFSerial import RFSerial
 from Outputs.IRController import IRController
 from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
-from Outputs.RGBStateController import RGBStateController, RGBState
+from Outputs.RGBMultiController import RGBMultiController, RGBState
 
 # TODO: Implement these!
 from Outputs.UNIMPLEMENTED.RecordingController import RecordingController
@@ -87,7 +87,7 @@ global_ctx = {
   "lockitron": LockitronController(),
   "timer": TimerController(),
   "scripts": ScriptController(),
-  "tower": RGBStateController(RGBLIGHT, default=RGBState.STATE_FADE),
+  "tower": RGBMultiController(RGBLIGHT, default=RGBState.STATE_FADE),
 }
 
 # Initialize the brain
