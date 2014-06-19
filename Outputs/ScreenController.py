@@ -3,19 +3,7 @@ from pygame.locals import *
 import os
 import time
 
-DELTA = 200
-
-def tween(img1, img2):
-  for i in xrange(255):
-    img1.set_alpha(255-i)
-    img2.set_alpha(i)
-    screen.fill((0, 0, 0))
-    screen.blit(img1,(0,0))
-    screen.blit(img2,(0,0))
-    pygame.display.flip()
-    clock.tick(30)
-
-
+DELTA = 400
 
 def easeInOutQuad(currtime, start, delta, duration):
   currtime = float(currtime)
@@ -31,25 +19,14 @@ def easeInOutQuad(currtime, start, delta, duration):
   currtime -= 1; 
   return -delta/2 * (currtime*(currtime-2) - 1) + start;
 
-def blur_blit(img, last, curr, ghost=0.25):
-  pass
-
-def sweep(img1, img2):
+def sweep(img1, img2, delta):
   start = 0
   mid = 60
   overlap = 10
   end = 100
-  delta = DELTA
-  ghost = 0.50
   alpha_end = 150
-
   img1_start = float(-delta)
   img2_start = float(-2*delta)
-
-  #screen.blit(img2,(img2_start,0))
-  screen.blit(img1,(img1_start,0))
-  pygame.display.flip()
-  time.sleep(2.0)
 
   for i in xrange(start, end):
     v = easeInOutQuad(i, start, delta, end) 
@@ -81,13 +58,12 @@ if __name__ == '__main__':
   clock = pygame.time.Clock()
   pygame.mouse.set_visible(False)
 
-  #img1 = loadimg("Assets/screentest/dawn.jpg")
-  #img2 = loadimg("Assets/screentest/day.jpg")
-  #img3 = loadimg("Assets/screentest/dusk.jpg")
   img1 = loadimg("Assets/Images/grassland.jpg")
   img2 = loadimg("Assets/Images/forest.jpg")
   while True:
-    sweep(img1, img2)
-    sweep(img2, img1)
+    sweep(img1, img2, DELTA)
+    time.sleep(2.0)
+    sweep(img2, img1, DELTA)
+    time.sleep(2.0)
         
 
