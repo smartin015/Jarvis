@@ -118,6 +118,7 @@ if __name__ == "__main__":
   from Outputs.RGBSingleController import RGBSingleController
   from Outputs.RGBMultiController import RGBMultiController, RGBState
   from Outputs.IRController import IRController
+  from mod_pywebsocket.standalone import _main as websocket_loop
   from effects import *
   import time
 
@@ -164,5 +165,7 @@ if __name__ == "__main__":
   # Test to see what the deck does
   print deck.handle({'day': True, 'rain': True, 'forest': True})
   deck.update()
+
+  websocket_loop(["-d", "Holodeck/example", "-p", "8880"])
 
   time.sleep(3.0)
