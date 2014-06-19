@@ -1,0 +1,121 @@
+<html>
+<header>
+	<title>This is a title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link rel="stylesheet" type="text/css" href="dynamictabtest.css">
+</header>
+<body>
+	<div id="page">
+  	<ul class='tabs'>
+  		<li>Tab 1</li>
+  		<li>Tab 2</li>
+  		<li>Tab 3</li>
+  		<li>Tab 4</li>
+  	</ul>
+  	
+    <div id="content">
+      <ul id='tab1' class='tabcontent'>
+        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
+      </ul>
+      <ul id='tab2' class='tabcontent'>
+        <li>This is the 2nd tab.</li>
+      </ul>
+      <ul id='tab3' class='tabcontent'>
+        <li>And this is the 3rd tab.</li>
+      </ul>
+      <ul id='tab4' class='tabcontent'>
+        <li>LAST TAB</li>
+      </ul>
+  	</div>
+  </div>
+	
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="http://www.google.com/jsapi"></script>
+  <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
+  <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
+	<script>
+    $(document).ready(function() {
+      document.body.addEventListener('touchmove', function(e){ e.preventDefault(); });
+      /* =====Set up elements===== */
+      var contentWidth = $('#content').width();
+      $("#content ul").width(contentWidth).each(function(index) {
+        $(this).css('left', contentWidth * index);
+      });
+      $('.tabs li:nth-child(1)').addClass('active');
+      var tileWidth = $('.tabcontent li').outerWidth();
+      $('.tabcontent li').css({'height':tileWidth}); // make the icon elements square
+
+      /* =====Web sockets interface====== */
+      var ws = $.websocket("ws://localhost:8880/echo", {
+        events: {
+          say: function(e) {
+            alert("message received!");
+            dataTEMP = e.data;
+
+            //adds items to tabs
+            for (i in dataTEMP) {
+              for(j in dataTEMP[i]) {
+                $("#"+i).append('<li id="'+dataTEMP[i][j]['id']+'" class="tabcontentli">'+dataTEMP[i][j]['text']+'</li>');
+              }
+            }
+          }
+        }
+      });
+      
+      /* ======Interactions===== */
+      $( ".tabcontent li" ).click(function() {
+        // TODO - send code to server
+      	/**
+      	var cID ={"clicked":event.target.id};
+      	jCID = JSON.stringify(cID);
+      	ws.send(jCID);
+      	*/
+      	ws.send("whaat");
+      });
+
+      $('.tabs li').click(function(){
+        var position = $(this).prevAll().length + 1;
+        $(".tabs li").removeClass("active");
+        $(".tabs li:nth-child(" + position + ")").addClass("active");
+        $("#content").css('margin-left', -contentWidth*(position-1));
+      });
+      /*
+  		$('.tabs').each(function(){
+        // For each set of tabs, we want to keep track of
+        // which tab is active and it's associated content
+        var $active, $content, $links = $(this).find('a');
+
+        // If the location.hash matches one of the links, use that as the active tab.
+        // If no match is found, use the first link as the initial active tab.
+        $active = $($links.filter('[href="'+location.hash+'"]')[0] || $links[0]);
+        $active.addClass('active');
+
+        $content = $($active[0].hash);
+
+        // Hide the remaining content
+        $links.not($active).each(function () {
+          $(this.hash).hide();
+        });
+
+        // Bind the click event handler
+        $(this).on('click', 'a', function(e){
+          // Make the old tab inactive.
+          $active.removeClass('active');
+          $content.hide();
+
+          // Update the variables with the new link and content
+          $active = $(this);
+          $content = $(this.hash);
+
+          // Make the tab active.
+          $active.addClass('active');
+          $content.show();
+
+          // Prevent the anchor's default click action
+          e.preventDefault();
+        });
+  	  });*/
+    });
+	</script>
+</body>
+</html>
