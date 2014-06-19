@@ -1,9 +1,7 @@
 import pygame
-from pygame.locals import *
 import os
 import time
 import socket
-import threading
 
 PORT = 9808
 SW,SH = 1920, 1080
@@ -27,17 +25,17 @@ class ScreenCMD():
     return cmd.strip().split(self.SEP)
 
 
-class ScreenServer(threading.Thread):
+class ScreenServer():
   def __init__(self, host, port):
-    threading.Thread.__init__(self)
     self.s = socket.socket()         # Create a socket object
     self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.s.settimeout(0.5)
     self.s.bind((host, port))        # Bind to the port
     self.s.listen(5)                 # Now wait for client connection.
     self.delta = DELTA
 
-  def run(self):
-    os.environ["DISPLAY"] = ":0"
+    if os.name is not 'nt':
+      os.environ["DISPLAY"] = ":0"
     os.environ["SDL_FBDEV"] = "/dev/fb1"
     self.screen = pygame.display.set_mode(
       (SW,SH), 
@@ -46,9 +44,15 @@ class ScreenServer(threading.Thread):
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
 
+  def handle_forever(self):
     last_img = None
     while True:
-      c, addr = self.s.accept()     # Establish connection with client.
+      try:
+        c, addr = self.s.accept()     # Establish connection with client.
+      except socket.timeout:
+        pygame.event.pump()
+        continue
+
       print 'Got connection from', addr
 
       msg = c.recv(1024)
@@ -105,17 +109,18 @@ class ScreenServer(threading.Thread):
         self.screen.blit(img2,(img2_start+v,VSTART))
   
       pygame.display.flip()
+      pygame.event.pump()
       self.clock.tick(30)
 
   def zoom(self, img1, img2):
     start = 0
-    mid = 90
-    overlap = 20
-    end = 100
+    mid = 50
+    overlap = 15
+    end = 80
     alpha_end = 150
     img1_start = float(-self.delta)
     img2_start = float(-self.delta)
-    delta = self.delta / 4
+    delta = self.delta / 8
     aspect = float(IMW)/float(IMH)
 
     img1 = img1.copy()
@@ -130,20 +135,21 @@ class ScreenServer(threading.Thread):
         img1_scale.set_alpha((alpha_end-alpha))
         self.screen.blit(img1_scale,(img1_start,VSTART))
       
-      if i > mid-overlap:
-        alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))
-        img2.set_alpha(alpha)
-        self.screen.blit(img2,(img2_start,VSTART+float(i-end)/2))
+      if i >= mid-overlap:
+        s = i-(mid-overlap)
+        alpha = s * alpha_end / float(end-(mid-overlap))
+        img2_scale = pygame.transform.smoothscale(img2, (int(aspect*(IMH+s)), int(IMH+s)))
+        img2_scale.set_alpha(alpha)
+        self.screen.blit(img2_scale,(img2_start-aspect*(s/2),VSTART-s/2))
     
       pygame.display.flip()
-      self.clock.tick(60)
+      pygame.event.pump()
+      self.clock.tick(45)
 
   def setimg(self, img):
     img_start = float(-self.delta)
     self.screen.blit(img, (img_start,VSTART))
     pygame.display.flip()
-
-      
 
 class ScreenController():
   def __init__(self, host, port):
@@ -165,24 +171,6 @@ class ScreenController():
   def zoom_to(self, img):
     self.send_cmd(ScreenCMD.pack(ScreenCMD.ZOOM_TO, img))
 
-
-def client_example():
-  con = ScreenController(host, PORT)  
-  time.sleep(2.0)
-  
-  forest = "Assets/Images/forest.jpg"
-  grass = "Assets/Images/grassland.jpg"
-
-  print "Setting base image"
-  con.set_img(forest)
-  time.sleep(2.0)
-  con.slide_to(grass)
-  time.sleep(10.0)
-  con.zoom_to(forest)
-  time.sleep(10.0)
-
-
-
 def loadimg(path):
   img = pygame.image.load(path).convert()
   img = pygame.transform.scale(img, (IMW,IMH))   
@@ -191,10 +179,5 @@ def loadimg(path):
 if __name__ == '__main__':
   host = socket.gethostname() # Get local machine name
   srv = ScreenServer(host, PORT)
-  srv.daemon = True
-  srv.start()
-
-  raw_input("Server started - press any key to exit")
-  # client_example()
-  
+  srv.handle_forever()
  
