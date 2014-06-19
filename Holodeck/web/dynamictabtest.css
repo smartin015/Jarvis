@@ -59,7 +59,7 @@ table {
 }
 body {
 	color: white;
-	font-size: 1em;
+	font-size: 1.1em;
 	background-color: #3C3D3F;
 	text-align: center;
 }
@@ -135,12 +135,14 @@ img {
 
 .tabcontent li {
 	position: relative;
-	width:24.5%;
-	float:left;
+	width: 22%;
+	float: left;
 
 	border-radius: 5%;
-	padding: 5%;
-	opacity: 0.8;
+	margin: 1.5%;
+	padding: 3% 4% 4% 4%;
+	opacity: 0.6;
+	background-color: #4C4D4F;
 	transition: all 0.1s ease;
 }
 .tabcontent li:hover {
@@ -158,5 +160,5 @@ img {
 	position: absolute;
 	left: 0;
 	right: 0;
-	bottom: 7%;
+	bottom: 2%;
 }
