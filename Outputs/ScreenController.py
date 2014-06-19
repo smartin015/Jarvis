@@ -27,16 +27,16 @@ class ScreenServer(threading.Thread):
       (SW,SH), 
       pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
     )
-    clock = pygame.time.Clock()
+    self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
 
     img1 = loadimg("Assets/Images/grassland.jpg")
     img2 = loadimg("Assets/Images/forest.jpg")
     while True:
-      c, addr = self.s.accept()     # Establish connection with client.
-      print 'Got connection from', addr
-      c.send('Thank you for connecting')
-      c.close()                # Close the connection
+      #c, addr = self.s.accept()     # Establish connection with client.
+      #print 'Got connection from', addr
+      #c.send('Thank you for connecting')
+      #c.close()                # Close the connection
       self.zoom(img1, img2, DELTA)
       time.sleep(2.0)
       self.sweep(img2,img1, DELTA)
@@ -74,13 +74,13 @@ class ScreenServer(threading.Thread):
         img1.set_alpha((alpha_end-alpha))
         self.screen.blit(img1,(img1_start+v,VSTART))
     
-    if i > mid-overlap:
-      alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
-      img2.set_alpha(alpha)
-      self.screen.blit(img2,(img2_start+v,VSTART))
+      if i > mid-overlap:
+        alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
+        img2.set_alpha(alpha)
+        self.screen.blit(img2,(img2_start+v,VSTART))
   
     pygame.display.flip()
-    clock.tick(30)
+    self.clock.tick(30)
 
   def zoom(self, img1, img2, delta):
     start = 0
@@ -111,7 +111,7 @@ class ScreenServer(threading.Thread):
         self.screen.blit(img2,(img2_start,VSTART+float(i-end)/2))
     
       pygame.display.flip()
-      clock.tick(60)
+      self.clock.tick(60)
 
 class ScreenController(threading.Thread):
   def __init__(self, host, port):

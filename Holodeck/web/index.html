@@ -18,7 +18,7 @@
 	</ul>
 	
 	<ul id='tab1' class='tabcontentul'>
-		<li id='tab1li1' class='tabcontentli'>Hi, this is the first tab.</li>
+		<li id='day' class='tabcontentli'>DAY</li>
 	</ul>
 	<ul id='tab2' class='tabcontentul'>
 		<li id='tab2li1' class='tabcontentli'>This is the 2nd tab.</li>
@@ -34,10 +34,9 @@
 	<script>
 	
 	var cw = $('.tabcontentli').width();
-	 var ws = $.websocket("ws://localhost:8880/echo", {
+	 var ws = $.websocket("ws://"+window.location.hostname+":8880/echo", {
         events: {
                 say: function(e) {
-                    alert("message received!");
                     dataTEMP = e.data;
           
                     //adds items to tabs
@@ -53,12 +52,11 @@
 	  });
 	  
 	  $( ".tabcontentli" ).click(function() {
-			/**
-			var cID ={"clicked":event.target.id};
+			var cID ={}
+      cID[event.target.id] = true;
 			jCID = JSON.stringify(cID);
-			ws.send(jCID);
-			*/
-			ws.send("whaat");
+      console.log(jCID);
+			ws.send('cmd',jCID);
 	  });
 		
 	  //makes height == to width

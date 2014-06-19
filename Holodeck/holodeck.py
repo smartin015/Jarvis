@@ -1,21 +1,9 @@
 from string import capitalize
 from SortedCollection import SortedCollection
 
-class Pipe():
-  RING = "towerRing"
-  TOWER = "tower"
-  LIGHTS = "lights"
-  WINDOWIMG = "windowimg"
-  WALLIMG = "wallimg"
-  FLOOR = "floor"
-  WINDOWTOP = "windowtop"
-  WINDOWBOT = "windowbot"
-  TEMP = "temp"
-  SOUND = "sound"
+from effects import *
+from pipe import Pipe
 
-  @classmethod
-  def items(self):
-    return [a for a in self.__dict__.values() if type(a) is str and not a.startswith("__")]
 
 class Holodeck():
   
@@ -85,6 +73,7 @@ class Holodeck():
     state_delta = {}
     for (req, turn_on) in request.items():
       req = self._cmd_to_key(req)
+      print "Looking for key", req
       if turn_on:
         state_delta[req] = True
         if req in self.activeEffects:
@@ -108,18 +97,14 @@ class Holodeck():
     # Write back the change in state
     return state_delta
 
-
-
-
-if __name__ == "__main__":
+def create_deck():
   from serial import Serial
   from Tests.TestSerial import TestSerial
   from Outputs.RelayController import RelayController
   from Outputs.RGBSingleController import RGBSingleController
   from Outputs.RGBMultiController import RGBMultiController, RGBState
   from Outputs.IRController import IRController
-  from mod_pywebsocket.standalone import _main as websocket_loop
-  from effects import *
+  import socket
   import time
 
   # TODO: Use getmembers?
@@ -145,27 +130,32 @@ if __name__ == "__main__":
     #for (k,v) in env.items():
     #  print k, v
     # Update the room to match the environment
-    window.write(
-      env[Pipe.WINDOWTOP],
-      env[Pipe.WINDOWBOT],
-    )
-    couch.write(env[Pipe.FLOOR])
+    if env[Pipe.WINDOWTOP] and env[Pipe.WINDOWBOT]:
+      window.write(
+        env[Pipe.WINDOWTOP],
+        env[Pipe.WINDOWBOT],
+      )
+
+    if env[Pipe.FLOOR]:
+      couch.write(env[Pipe.FLOOR])
     
     if env[Pipe.TOWER] and env[Pipe.RING]:
       for (i,c) in enumerate(env[Pipe.TOWER]+env[Pipe.RING]):
         tower.manual_write(i, c)
       tower.manual_update()
     #controls['IR_AC'].setState(env['temp'])
-    lights.set_state(env[Pipe.LIGHTS])
+    if env[Pipe.LIGHTS]:
+      lights.set_state(env[Pipe.LIGHTS])
     # TODO: Video screens
 
   # Start up the holdeck
   deck = Holodeck(effect_list, update_room)
+  return deck
+
+if __name__ == "__main__":
+  deck = create_deck()
 
   # Test to see what the deck does
   print deck.handle({'day': True, 'rain': True, 'forest': True})
   deck.update()
 
-  websocket_loop(["-d", "Holodeck/example", "-p", "8880"])
-
-  time.sleep(3.0)

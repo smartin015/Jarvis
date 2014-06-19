@@ -27,9 +27,12 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
+from Holodeck.holodeck import create_deck
 
-_GOODBYE_MESSAGE = 'Goodbye'
+deck = create_deck()
 
+
+# TODO: Actually get useful shit from the deck
 d = {
 			"tab1":{
 				"tab1item1":{
@@ -72,28 +75,29 @@ n = {"type": "say", "data":d};
 def web_socket_do_extra_handshake(request):
     # This example handler accepts any request. See origin_check_wsh.py for how
     # to reject access from untrusted scripts based on origin value.
-
     pass  # Always accept.
 
 
 def web_socket_transfer_data(request):
+    global deck
+    print deck
     j = json.dumps(n)
     request.ws_stream.send_message(j, binary=False)
     while True:
-        line = request.ws_stream.receive_message()
-        if line is None:
-            request.ws_stream.send_message("a", binary=False)
-            print "a"
+        msg = request.ws_stream.receive_message()
+        if msg is None:
+            print "Client connection aborted"
             return
-        if isinstance(line, unicode):
-            request.ws_stream.send_message("b", binary=False)
-            print "b"
-            if line == _GOODBYE_MESSAGE:
-                return
-        else:
-            request.ws_stream.send_message("c", binary=False)
-            print "c"
-            request.ws_stream.send_message(line, binary=True)
 
+        msg = json.loads(msg)
+        cmd = json.loads(msg['data'])
+
+        result = deck.handle(cmd)
+        response = json.dumps(result)
+ 
+        print "Responding with", response
+        request.ws_stream.send_message(response, binary=False)
+
+        deck.update()
 
 # vi:sts=4 sw=4 et

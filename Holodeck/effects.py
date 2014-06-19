@@ -1,4 +1,4 @@
-from Holodeck.holodeck import Pipe as P
+from pipe import Pipe as P
 from Outputs.RGBMultiController import NLIGHTS, NRING
 
 class Effect():
