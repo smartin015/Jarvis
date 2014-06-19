@@ -1,0 +1,109 @@
+<html>
+<header>
+	<link rel="stylesheet" type="text/css" href="dynamictabtest.css">
+	<title>This is a title</title>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+	<script src="http://www.google.com/jsapi"></script>
+	<script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
+	<script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
+	<meta name="viewport" content="initial-scale=1.0, width=device-width" />
+</header>
+<body>
+	
+	<ul class='tabs'>
+		<li class='tabsli'><a href='#tab1'>Tab 1</a></li>
+		<li class='tabsli'><a href='#tab2'>Tab 2</a></li>
+		<li class='tabsli'><a href='#tab3'>Tab 3</a></li>
+		<li class='tabsli'><a href='#tab4'>Tab 4</a></li>
+	</ul>
+	
+	<ul id='tab1' class='tabcontentul'>
+		<li id='tab1li1' class='tabcontentli'>Hi, this is the first tab.</li>
+	</ul>
+	<ul id='tab2' class='tabcontentul'>
+		<li id='tab2li1' class='tabcontentli'>This is the 2nd tab.</li>
+	</ul>
+	<ul id='tab3' class='tabcontentul'>
+		<li id='tab3li1' class='tabcontentli'>And this is the 3rd tab.</li>
+	</ul>
+	<ul id='tab4' class='tabcontentul'>
+		<li id='tab4li1' class='tabcontentli'>LAST TAB</li>
+	</ul>
+	
+	
+	<script>
+	
+	var cw = $('.tabcontentli').width();
+	 var ws = $.websocket("ws://localhost:8880/echo", {
+        events: {
+                say: function(e) {
+                    alert("message received!");
+                    dataTEMP = e.data;
+          
+                    //adds items to tabs
+                    for (i in dataTEMP) {
+                      for(j in dataTEMP[i]) {
+                        $("#"+i).append('<li id="'+dataTEMP[i][j]['id']+'" class="tabcontentli">'+dataTEMP[i][j]['text']+'</li>');
+                         $('.tabcontentli').css({'height':cw+'px'});
+                      }
+                    }
+                    
+                }
+        }
+	  });
+	  
+	  $( ".tabcontentli" ).click(function() {
+			/**
+			var cID ={"clicked":event.target.id};
+			jCID = JSON.stringify(cID);
+			ws.send(jCID);
+			*/
+			ws.send("whaat");
+	  });
+		
+	  //makes height == to width
+	  
+	 
+	</script>
+	
+	
+	<script>
+		$('.tabs').each(function(){
+        // For each set of tabs, we want to keep track of
+        // which tab is active and it's associated content
+        var $active, $content, $links = $(this).find('a');
+
+        // If the location.hash matches one of the links, use that as the active tab.
+        // If no match is found, use the first link as the initial active tab.
+        $active = $($links.filter('[href="'+location.hash+'"]')[0] || $links[0]);
+        $active.addClass('active');
+
+        $content = $($active[0].hash);
+
+        // Hide the remaining content
+        $links.not($active).each(function () {
+          $(this.hash).hide();
+        });
+
+        // Bind the click event handler
+        $(this).on('click', 'a', function(e){
+          // Make the old tab inactive.
+          $active.removeClass('active');
+          $content.hide();
+
+          // Update the variables with the new link and content
+          $active = $(this);
+          $content = $(this.hash);
+
+          // Make the tab active.
+          $active.addClass('active');
+          $content.show();
+
+          // Prevent the anchor's default click action
+          e.preventDefault();
+        });
+	  });
+    
+	</script>
+</body>
+</html>
