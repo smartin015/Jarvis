@@ -5,11 +5,26 @@ import time
 import socket
 import threading
 
+PORT = 9808
 SW,SH = 1920, 1080
 DELTA = 400
 SCALE_DELTA = 10
 VSTART = 0
 IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
+
+class ScreenCMD():
+  SLIDE_TO = "slideto"
+  ZOOM_TO = "zoomto"
+  SET_IMG = "setimg"
+  SEP = '|'
+
+  @classmethod
+  def pack(self, cmd, path):
+    return "%s%s%s\n" % (cmd, self.SEP, path)
+
+  @classmethod
+  def unpack(self, cmd):
+    return cmd.strip().split(self.SEP)
 
 
 class ScreenServer(threading.Thread):
@@ -19,6 +34,7 @@ class ScreenServer(threading.Thread):
     self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.s.bind((host, port))        # Bind to the port
     self.s.listen(5)                 # Now wait for client connection.
+    self.delta = DELTA
 
   def run(self):
     os.environ["DISPLAY"] = ":0"
@@ -31,16 +47,26 @@ class ScreenServer(threading.Thread):
     pygame.mouse.set_visible(False)
 
     img1 = loadimg("Assets/Images/grassland.jpg")
-    img2 = loadimg("Assets/Images/forest.jpg")
+    last_img = None
     while True:
-      #c, addr = self.s.accept()     # Establish connection with client.
-      #print 'Got connection from', addr
-      #c.send('Thank you for connecting')
-      #c.close()                # Close the connection
-      self.zoom(img1, img2, DELTA)
-      time.sleep(2.0)
-      self.sweep(img2,img1, DELTA)
-      time.sleep(2.0)
+      c, addr = self.s.accept()     # Establish connection with client.
+      print 'Got connection from', addr
+
+      msg = c.recv(1024)
+      (cmd,path) = ScreenCMD.unpack(msg)
+
+      img = loadimg(path)
+      if cmd == ScreenCMD.SLIDE_TO:
+        self.sweep(last_img, img)
+      elif cmd == ScreenCMD.ZOOM_TO:
+        self.zoom(last_img, img)
+      elif cmd == ScreenCMD.SET_IMG:
+        self.setimg(img)
+      else:
+        raise Exception("Unknown Command")
+      
+      c.close()      
+      last_img = img
 
   @classmethod
   def easeInOutQuad(self, currtime, start, delta, duration):
@@ -57,17 +83,17 @@ class ScreenServer(threading.Thread):
     currtime -= 1; 
     return -delta/2 * (currtime*(currtime-2) - 1) + start;
 
-  def sweep(self, img1, img2, delta):
+  def sweep(self, img1, img2):
     start = 0
     mid = 60
     overlap = 10
     end = 100
     alpha_end = 150
-    img1_start = float(-delta)
-    img2_start = float(-2*delta)
+    img1_start = float(-self.delta)
+    img2_start = float(-2*self.delta)
 
     for i in xrange(start, end):
-      v = ScreenServer.easeInOutQuad(i, start, delta, end) 
+      v = ScreenServer.easeInOutQuad(i, start, self.delta, end) 
 
       if i < mid+overlap:
         alpha = i * (alpha_end/float(mid+overlap))  
@@ -79,18 +105,18 @@ class ScreenServer(threading.Thread):
         img2.set_alpha(alpha)
         self.screen.blit(img2,(img2_start+v,VSTART))
   
-    pygame.display.flip()
-    self.clock.tick(30)
+      pygame.display.flip()
+      self.clock.tick(30)
 
-  def zoom(self, img1, img2, delta):
+  def zoom(self, img1, img2):
     start = 0
     mid = 90
     overlap = 20
     end = 100
     alpha_end = 150
-    img1_start = float(-delta)
-    img2_start = float(-delta)
-    delta /= 4
+    img1_start = float(-self.delta)
+    img2_start = float(-self.delta)
+    delta = self.delta / 4
     aspect = float(IMW)/float(IMH)
 
     img1 = img1.copy()
@@ -113,13 +139,48 @@ class ScreenServer(threading.Thread):
       pygame.display.flip()
       self.clock.tick(60)
 
+  def setimg(self, img):
+    img_start = float(-self.delta)
+    self.screen.blit(img, (img_start,VSTART))
+    pygame.display.flip()
+
+      
+
 class ScreenController(threading.Thread):
   def __init__(self, host, port):
+    self.host = host
+    self.port = port
+
+  def send_cmd(self, cmd):
     s = socket.socket()         # Create a socket object
-    print "Connecting to", host
-    s.connect((host, port))
-    print s.recv(1024)
-    s.close                     # Close the socket when done
+    s.connect((self.host, self.port))
+    s.send(cmd)
+    s.close()
+
+  def slide_to(self, img):
+    self.send_cmd(ScreenCMD.pack(ScreenCMD.SLIDE_TO, img))
+
+  def set_img(self, img):
+    self.send_cmd(ScreenCMD.pack(ScreenCMD.SET_IMG, img))
+
+  def zoom_to(self, img):
+    self.send_cmd(ScreenCMD.pack(ScreenCMD.ZOOM_TO, img))
+
+
+def client_example():
+  con = ScreenController(host, PORT)  
+  time.sleep(2.0)
+  
+  forest = "Assets/Images/forest.jpg"
+  grass = "Assets/Images/grassland.jpg"
+
+  print "Setting base image"
+  con.set_img(forest)
+  time.sleep(2.0)
+  con.slide_to(grass)
+  time.sleep(10.0)
+  con.zoom_to(forest)
+  time.sleep(10.0)
 
 
 
@@ -130,13 +191,11 @@ def loadimg(path):
 
 if __name__ == '__main__':
   host = socket.gethostname() # Get local machine name
-  port = 9808
-  srv = ScreenServer(host, port)
+  srv = ScreenServer(host, PORT)
   srv.daemon = True
   srv.start()
-  con = ScreenController(host, port)
-  time.sleep(10.0)
-"""
+
+  raw_input("Server started - press any key to exit")
+  # client_example()
   
-        
-"""
+ 
