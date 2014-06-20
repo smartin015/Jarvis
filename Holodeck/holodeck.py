@@ -1,7 +1,7 @@
 from string import capitalize
 from SortedCollection import SortedCollection
 
-from effects import *
+from effects import get_all_effects
 from pipe import Pipe
 
 
@@ -18,9 +18,7 @@ class Holodeck():
     }
 
     # Create a dictionary of effects keyed by class name
-    self.effectClasses = {}
-    for cls in effect_list:
-      self.effectClasses[cls.__name__] = cls
+    self.effectClasses = effect_list
 
     # When effects are instantiated, they are listed here.
     # New effects can request existing effects to go away,
@@ -107,16 +105,6 @@ def create_deck():
   import socket
   import time
 
-  # TODO: Use getmembers?
-  effect_list = [
-    ForestEffect,
-    RainEffect,
-    BattleEffect,
-    DayEffect,
-    PaulEffect,
-    # TODO: All effects
-  ]
-
   window = RGBSingleController(Serial("/dev/ttyUSB1", 9600))
   couch = RGBSingleController(Serial("/dev/ttyUSB0", 9600))
   tower = RGBMultiController(Serial("/dev/ttyACM0", 115200))
@@ -150,7 +138,7 @@ def create_deck():
     # TODO: Video screens
 
   # Start up the holdeck
-  deck = Holodeck(effect_list, update_room)
+  deck = Holodeck(get_all_effects(), update_room)
   return deck
 
 if __name__ == "__main__":

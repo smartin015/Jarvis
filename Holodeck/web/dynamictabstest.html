@@ -15,23 +15,13 @@
   	
     <div id="content">
       <ul id='tab1' class='tabcontent'>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
+        <!--<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>-->
       </ul>
       <ul id='tab2' class='tabcontent'>
-        <li>This is the 2nd tab.</li>
       </ul>
       <ul id='tab3' class='tabcontent'>
-        <li>And this is the 3rd tab.</li>
       </ul>
       <ul id='tab4' class='tabcontent'>
-        <li>LAST TAB</li>
       </ul>
   	</div>
   </div>
@@ -57,16 +47,21 @@
       $('.tabcontent li').css({'height':tileWidth}); // make the icon elements square
 
       /* =====Web sockets interface====== */
-      var ws = $.websocket("ws://localhost:8880/echo", {
+      var ws = $.websocket("ws://"+window.location.hostname+":8880/echo", {
         events: {
           say: function(e) {
-            alert("message received!");
             dataTEMP = e.data;
-
+            console.log("Got data");
             //adds items to tabs
             for (i in dataTEMP) {
               for(j in dataTEMP[i]) {
-                $("#"+i).append('<li id="'+dataTEMP[i][j]['id']+'" class="tabcontentli">'+dataTEMP[i][j]['text']+'</li>');
+                
+                var elem = $("<li/>");
+                elem.append("<img src=\"/img/"+dataTEMP[i][j]['img']+"\"></img>");
+                elem.append("<label>"+dataTEMP[i][j]['text']+"</label>");
+                elem.attr("data-effect", dataTEMP[i][j]['id']);
+                $("#"+i).append(elem);
+                
               }
             }
           }
@@ -106,15 +101,19 @@
 
 
 
-      $( ".tabcontent li" ).click(function() {
+      $(document).on("click", ".tabcontent li", function() {
         if (swiping) return;
-        // TODO - send code to server
-      	/**
-      	var cID ={"clicked":event.target.id};
-      	jCID = JSON.stringify(cID);
-      	ws.send(jCID);
-      	*/
-      	ws.send("whaat");
+        var cID ={}
+        if (!$(this).hasClass("on")) {
+          cID[$(this).data("effect")] = true;
+          $(this).addClass("on");
+        } else {
+          cID[$(this).data("effect")] = false;
+          $(this).removeClass("on");
+        }
+  			jCID = JSON.stringify(cID);
+        console.log(jCID);
+  			ws.send('cmd',jCID);
         return false;
       });
 

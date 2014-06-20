@@ -1,12 +1,18 @@
 from pipe import Pipe as P
 from Outputs.RGBMultiController import NLIGHTS, NRING
 
-class Effect():
+def get_all_effects():
+  import inspect
+  import sys
+  effect_list = inspect.getmembers(sys.modules[__name__], inspect.isclass)
+  return dict([(k,v) for k,v in effect_list if k.endswith('Effect')])
+
+class EffectTemplate():
   META = {
-    'category': None,
-    'image': None,
-    'name': None,
-    'description': None,
+    'tab': None,
+    'id': None,
+    'text': None,
+    'img': None,
   }
 
   def get_blacklist(self):
@@ -31,8 +37,13 @@ class Effect():
     pass
 
 
-class ForestEffect(Effect):
-  
+class ForestEffect(EffectTemplate):
+  META = {
+    'tab': "tab1",
+    'id': "forest",
+    'text': "Forest",
+    'img': "forest.png",
+  }
   def __init__(self):
     self.counter = 0
 
@@ -53,8 +64,13 @@ class ForestEffect(Effect):
   def post_render(self, holodeck):
     self.counter += 1
 
-class RainEffect(Effect):
-
+class RainEffect(EffectTemplate):
+  META = {
+    'tab': "tab1",
+    'id': "rain",
+    'text': "Rain",
+    'img': "rain.png",
+  }
   def inject_into(self, pipes):
     pipes[P.TOWER].insert((self.tower, 1))
     pipes[P.RING].insert((self.ring, 1))
@@ -66,22 +82,37 @@ class RainEffect(Effect):
     return [[128, 128, 255]]*NRING
 
 
-class BattleEffect(Effect):
-
+class BattleEffect(EffectTemplate):
+  META = {
+    'tab': "tab1",
+    'id': "battle",
+    'text': "Battle",
+    'img': "cave.png",
+  }
   def inject_into(self, pipes):
     pass
 
 
-class DayEffect(Effect):
-
+class DayEffect(EffectTemplate):
+  META = {
+    'tab': "tab1",
+    'id': "day",
+    'text': "Daytime",
+    'img': "plains.png",
+  }
   def inject_into(self, pipes):
     pipes[P.LIGHTS].insert((self.lights, 1))
 
   def lights(self, prev):
     return True
 
-class PaulEffect(Effect):
-
+class PaulEffect(EffectTemplate):
+  META = {
+    'tab': "tab1",
+    'id': "paul",
+    'text': "Paul-ify",
+    'img': "beach.png",
+  }
   def inject_into(self, pipes):
     pipes[P.FLOOR].insert((self.floor, 1))
     pipes[P.WINDOWTOP].insert((self.window_top, 1))

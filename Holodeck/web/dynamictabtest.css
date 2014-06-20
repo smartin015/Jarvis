@@ -145,6 +145,10 @@ img {
 	background-color: #4C4D4F;
 	transition: all 0.1s ease;
 }
+.tabcontent li.on {
+  background-color: #808080;
+  opacity: 1.0;
+}
 .tabcontent li:hover {
 	opacity: 1;
 	cursor: pointer;

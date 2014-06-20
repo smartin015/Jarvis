@@ -28,48 +28,24 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
 from Holodeck.holodeck import create_deck
-
+from Holodeck.effects import get_all_effects
 deck = create_deck()
 
 
 # TODO: Actually get useful shit from the deck
-d = {
-			"tab1":{
-				"tab1item1":{
-					"id":"tab1item1",
-					"text":"Tab1Item1",
-					"picpath":""
-				},
-				"tab1item2":{
-					"id":"tab1item2",
-					"text":"Tab1Item2",
-					"picpath":""
-				},
-				"tab1item3":{
-					"id":"tab1item3",
-					"text":"Tab1Item3",
-					"picpath":""
-				}
-			}, 
-			"tab2":{
-				"tab2item1":{
-					"id":"tab2item1",
-					"text":"Tab2Item1",
-					"picpath":""
-				},
-				"tab2item2":{
-					"id":"tab2item2",
-					"text":"Tab2ItemB",
-					"picpath":""
-				},
-				"tab2item3":{
-					"id":"tab2item3",
-					"text":"Tab2Item3",
-					"picpath":""
-				}
-			}
-		}
-n = {"type": "say", "data":d};
+effect_list = get_all_effects()
+print effect_list
+
+d = {}
+for (ename, eclass) in effect_list.items():
+  meta = eclass.META
+  if not d.get(meta['tab'], None):
+    d[meta['tab']] = {}
+
+  d[meta['tab']][meta['id']] = meta 
+
+n = {"type": "say", "data":d}
+print n
 		
 
 def web_socket_do_extra_handshake(request):
