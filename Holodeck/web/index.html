@@ -18,7 +18,7 @@
   	
     <div id="content">
       <ul id='locations' class='tabcontent'>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
+        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='atmosphere' class='tabcontent'>
       </ul>
@@ -57,7 +57,11 @@
       });
       $('.tabs li:nth-child(1)').addClass('active');
       var tileWidth = $('.tabcontent li').outerWidth();
-      $('.tabcontent li').css({'height':tileWidth}); // make the icon elements square
+      $('.tabcontent li')
+      	.css({'height':tileWidth}) // make the icon elements square
+      	.show();
+
+      $("#content").hide().fadeIn();
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {

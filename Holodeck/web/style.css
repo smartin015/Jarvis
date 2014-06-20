@@ -146,6 +146,7 @@ img {
 }
 
 .tabcontent li {
+	display: none;
 	position: relative;
 	width: 22%;
 	float: left;
@@ -159,7 +160,7 @@ img {
 }
 .tabcontent li.on {
 	background-color: #808080;
-	opacity: 1.0;
+	opacity: 1;
 }
 .tabcontent li:hover {
 	opacity: 1;
@@ -212,5 +213,12 @@ img {
 	}
 	#settingsButton {
 		background-image: url('img/settings.png');
+	}
+
+	.tabcontent li {
+		padding: 5% 6% 6% 6%;
+	}
+	.tabcontent li label {
+		bottom: 0;
 	}
 }
