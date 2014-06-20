@@ -53,7 +53,7 @@ class Holodeck(threading.Thread):
     c = Clock()
     while True:
       self.update()
-      c.tick(10)
+      c.tick(30)
 
   def update(self):
     # Compose controllers into single environment
@@ -163,6 +163,6 @@ def create_deck():
 if __name__ == "__main__":
   deck = create_deck()
   # Test to see what the deck does
-  print deck.handle({'paul': True})
-  deck.update()
+  print deck.handle({'rain': True,'day': True})
+  deck.run()
 

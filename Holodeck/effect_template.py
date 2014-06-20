@@ -1,3 +1,4 @@
+import types
 
 class EffectTemplate():
   META = {
@@ -11,6 +12,10 @@ class EffectTemplate():
     self.should_exit = False
     self.pipes = pipes
     self.active_effects = active_effects
+    self.setup()
+
+  def setup(self):
+    pass
 
   def get_blacklist(self):
     """ Return a list of typenames that this effect 
@@ -24,7 +29,7 @@ class EffectTemplate():
     """
     # TODO: blacklist booting
 
-    # Remove from pipeline
+    # Add to pipeline
     for (pipe_id, con) in self.get_mapping().items():
       self.pipes[pipe_id].append(con)
       self.pipes[pipe_id].sort(key=lambda con:con[1])
