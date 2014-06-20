@@ -34,7 +34,9 @@
   <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
   <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
   <script src="hammer.min.js"></script>
-	<script>
+  <script>
+  	// TODO use translate instead of LEFT/MARGIN-LEFT for positioning/sliding
+  	// http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
 	if (!window.location.hash && window.addEventListener) {
 		window.addEventListener('load', function() {
 			window.scrollTo( 0, 1 );
