@@ -13,4 +13,7 @@ class Pipe():
 
   @classmethod
   def items(self):
-    return [a for a in self.__dict__.values() if type(a) is str and not a.startswith("__")]
+    return [v for (k,v) in self.__dict__.items() 
+            if type(v) is str 
+            and not v.startswith("__")
+            and not k.startswith("__")]

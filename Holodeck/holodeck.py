@@ -14,7 +14,7 @@ def classname_to_id(key):
 
 class Holodeck(threading.Thread):
   
-  def __init__(self, effect_list, update_funcs):
+  def __init__(self, effect_list, pipelines, update_funcs):
     self.logger = logging.getLogger('Holodeck')
         
     threading.Thread.__init__(self)
@@ -33,8 +33,10 @@ class Holodeck(threading.Thread):
     # Subsequent functions are passed in the previous functions' outputs.
     # Composition is left-to-right
     self.pipelines = {}
-    for pipe in P.items():
+    self.initial_pipe_values = {}
+    for pipe in pipelines:
       self.pipelines[pipe] = []
+      self.initial_pipe_values[pipe] = pipelines[pipe]
 
   def is_active(self, cmd):
     return (id_to_classname(cmd) in self.activeEffects)
@@ -43,7 +45,7 @@ class Holodeck(threading.Thread):
     # Composes each controller pipeline into a single environment
     env = dict()
     for name in self.pipelines:
-      composite = None
+      composite = self.initial_pipe_values[name]
       for (con, priority) in self.pipelines[name]:
         composite = con(composite)
       env[name] = composite
@@ -58,11 +60,11 @@ class Holodeck(threading.Thread):
   def update(self):
     # Compose controllers into single environment
     env = self.compose()
-    
     # Use a separate function to complete updates
     # TODO: Multi-thread pipeline and updates
     for (deps, func) in self.update_funcs:
-      func(*[env[pipe_id] for pipe_id in deps if env[pipe_id] is not None])
+      pipes = [env[pipe_id] for pipe_id in deps]
+      func(*pipes)
 
     # Finally, give the effect objects a chance to adjust themselves
     # (usually, to remove themselves from )
@@ -92,7 +94,7 @@ class Holodeck(threading.Thread):
         # This may affect other active effects
         eff = self.effectClasses[req](self.activeEffects, self.pipelines)
         eff.register()
-      else:
+      elif self.activeEffects.get(req):
         self.logger.info("Removing " + req)
         state_delta[classname_to_id(req)] = False
         self.activeEffects[req].request_exit()
@@ -100,6 +102,8 @@ class Holodeck(threading.Thread):
     # Write back the change in state
     return state_delta
 
+
+last_sound = []
 def create_deck():
   from serial import Serial
   from Tests.TestSerial import TestSerial
@@ -108,6 +112,7 @@ def create_deck():
   from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRING
   from Outputs.IRController import IRController
   from Outputs.ScreenController import ScreenController
+  from Outputs.AudioController import AudioController
   import socket
 
   window = RGBSingleController(Serial("/dev/ttyUSB1", 9600))
@@ -115,6 +120,7 @@ def create_deck():
   tower = RGBMultiController(Serial("/dev/ttyACM0", 115200))
   proj_window = ScreenController("192.168.1.100")
   proj_wall = ScreenController("192.168.1.23", imgpath="Assets/Images/")
+  audio = AudioController("192.168.1.100")
   #"IR_AC": IRController(TestSerial("AC")),
   lights = RelayController(Serial("/dev/ttyUSB2", 9600))
   time.sleep(2.5) # Need delay at least this long for arduino to startup
@@ -145,10 +151,33 @@ def create_deck():
 
   def update_lights(is_on=False):
     lights.set_state(is_on)
-    
+
+  
+  def update_sound(sounds=[]):
+    global last_sound
+    for s in sounds:
+      if s not in last_sound:
+        audio.play(s)
+    for s in last_sound:
+      if s not in sounds:
+        audio.fade_out(s)
+    last_sound = sounds
+      
   # Start up the holodeck
   deck = Holodeck(
     get_all_effects(), 
+    {
+      P.WINDOWTOP: None,
+      P.WINDOWBOT: None,
+      P.FLOOR: None,
+      P.TOWER: None,
+      P.RING: None,
+      P.WINDOWIMG: None,
+      P.WALLIMG: None,
+      P.LIGHTS: None,
+      P.SOUND: None, 
+      P.TEMP: None,
+    },
     [
       ([P.WINDOWTOP, P.WINDOWBOT], update_window_leds),
       ([P.FLOOR], update_floor_leds),
@@ -156,6 +185,7 @@ def create_deck():
       ([P.WINDOWIMG], update_window_img),
       ([P.WALLIMG], update_wall_img),
       ([P.LIGHTS], update_lights),
+      ([P.SOUND], update_sound),
     ]
   )
   return deck
@@ -163,6 +193,6 @@ def create_deck():
 if __name__ == "__main__":
   deck = create_deck()
   # Test to see what the deck does
-  print deck.handle({'rain': True,'day': True})
+  print deck.handle({'fire': True})
   deck.run()
 

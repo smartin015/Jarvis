@@ -27,15 +27,23 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
-from Holodeck.holodeck import create_deck, classname_to_id
+import threading
+from Holodeck.holodeck import classname_to_id
+from Holodeck.holodeck_controller import JarvisHolodeck, HolodeckController
 from Holodeck.effects import get_all_effects
 
 # This creates the holodeck once, making it global for all
 # future connections.
-deck = create_deck() 
-deck.daemon = True
-deck.start()
+jarvisdecksrv = JarvisHolodeck() 
+dt = threading.Thread(target=jarvisdecksrv.serve_forever)
+dt.daemon = True
+dt.start()
 print "Started holodeck thread"
+
+deck_controllers = [
+  HolodeckController(),
+  HolodeckController("192.168.1.100"),
+]
 
 def web_socket_do_extra_handshake(request):
     # This example handler accepts any request. See origin_check_wsh.py for how
@@ -43,53 +51,56 @@ def web_socket_do_extra_handshake(request):
     pass  # Always accept.
 
 
+def send_meta(ws_stream):
+  effect_list = get_all_effects()
+  
+  icon_meta = {}
+  for (ename, eclass) in effect_list.items():
+    meta = eclass.META
+    if not meta.get('id'):
+      meta['id'] = classname_to_id(ename)
+    if not meta.get('img'):
+      meta['img'] = meta['id']+".png"
+    
+    #TODO: Show active state
+    #meta['active'] = deck.is_active(meta['id'])
+    meta['active'] = False
+
+    # Create this tab if not already made
+    if not icon_meta.get(meta['tab'], None):
+      icon_meta[meta['tab']] = {}
+    icon_meta[meta['tab']][meta['id']] = meta 
+
+  print "Sending meta:"
+  for tab in icon_meta:
+    print tab
+    for icon in icon_meta[tab]:
+      print "-", icon
+
+  ws_stream.send_message(json.dumps(
+    {"type": "init", "data": icon_meta}
+  ), binary=False)
+
+
 
 def web_socket_transfer_data(request):
-    global deck
+    global deck_controllers
     
-    effect_list = get_all_effects()
-    
-    icon_meta = {}
-    for (ename, eclass) in effect_list.items():
-      meta = eclass.META
-
-      if not meta.get('id'):
-        meta['id'] = classname_to_id(ename)
-
-      if not meta.get('img'):
-        meta['img'] = meta['id']+".png"
-
-      meta['active'] = deck.is_active(meta['id'])
-
-      # Create this tab if not already made
-      if not icon_meta.get(meta['tab'], None):
-        icon_meta[meta['tab']] = {}
-
-      icon_meta[meta['tab']][meta['id']] = meta 
-
-    print "Sending meta:"
-    for tab in icon_meta:
-      print tab
-      for icon in icon_meta[tab]:
-        print "-", icon
-
-    request.ws_stream.send_message(json.dumps(
-      {"type": "init", "data": icon_meta}
-    ), binary=False)
-
+    send_meta(request.ws_stream)
     while True:
         msg = request.ws_stream.receive_message()
         if msg is None:
             print "Client connection aborted"
             return
+      
+        # Forward it via each controller
+        responses = [con.send_cmd_json(msg) for con in deck_controllers]
+        responses = [r for r in responses if r is not None]
 
-        msg = json.loads(msg)
-        cmd = json.loads(msg['data'])
-
-        result = deck.handle(cmd)
-        print "Response:", result
-        response = json.dumps({"type": "delta", "data": result})
-        request.ws_stream.send_message(response, binary=False)
-
-        deck.update()
-
+        # Responses should be equal (lock-step)
+        print "Checking for response equality"
+        for r in responses:
+          assert (responses.count(r) == 1)
+        
+        print "Response:", r
+        request.ws_stream.send_message(r, binary=False)

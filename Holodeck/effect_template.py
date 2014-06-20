@@ -31,12 +31,14 @@ class EffectTemplate():
 
     # Add to pipeline
     for (pipe_id, con) in self.get_mapping().items():
+      if self.pipes.get(pipe_id) is None:
+        continue
+
       self.pipes[pipe_id].append(con)
       self.pipes[pipe_id].sort(key=lambda con:con[1])
 
     # Add to active effects
     self.active_effects[self.__class__.__name__] = self
-
 
   def get_mapping(self):
     raise Exception("Unimplemented")
@@ -45,6 +47,9 @@ class EffectTemplate():
     """ Removes ourselves from the pipeline """
     # TODO: Mutex this!
     for (pipe_id, con) in self.get_mapping().items():
+      if not self.pipes.get(pipe_id):
+        continue
+
       try:
         idx = self.pipes[pipe_id].index(con)
         del self.pipes[pipe_id][idx]

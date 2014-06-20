@@ -2,8 +2,8 @@ import time
 from Outputs.AudioController import AudioController, PORT
 import socket
 
-con = AudioController(socket.gethostname(), PORT)
+con = AudioController("192.168.1.100", PORT)
 
 
-con.play("confirm")
+con.play("confirm2")
 print "Played sound"

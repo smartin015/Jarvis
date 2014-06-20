@@ -141,9 +141,8 @@
         } else {
           cID[$(this).data("effect")] = false;
         }
-  			jCID = JSON.stringify(cID);
-        console.log(jCID);
-  			ws.send('cmd',jCID);
+        console.log(cID);
+  			ws.send('cmd',cID);
         return false;
       });
 
