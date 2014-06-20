@@ -2,7 +2,7 @@
 
 
 /* =====RESET===== */
-div, span, applet, object, iframe,
+body, html, div, span, applet, object, iframe,
 h1, h2, h3, h4, h5, h6, p, blockquote, pre,
 a, abbr, acronym, address, big, cite, code,
 del, dfn, em, img, ins, kbd, q, s, samp,
@@ -58,40 +58,50 @@ table {
 	box-sizing: border-box;
 }
 body {
+	height: 100%;
 	color: white;
 	font-size: 1.1em;
-	background-color: #3C3D3F;
+	background-color: #313236;
 	text-align: center;
+	font-family: 'Raleway', sans-serif;
 }
 img {
 	pointer-events: none;
 }
 
 #page {
+	height: 100%;
 	max-width: 900px;
-  margin: auto;
+	margin: auto;
 }
 
 #logo {
-	font-family: 'Raleway', sans-serif;
 	padding-top: 1%;
+	text-align: left;
+	float: left;
+	font-size: 1.4em;
 }
-.tabs {
-  width: 100%;
-  float: left;
+#currentPage {
+	display: none;
+}
 
-  font-family: 'Lato', sans-serif;
+.tabs {
+	width: 100%;
+	float: left;
+	clear: both;
+
+	font-family: 'Lato', sans-serif;
 	margin-bottom: 3%;
 	border-bottom: 2px solid #ccc;
 }
 .tabs li {
 	position: relative;
-  float: left;
-  width: 24.5%;
-  padding: 2% 0;
+	float: left;
+	width: 24.5%;
+	padding: 2% 0;
 
-  border-radius: 5%;
-  font-size: 2.5em;
+	border-radius: 5%;
+	font-size: 2em;
 	text-align: center;
 	opacity: 0.7;
 	transition: all 0.1s ease;
@@ -124,11 +134,9 @@ img {
 #content {
 	z-index: 10;
 	position: relative;
-  clear: both;
-  height: 100%;
-  overflow: hidden;
-
-  font-family: 'Raleway', sans-serif;
+	clear: both;
+	height: 100%;
+	overflow: hidden;
 }
 
 .tabcontent {
@@ -150,8 +158,8 @@ img {
 	transition: all 0.1s ease;
 }
 .tabcontent li.on {
-  background-color: #808080;
-  opacity: 1.0;
+	background-color: #808080;
+	opacity: 1.0;
 }
 .tabcontent li:hover {
 	opacity: 1;
@@ -161,12 +169,48 @@ img {
 	background-color: #747475;
 }
 .tabcontent li img {
-  width: 100%;
-  height: auto;
+	width: 100%;
+	height: auto;
 }
 .tabcontent li label {
 	position: absolute;
 	left: 0;
 	right: 0;
 	bottom: 2%;
+}
+
+/* =====Responsive Design===== */
+@media only screen and (max-device-width: 480px) {
+	#logo {
+		padding: 3%;
+		font-size: 1.1em;
+	}
+	#currentPage {
+		float: right;
+		padding: 3%;
+		display: block;
+	}
+	.tabs li {
+		text-indent: 100%;
+		white-space: nowrap;
+		overflow: hidden;
+
+		background: no-repeat center center;
+		-webkit-background-size: contain;
+		-moz-background-size: contain;
+		-o-background-size: contain;
+		background-size: contain;
+	}
+	#locationsButton {
+		background-image: url('img/locations.png');
+	}
+	#atmosphereButton {
+		background-image: url('img/day.png');
+	}
+	#effectsButton {
+		background-image: url('img/effects.png');
+	}
+	#settingsButton {
+		background-image: url('img/settings.png');
+	}
 }
