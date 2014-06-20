@@ -58,8 +58,7 @@
       $('.tabs li:nth-child(1)').addClass('active');
       var tileWidth = $('.tabcontent li').outerWidth();
       $('.tabcontent li')
-      	.css({'height':tileWidth}) // make the icon elements square
-      	.show();
+      	.css({'height':tileWidth, 'display': 'list-item'}); // make the icon elements square
 
       $("#content").hide().fadeIn();
 
