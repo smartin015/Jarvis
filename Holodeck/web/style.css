@@ -72,6 +72,10 @@ img {
   margin: auto;
 }
 
+#logo {
+	font-family: 'Raleway', sans-serif;
+	padding-top: 1%;
+}
 .tabs {
   width: 100%;
   float: left;
