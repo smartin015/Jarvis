@@ -27,26 +27,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import json
-from Holodeck.holodeck import create_deck
+from Holodeck.holodeck import create_deck, classname_to_id
 from Holodeck.effects import get_all_effects
-deck = create_deck()
 
-
-# TODO: Actually get useful shit from the deck
-effect_list = get_all_effects()
-print effect_list
-
-d = {}
-for (ename, eclass) in effect_list.items():
-  meta = eclass.META
-  if not d.get(meta['tab'], None):
-    d[meta['tab']] = {}
-
-  d[meta['tab']][meta['id']] = meta 
-
-n = {"type": "say", "data":d}
-print n
-		
+# This creates the holodeck once, making it global for all
+# future connections.
+deck = create_deck() 
+deck.daemon = True
+deck.start()
+print "Started holodeck thread"
 
 def web_socket_do_extra_handshake(request):
     # This example handler accepts any request. See origin_check_wsh.py for how
@@ -54,11 +43,40 @@ def web_socket_do_extra_handshake(request):
     pass  # Always accept.
 
 
+
 def web_socket_transfer_data(request):
     global deck
-    print deck
-    j = json.dumps(n)
-    request.ws_stream.send_message(j, binary=False)
+    
+    effect_list = get_all_effects()
+    
+    icon_meta = {}
+    for (ename, eclass) in effect_list.items():
+      meta = eclass.META
+
+      if not meta.get('id'):
+        meta['id'] = classname_to_id(ename)
+
+      if not meta.get('img'):
+        meta['img'] = meta['id']+".png"
+
+      meta['active'] = deck.is_active(meta['id'])
+
+      # Create this tab if not already made
+      if not icon_meta.get(meta['tab'], None):
+        icon_meta[meta['tab']] = {}
+
+      icon_meta[meta['tab']][meta['id']] = meta 
+
+    print "Sending meta:"
+    for tab in icon_meta:
+      print tab
+      for icon in icon_meta[tab]:
+        print "-", icon
+
+    request.ws_stream.send_message(json.dumps(
+      {"type": "init", "data": icon_meta}
+    ), binary=False)
+
     while True:
         msg = request.ws_stream.receive_message()
         if msg is None:
@@ -69,11 +87,9 @@ def web_socket_transfer_data(request):
         cmd = json.loads(msg['data'])
 
         result = deck.handle(cmd)
-        response = json.dumps(result)
- 
-        print "Responding with", response
+        print "Response:", result
+        response = json.dumps({"type": "delta", "data": result})
         request.ws_stream.send_message(response, binary=False)
 
         deck.update()
 
-# vi:sts=4 sw=4 et

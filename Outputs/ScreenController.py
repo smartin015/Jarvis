@@ -26,7 +26,7 @@ class ScreenCMD():
 
 
 class ScreenServer():
-  def __init__(self, host, port):
+  def __init__(self, host, port=PORT):
     self.s = socket.socket()         # Create a socket object
     self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.s.settimeout(0.5)
@@ -152,24 +152,28 @@ class ScreenServer():
     pygame.display.flip()
 
 class ScreenController():
-  def __init__(self, host, port):
+  def __init__(self, host, imgpath="", port=PORT):
     self.host = host
     self.port = port
+    self.path = imgpath
+    self.last_img = None
 
-  def send_cmd(self, cmd):
-    s = socket.socket()         # Create a socket object
-    s.connect((self.host, self.port))
-    s.send(cmd)
-    s.close()
+  def send_cmd(self, cmd, img):
+    if img != self.last_img:
+      s = socket.socket()         # Create a socket object
+      s.connect((self.host, self.port))
+      s.send(ScreenCMD.pack(cmd, path+img))
+      s.close()
+      self.last_img = img
 
   def slide_to(self, img):
-    self.send_cmd(ScreenCMD.pack(ScreenCMD.SLIDE_TO, img))
+    self.send_cmd(ScreenCMD.SLIDE_TO, img)
 
   def set_img(self, img):
-    self.send_cmd(ScreenCMD.pack(ScreenCMD.SET_IMG, img))
+    self.send_cmd(ScreenCMD.SET_IMG, img)
 
   def zoom_to(self, img):
-    self.send_cmd(ScreenCMD.pack(ScreenCMD.ZOOM_TO, img))
+    self.send_cmd(ScreenCMD.ZOOM_TO, img)
 
 def loadimg(path):
   img = pygame.image.load(path).convert()
