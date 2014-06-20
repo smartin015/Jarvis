@@ -57,10 +57,6 @@
       });
       $('.tabs li:nth-child(1)').addClass('active');
       var tileWidth = $('.tabcontent li').outerWidth();
-      $('.tabcontent li')
-      	.css({'height':tileWidth, 'display': 'list-item'}); // make the icon elements square
-
-      $("#content").hide().fadeIn();
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
@@ -80,10 +76,14 @@
                 if (meta['active']) {
                   elem.addClass("on");
                 }
-
                 $("#"+i).append(elem);
               }
             }
+            $('.tabcontent li').css({
+              'height':tileWidth, 
+              'display': 'list-item'
+            }); // make the icon elements square
+
           },
           delta: function(e) {
             console.log(e.data);

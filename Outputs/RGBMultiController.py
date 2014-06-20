@@ -1,6 +1,6 @@
 import time
 
-NLIGHTS = 105
+NTOWER = 105
 NRING = 24
 
 class RGBState():
@@ -55,11 +55,11 @@ if __name__ == "__main__":
   con = RGBMultiController(ser)
   con.setState(RGBState.STATE_MANUAL)
   for j in xrange(55):
-    for i in xrange(NLIGHTS+NRING):
+    for i in xrange(NTOWER+NRING):
       con.manual_write(i, [j, 0, 0])  
     con.manual_update()
   for j in xrange(55, -1, -1):
-    for i in xrange(NLIGHTS+NRING):
+    for i in xrange(NTOWER+NRING):
       con.manual_write(i, [j, 0, 0])
     con.manual_update()
 
