@@ -1,28 +1,30 @@
 <html>
 <header>
 	<title>HoloDeck Control Panel</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <link rel="stylesheet" type="text/css" href="style.css">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<link rel="stylesheet" type="text/css" href="style.css">
 </header>
 <body>
 	<div id="page">
-    <div id="logo">HoloDeck Command Dashboard</div>
+    <div id="logo">HoloDeck Command</div>
+    <div id="currentPage">Locations</div>
   	<ul class='tabs'>
-  		<li>Tab 1</li>
-  		<li>Tab 2</li>
-  		<li>Tab 3</li>
-  		<li>Tab 4</li>
+  		<li id="locationsButton">Locations</li>
+  		<li id="atmosphereButton">Atmosphere</li>
+  		<li id="effectsButton">Effects</li>
+  		<li id="settingsButton">Settings</li>
   	</ul>
   	
     <div id="content">
-      <ul id='tab1' class='tabcontent'>
-        <!--<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>-->
+      <ul id='locations' class='tabcontent'>
+        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>Forest</label></li>
       </ul>
-      <ul id='tab2' class='tabcontent'>
+      <ul id='atmosphere' class='tabcontent'>
       </ul>
-      <ul id='tab3' class='tabcontent'>
+      <ul id='effects' class='tabcontent'>
       </ul>
-      <ul id='tab4' class='tabcontent'>
+      <ul id='settings' class='tabcontent'>
       </ul>
   	</div>
   </div>
@@ -33,11 +35,21 @@
   <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
   <script src="hammer.min.js"></script>
 	<script>
+	if (!window.location.hash && window.addEventListener) {
+		window.addEventListener('load', function() {
+			window.scrollTo( 0, 1 );
+			window.scrollTo( 0, 0 );
+		}, false);
+	}
+
+
     $(document).ready(function() {
+	// for now, prevent mobile scrolling (until we have enough icons to worry)
+      document.body.addEventListener('touchmove', function(e){ e.preventDefault(); });
+
       var swiping = false;
       var currentTab = 1;
       var maxTab = $(".tabs li").length;
-      document.body.addEventListener('touchmove', function(e){ e.preventDefault(); });
       /* =====Set up elements===== */
       var contentWidth = $('#content').width();
       $("#content ul").width(contentWidth).each(function(index) {
@@ -140,6 +152,7 @@
         $("#content")
           .css('transition', 'margin 0.' + (dist*2) + 's ease')
           .css('margin-left', -contentWidth*(currentTab-1));
+		$("#currentPage").html($(this).html());
         setTimeout(function() {
           $("#content").css('transition', 'none');
         }, dist*205);
