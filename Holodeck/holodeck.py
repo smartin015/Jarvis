@@ -55,7 +55,7 @@ class Holodeck(threading.Thread):
   def run(self):
     while True:
       self.update()
-      time.sleep(0.5)
+      time.sleep(0.2)
 
   def update(self):
     # Compose controllers into single environment

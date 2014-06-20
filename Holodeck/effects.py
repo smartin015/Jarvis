@@ -67,11 +67,14 @@ class EffectTemplate():
     """ Called once per frame for update purposes. 
         Remember to check self.should_exit() here
     """
-    raise Exception("Unimplemented - should at least check should_exit")
+    if self.should_exit:
+      self.remove()
+
+
 
 class ForestEffect(EffectTemplate):
   META = {
-    'tab': "tab1",
+    'tab': "locations",
     'text': "Forest",
   }
 
@@ -91,22 +94,18 @@ class ForestEffect(EffectTemplate):
   def window_bot(self, prev):
     return [100, 50, 20]
 
-  def post_render(self):
-    if self.should_exit:
-      self.remove()
-      print "Delete success!"
-
 
 class RainEffect(EffectTemplate):
   META = {
-    'tab': "tab1",
-    'id': "rain",
+    'tab': "atmosphere",
     'text': "Rain",
-    'img': "rain.png",
   }
-  def inject_into(self, pipes):
-    pipes[P.TOWER].insert((self.tower, 1))
-    pipes[P.RING].insert((self.ring, 1))
+
+  def get_mapping(self):
+    return {
+      P.TOWER: (self.tower, 1),
+      P.RING: (self.ring, 1),
+    }
 
   def tower(self, prev):
     return [[0, 0, 255]]*NLIGHTS
@@ -117,39 +116,49 @@ class RainEffect(EffectTemplate):
 
 class BattleEffect(EffectTemplate):
   META = {
-    'tab': "tab1",
-    'id': "battle",
+    'tab': "effects",
     'text': "Battle",
-    'img': "cave.png",
   }
-  def inject_into(self, pipes):
-    pass
+
+  def get_mapping(self):
+    return {
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1)
+    }
+
+  def window_top(self, prev):
+    return [255, 0, 0]
+
+  def window_bot(self, prev):
+    return [255, 0, 0]
 
 
 class DayEffect(EffectTemplate):
   META = {
-    'tab': "tab1",
-    'id': "day",
+    'tab': "atmosphere",
     'text': "Daytime",
-    'img': "plains.png",
   }
-  def inject_into(self, pipes):
-    pipes[P.LIGHTS].insert((self.lights, 1))
+
+  def get_mapping(self):
+    return {
+      P.LIGHTS: (self.lights, 1)
+    }
 
   def lights(self, prev):
     return True
 
 class PaulEffect(EffectTemplate):
   META = {
-    'tab': "tab1",
-    'id': "paul",
+    'tab': "effects",
     'text': "Paul-ify",
-    'img': "beach.png",
   }
-  def inject_into(self, pipes):
-    pipes[P.FLOOR].insert((self.floor, 1))
-    pipes[P.WINDOWTOP].insert((self.window_top, 1))
-    pipes[P.WINDOWBOT].insert((self.window_bot, 1))
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+    }
 
   def floor(self, prev):
     return [80, 180, 0]
