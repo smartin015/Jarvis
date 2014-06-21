@@ -5,7 +5,7 @@ logging.basicConfig()
 logging.addLevelName( logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
 logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
 
-from Holodeck.pipe import Pipe as P
+from Holodeck.Settings import Pipe as P
 from serial import Serial
 from Tests.TestSerial import TestSerial
 from Outputs.RelayController import RelayController
@@ -13,10 +13,10 @@ from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRING
 from Outputs.IRController import IRController
 from Outputs.ScreenController import ScreenController
-from Holodeck.holodeck_server import HolodeckServer
+from Holodeck.Server import HolodeckServer
 import time
 
-class JarvisHolodeck(HolodeckServer):
+class Holodeck(HolodeckServer):
   def __init__(self):
     self.devices = {
       "window": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
@@ -78,6 +78,6 @@ class JarvisHolodeck(HolodeckServer):
   
 
 if __name__ == "__main__":
-  h = JarvisHolodeck() 
+  h = Holodeck() 
   h.serve_forever()
 

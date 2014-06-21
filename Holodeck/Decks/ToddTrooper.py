@@ -5,13 +5,13 @@ logging.basicConfig()
 logging.addLevelName( logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLevelName(logging.WARNING))
 logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
 
-from Holodeck.pipe import Pipe as P
+from Holodeck.Settings import Pipe as P
 from Outputs.ScreenController import ScreenController
 from Outputs.AudioController import AudioController
-from Holodeck.holodeck_server import HolodeckServer
+from Holodeck.Server import HolodeckServer
 import time
 
-class ToddHolodeck(HolodeckServer):
+class Holodeck(HolodeckServer):
   def __init__(self):
     self.devices = {
       "proj": ScreenController(),
@@ -52,6 +52,6 @@ class ToddHolodeck(HolodeckServer):
     self.last_sounds = sounds
 
 if __name__ == "__main__":
-  h = ToddHolodeck() 
+  h = Holodeck() 
   h.serve_forever()
 

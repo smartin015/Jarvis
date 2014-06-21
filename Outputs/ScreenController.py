@@ -51,7 +51,7 @@ class ScreenController(threading.Thread):
     img2_start = float(-2*self.delta)
 
     for i in xrange(start, end):
-      v = ScreenServer.easeInOutQuad(i, start, self.delta, end) 
+      v = ScreenController.easeInOutQuad(i, start, self.delta, end) 
 
       if i < mid+overlap:
         alpha = i * (alpha_end/float(mid+overlap))  
@@ -79,7 +79,7 @@ class ScreenController(threading.Thread):
     aspect = float(IMW)/float(IMH)
 
     for i in xrange(start, end):
-      v = ScreenServer.easeInOutQuad(i, start, delta, end) 
+      v = ScreenController.easeInOutQuad(i, start, delta, end) 
 
       if i < mid+overlap:
         alpha = i * (alpha_end/float(mid+overlap))  
@@ -103,6 +103,7 @@ class ScreenController(threading.Thread):
     img_start = float(-self.delta)
     self.screen.blit(img, (img_start,VSTART))
     pygame.display.flip()
+    self.last_img = img
 
   @classmethod
   def loadimg(self, path):
@@ -113,8 +114,11 @@ class ScreenController(threading.Thread):
 if __name__ == '__main__':
   con = ScreenController()
   forest = ScreenController.loadimg('Assets/Images/forest.jpg')
+  grass = ScreenController.loadimg('Assets/Images/grassland.jpg')
   con.setimg(forest)
-  time.sleep(2.0)
+  raw_input("Enter to slide:")
+  con.sweep(grass)
+  time.sleep(10.0)
 
 
  

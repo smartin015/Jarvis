@@ -1,11 +1,11 @@
 import socket
 import SocketServer
-from Holodeck.holodeck import Holodeck
-from Holodeck.effects import get_all_effects
 import json
 import logging
-from Holodeck.effects import get_all_effects
-PORT = 9615
+
+from Holodeck.Engine import HolodeckEngine
+from Holodeck.Effects import get_all_effects
+from Holodeck.Settings import SERVER_PORT as PORT
    
 class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
   def handle(self):
@@ -49,18 +49,8 @@ class HolodeckServer(SocketServer.ThreadingTCPServer):
     self.logger.debug("Using address "+str(server_address))
 
     SocketServer.ThreadingTCPServer.__init__(self, server_address, HolodeckRequestHandler)
-    self.begin()
-  
-  def broadcast(self, data):
-    self.logger.debug("Broadcast %s" % str(data))
-    for user in self.userlist:
-      user.send(data)
-
-  def broadcast_state(self, state):
-    self.broadcast(json.dumps({"type":"delta", "data":state}))
-
-  def begin(self):
-    self.deck = Holodeck(
+    
+    self.deck = HolodeckEngine(
       get_all_effects(), 
       self.get_pipeline_defaults(),
       self.get_pipeline_handlers(),
@@ -69,6 +59,18 @@ class HolodeckServer(SocketServer.ThreadingTCPServer):
     self.deck.daemon = True
     self.deck.start()
     self.logger.debug("Holodeck started")
+  
+  def broadcast(self, data):
+    self.logger.debug("Broadcast %s" % str(data))
+    for user in self.userlist:
+      user.send(data)
+
+  def broadcast_state(self, state):
+    self.broadcast(json.dumps({"type":"delta", "data":state}))
+     
+  def handle(self, data):
+    """ Use this for testing/debugging of commands without server """
+    self.deck.handle(data)
     
   def get_pipeline_handlers(self):
     raise Exception("Unimplemented")

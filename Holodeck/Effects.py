@@ -1,6 +1,6 @@
-from pipe import Pipe as P
+from Holodeck.Settings import Pipe as P
 from Outputs.RGBMultiController import NTOWER, NRING
-from Holodeck.effect_template import EffectTemplate
+from Holodeck.Engine import EffectTemplate
 from random import randint
 
 SKY = [20, 100, 205]

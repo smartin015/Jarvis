@@ -1,13 +1,112 @@
 from string import capitalize
 import threading
-from effects import get_all_effects
-from effect_template import id_to_classname, classname_to_id
-from pipe import Pipe as P
+from Holodeck.Settings import Pipe as P
 import time
 import logging
 from pygame.time import Clock
+import types
+from string import capitalize
 
-class Holodeck(threading.Thread):
+def id_to_classname(cmd):
+  return "%sEffect" % (capitalize(cmd))
+
+def classname_to_id(key):
+  return key[:-6].lower()
+
+class EffectTemplate():
+  META = {
+    'tab': None,
+    'id': None,
+    'text': None,
+    'img': None,
+  }
+
+  def __init__(self, pipes, active_effects, remove_cb):
+    self.logger = logging.getLogger(self.__class__.__name__)
+    self.logger.setLevel(logging.DEBUG)
+    self.remove_cb = remove_cb
+    self.should_exit = False
+    self.pipes = pipes
+    self.active_effects = active_effects
+    self.logger.debug("Entering setup")
+    self.setup()
+    self.logger.debug("Setup complete")
+
+  def setup(self):
+    pass
+
+  @classmethod
+  def get_meta(self):
+    meta = self.META
+    if not meta.get('id'):
+      meta['id'] = classname_to_id(self.__name__)
+    if not meta.get('img'):
+      meta['img'] = meta['id']+".png"
+    if not meta.get('text'):
+      meta['text'] = capitalize(meta['id'])
+    return meta
+
+
+  def get_blacklist(self):
+    """ Return a list of typenames that this effect 
+        should not run alongside
+    """
+    return []
+
+  def register(self):
+    """ Effect injects itself into its own location(s) 
+        in the controller pipeline
+    """
+    # TODO: blacklist booting
+
+    # Add to pipeline
+    for (pipe_id, con) in self.get_mapping().items():
+      if self.pipes.get(pipe_id) is None:
+        continue
+
+      self.pipes[pipe_id].append(con)
+      self.pipes[pipe_id].sort(key=lambda con:con[1])
+
+    self.active_effects[self.__class__.__name__] = self
+
+  def get_mapping(self):
+    raise Exception("Unimplemented")
+
+  def remove(self):
+    """ Removes ourselves from the pipeline """
+    # TODO: Mutex this!
+    for (pipe_id, con) in self.get_mapping().items():
+      if not self.pipes.get(pipe_id):
+        continue
+
+      try:
+        idx = self.pipes[pipe_id].index(con)
+        del self.pipes[pipe_id][idx]
+      except ValueError:
+        print self.pipes
+        raise
+
+    # Remove from active effects
+    del self.active_effects[self.__class__.__name__]
+
+    # Notify the holodeck that we're dead
+    self.remove_cb(self)
+
+  def request_exit(self):
+    """ Tell this effect to start the process of dying 
+    """
+    self.should_exit = True
+
+  def post_render(self):
+    """ Called once per frame for update purposes. 
+        Remember to check self.should_exit() here
+    """
+    if self.should_exit:
+      self.remove()
+
+
+
+class HolodeckEngine(threading.Thread):
   
   def __init__(self, effect_list, pipelines, update_funcs, state_callback=None):
     self.logger = logging.getLogger(self.__class__.__name__)
@@ -82,7 +181,6 @@ class Holodeck(threading.Thread):
 
       meta[e_meta['tab']][e_meta['id']] = e_meta
     return meta
-    
 
   def handle(self, request):
     # Request is in JSON format,
@@ -94,12 +192,11 @@ class Holodeck(threading.Thread):
     #
     # See self.effectClasses for a full list
     self.logger.debug("Got request %s" % str(request))
-    state_delta = {}
     for (req, turn_on) in request.items():
       req = id_to_classname(req)
       if turn_on:
         self.logger.info("Adding " + req)
-        state_delta[classname_to_id(req)] = True
+        
         if req in self.activeEffects:
           raise Exception("Effect already in effect")
         
@@ -109,107 +206,13 @@ class Holodeck(threading.Thread):
 
         self.logger.info("Registering")
         eff.register()
+
+        # Tell the server this was activated
+        self.state_callback({classname_to_id(req): True})
+
       elif self.activeEffects.get(req):
         self.logger.info("Removing " + req)
-        state_delta[classname_to_id(req)] = False
         self.activeEffects[req].request_exit()
 
-    # Write back the change in state to ALL clients
-    self.logger.debug("Handing off to callback")
-    
-    self.state_callback(state_delta)
 
-
-last_sound = []
-def create_deck():
-  from serial import Serial
-  from Tests.TestSerial import TestSerial
-  from Outputs.RelayController import RelayController
-  from Outputs.RGBSingleController import RGBSingleController
-  from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRING
-  from Outputs.IRController import IRController
-  from Outputs.ScreenController import ScreenController
-  from Outputs.AudioController import AudioController
-  import socket
-
-  window = RGBSingleController(Serial("/dev/ttyUSB1", 9600))
-  couch = RGBSingleController(Serial("/dev/ttyUSB0", 9600))
-  tower = RGBMultiController(Serial("/dev/ttyACM0", 115200))
-  proj_window = ScreenController("192.168.1.100")
-  proj_wall = ScreenController("192.168.1.23", imgpath="Assets/Images/")
-  audio = AudioController("192.168.1.100")
-  #"IR_AC": IRController(TestSerial("AC")),
-  lights = RelayController(Serial("/dev/ttyUSB2", 9600))
-  time.sleep(2.5) # Need delay at least this long for arduino to startup
-
-  tower.setState(RGBState.STATE_MANUAL)
-  time.sleep(1.0)
-
-  tower_default = [[0,0,0]]*NTOWER
-  ring_default = [[0,0,0]]*NRING
-  black = [0,0,0]
-
-  def update_window_leds(top=black, bot=black):
-    window.write(top, bot)  
-
-  def update_floor_leds(rgb=black):
-    couch.write(rgb)
-  
-  def update_tower_ring(trgb=tower_default, rrgb=ring_default):
-    for (i,c) in enumerate(trgb+rrgb):
-      tower.manual_write(i, c)
-    tower.manual_update()
-
-  def update_window_img(img=None):
-    proj_window.zoom_to(img)
-  
-  def update_wall_img(img=None):
-    proj_wall.slide_to(img)
-
-  def update_lights(is_on=False):
-    lights.set_state(is_on)
-
-  
-  def update_sound(sounds=[]):
-    global last_sound
-    for s in sounds:
-      if s not in last_sound:
-        audio.play(s)
-    for s in last_sound:
-      if s not in sounds:
-        audio.fade_out(s)
-    last_sound = sounds
-      
-  # Start up the holodeck
-  deck = Holodeck(
-    get_all_effects(), 
-    {
-      P.WINDOWTOP: None,
-      P.WINDOWBOT: None,
-      P.FLOOR: None,
-      P.TOWER: None,
-      P.RING: None,
-      P.WINDOWIMG: None,
-      P.WALLIMG: None,
-      P.LIGHTS: None,
-      P.SOUND: None, 
-      P.TEMP: None,
-    },
-    [
-      ([P.WINDOWTOP, P.WINDOWBOT], update_window_leds),
-      ([P.FLOOR], update_floor_leds),
-      ([P.TOWER, P.RING], update_tower_ring),
-      ([P.WINDOWIMG], update_window_img),
-      ([P.WALLIMG], update_wall_img),
-      ([P.LIGHTS], update_lights),
-      ([P.SOUND], update_sound),
-    ]
-  )
-  return deck
-
-if __name__ == "__main__":
-  deck = create_deck()
-  # Test to see what the deck does
-  print deck.handle({'fire': True})
-  deck.run()
 

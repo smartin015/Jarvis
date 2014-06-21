@@ -1,4 +1,7 @@
 
+SERVER_LIST = ["Jarvis", "ToddTrooper"]
+SERVER_PORT = 9601
+
 class Pipe():
   RING = "towerRing"
   TOWER = "tower"
