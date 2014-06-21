@@ -149,11 +149,9 @@ img {
 	width: 22%;
 	float: left;
 
-	border-radius: 5%;
 	margin: 1.5%;
 	padding: 3% 4% 4% 4%;
 	opacity: 0.6;
-	background-color: #4C4D4F;
 	transition: all 0.1s ease;
 }
 .tabcontent li.on {
@@ -170,6 +168,8 @@ img {
 .tabcontent li img {
 	width: 100%;
 	height: auto;
+	background-color: #4C4D4F;
+	border-radius: 5%;
 }
 .tabcontent li label {
 	position: absolute;
