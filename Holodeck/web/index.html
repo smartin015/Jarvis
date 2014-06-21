@@ -89,10 +89,8 @@
               }
             }
             $('.tabcontent li').css('height', tileWidth); // make the icon elements square
-            $("#loading").fadeOut(300, function() {
-            	$("#loading").remove();
-            	$("#page").animate({"opacity": 1}, 600);
-            });
+          	$("#loading").remove();
+          	$("#page").animate({"opacity": 1}, 600);
           },
           delta: function(e) {
             console.log(e.data);
