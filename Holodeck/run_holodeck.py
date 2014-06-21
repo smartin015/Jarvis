@@ -22,7 +22,7 @@ class JarvisHolodeck(HolodeckServer):
       "window": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
       "couch": RGBSingleController(Serial("/dev/ttyUSB0", 9600)),
       "tower": RGBMultiController(Serial("/dev/ttyACM0", 115200)),
-      "proj_wall": ScreenController(),
+      "proj": ScreenController(),
       "lights": RelayController(Serial("/dev/ttyUSB2", 9600)),
     }
 
@@ -72,8 +72,8 @@ class JarvisHolodeck(HolodeckServer):
   def wall_img(self, img):
     # TODO: Slide
     if img != self.last_img:
-      img_data = self.devices['proj_wall'].loadimg(self.img_path + img)
-      self.devices['proj_wall'].setimg(img_data)
+      img_data = self.devices['proj'].loadimg(self.img_path + img)
+      self.devices['proj'].setimg(img_data)
       self.last_img = img
   
 

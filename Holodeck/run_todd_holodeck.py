@@ -13,41 +13,34 @@ import time
 
 class ToddHolodeck(HolodeckServer):
   def __init__(self):
-    HolodeckServer.__init__(self)
-    
     self.devices = {
-      "proj_window": ScreenController(socket.gethostname()),
-      "audio": AudioController(socket.gethostname()),
+      "proj": ScreenController(),
+      "audio": AudioController(),
     }
     self.last_sounds = []
+    self.last_img = None
+    self.img_path = "Assets/Images/"
+
+    HolodeckServer.__init__(self)
 
   def get_pipeline_handlers(self):
     return [
-      ([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
-      ([P.FLOOR], self.floor_leds),
-      ([P.TOWER, P.RING], self.tower_ring),
       ([P.WINDOWIMG], self.window_img),
-      ([P.WALLIMG], self.wall_img),
-      ([P.LIGHTS], self.lights),
       ([P.SOUND], self.sound),
     ]
 
   def get_pipeline_defaults(self):
     return {
-      P.WINDOWTOP:  [0,0,0],
-      P.WINDOWBOT:  [0,0,0],
-      P.FLOOR:      [0,0,0],
-      P.TOWER:      [[0,0,0]]*NTOWER,
-      P.RING:       [[0,0,0]]*NRING,
       P.WINDOWIMG:  None,
-      P.WALLIMG:    None,
-      P.LIGHTS:     False,
       P.SOUND:      [], 
-      P.TEMP:       None,
     }
 
   def window_img(self, img):
-    self.devices['proj_window'].zoom_to(img)
+    # TODO: Zoom
+    if img != self.last_img:
+      img_data = self.devices['proj'].loadimg(self.img_path + img)
+      self.devices['proj'].setimg(img_data)
+      self.last_img = img
   
   def sound(self, sounds=[]):
     for s in sounds:

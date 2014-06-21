@@ -23,7 +23,8 @@ class ForestEffect(EffectTemplate):
       P.FLOOR: (self.floor, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.screen, 1),
+      P.WALLIMG: (self.wall_img, 1),
+      P.WINDOWIMG: (self.window_img, 1),
     }
 
   def floor(self, prev):
@@ -35,7 +36,10 @@ class ForestEffect(EffectTemplate):
   def window_bot(self, prev):
     return [102, 55, 0]
 
-  def screen(self, prev):
+  def wall_img(self, prev):
+    return "forest.jpg"
+
+  def window_img(self, prev):
     return "forest.jpg"
 
 def flicker(rgb, flicker = 3):
