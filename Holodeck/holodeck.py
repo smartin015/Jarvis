@@ -1,16 +1,11 @@
 from string import capitalize
 import threading
 from effects import get_all_effects
+from effect_template import id_to_classname, classname_to_id
 from pipe import Pipe as P
 import time
 import logging
 from pygame.time import Clock
-
-def id_to_classname(cmd):
-  return "%sEffect" % (capitalize(cmd))
-
-def classname_to_id(key):
-  return key[:-6].lower()
 
 class Holodeck(threading.Thread):
   

@@ -16,7 +16,6 @@ def get_all_effects():
 class ForestEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Forest",
   }
 
   def get_mapping(self):
@@ -59,7 +58,6 @@ def flicker(rgb, flicker = 3):
 class RainEffect(EffectTemplate):
   META = {
     'tab': "atmosphere",
-    'text': "Rain",
   }
 
   def setup(self):
@@ -90,7 +88,6 @@ class RainEffect(EffectTemplate):
 class BattleEffect(EffectTemplate):
   META = {
     'tab': "effects",
-    'text': "Battle",
   }
 
   def get_mapping(self):
@@ -123,7 +120,6 @@ class DayEffect(EffectTemplate):
 class FireEffect(EffectTemplate):
   META = {
     'tab': "effects",
-    'text': "Fire",
   }
 
   def get_mapping(self):
@@ -211,10 +207,9 @@ class PaulEffect(EffectTemplate):
   def window_bot(self, prev):
     return [100, 50, 20]
 
-class CandleEffect(EffectTemplate):
+class TorchEffect(EffectTemplate):
   META = {
     'tab': "effects",
-    'text': "Fire",
   }
 
   def get_mapping(self):
@@ -254,7 +249,6 @@ class CandleEffect(EffectTemplate):
 class LightningEffect(EffectTemplate):
   META = {
     'tab': "atmosphere",
-    'text': "Lightning",
   }
 
   def setup(self):
@@ -326,7 +320,6 @@ class LightningEffect(EffectTemplate):
 class DesertEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Desert",
   }
 
   def tower(self, prev):
@@ -353,7 +346,6 @@ class DesertEffect(EffectTemplate):
 class TundraEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Tundra",
   }
 
   def tower(self, prev):
@@ -380,7 +372,6 @@ class TundraEffect(EffectTemplate):
 class WaterEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "water",
   }
 
   def setup(self):
@@ -412,7 +403,6 @@ class WaterEffect(EffectTemplate):
 class JungleEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Jungle",
   }
 
   def get_mapping(self):
@@ -434,7 +424,6 @@ class JungleEffect(EffectTemplate):
 class PlainsEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Plains",
   }
 
   def tower(self, prev):
@@ -461,7 +450,6 @@ class PlainsEffect(EffectTemplate):
 class BeachEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Beach",
   }
 
   def tower(self, prev):

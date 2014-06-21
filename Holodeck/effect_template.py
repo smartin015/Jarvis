@@ -1,5 +1,12 @@
 import types
 import logging
+from string import capitalize
+
+def id_to_classname(cmd):
+  return "%sEffect" % (capitalize(cmd))
+
+def classname_to_id(key):
+  return key[:-6].lower()
 
 class EffectTemplate():
   META = {
@@ -22,6 +29,18 @@ class EffectTemplate():
 
   def setup(self):
     pass
+
+  @classmethod
+  def get_meta(self):
+    meta = self.META
+    if not meta.get('id'):
+      meta['id'] = classname_to_id(self.__name__)
+    if not meta.get('img'):
+      meta['img'] = meta['id']+".png"
+    if not meta.get('text'):
+      meta['text'] = capitalize(meta['id'])
+    return meta
+
 
   def get_blacklist(self):
     """ Return a list of typenames that this effect 
