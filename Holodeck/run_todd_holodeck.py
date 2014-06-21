@@ -48,7 +48,7 @@ class ToddHolodeck(HolodeckServer):
         self.devices['audio'].play(s)
     for s in self.last_sounds:
       if s not in sounds:
-        self.devices['audio'].fade_out(s)
+        self.devices['audio'].fadeout(s)
     self.last_sounds = sounds
 
 if __name__ == "__main__":

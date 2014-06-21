@@ -134,6 +134,7 @@ img {
 
 
 #page {
+	opacity: 0; /* faded in on load */
 	height: 100%;
 	max-width: 900px;
 	margin: auto;
