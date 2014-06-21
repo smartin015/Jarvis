@@ -30,7 +30,7 @@ import socket
 from Holodeck.holodeck_controller import HolodeckController
 
 # TODO: Put in config?
-holodeck_server_list = [socket.gethostname()] #TODO: Add todd
+holodeck_server_list = [socket.gethostname(), "192.168.1.100"]
 
 def web_socket_do_extra_handshake(request):
     # This example handler accepts any request. See origin_check_wsh.py for how
