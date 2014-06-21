@@ -75,15 +75,17 @@ img {
 	margin: auto;
 	overflow: hidden;
 }
-
+#topBar {
+	padding: 2%;
+}
 #logo {
-	padding-top: 1%;
 	text-align: left;
 	float: left;
 	font-size: 1.4em;
 }
 #currentPage {
 	display: none;
+	padding-top: 1%;
 }
 
 .tabs {
@@ -92,7 +94,7 @@ img {
 	clear: both;
 
 	font-family: 'Lato', sans-serif;
-	margin-bottom: 3%;
+	margin: 1% 0 3% 0;
 	border-bottom: 2px solid #ccc;
 }
 .tabs li {
@@ -104,7 +106,7 @@ img {
 	font-size: 2em;
 	text-align: center;
 	opacity: 0.7;
-	transition: all 0.3s ease;
+	transition: all 0.25s ease;
 }
 .tabs li:hover {
 	opacity: 0.9;
@@ -113,7 +115,7 @@ img {
 .tabs li.active {
 	opacity: 1;
 	font-weight: 700;
-	background-color: #353637;
+	background-color: #2A2B2E;
 }
 .tabs li:before {
 	z-index: 100;
@@ -180,26 +182,21 @@ img {
 
 /* =====Responsive Design===== */
 
-@media only screen and (max-device-width: 768px) {
-	#logo {
-		padding: 3%;
-		font-size: 1.1em;
-	}
+@media only screen and (max-width: 768px) {
 	#currentPage {
-		float: right;
-		padding: 3%;
 		display: block;
+		font-size: 0.6em;
 	}
 	.tabs li {
 		text-indent: 100%;
 		white-space: nowrap;
 		overflow: hidden;
 
-		background: no-repeat center center;
-		-webkit-background-size: contain;
-		-moz-background-size: contain;
-		-o-background-size: contain;
-		background-size: contain;
+		background: no-repeat center bottom;
+		-webkit-background-size: auto 90%;
+		-moz-background-size: auto 90%;
+		-o-background-size: auto 90%;
+		background-size: auto 90%;
 	}
 	#locationsButton {
 		background-image: url('img/locations.png');
@@ -220,7 +217,7 @@ img {
 }
 
 
-@media only screen and (max-device-width: 480px) {
+@media only screen and (max-width: 480px) {
 	.tabcontent li label {
 		bottom: 0;
 	}
