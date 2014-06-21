@@ -1,51 +1,20 @@
 import pygame
 import os
 import time
-import socket
 import threading
 
-PORT = 9808
 SW,SH = 1920, 1080
 DELTA = 500
 SCALE_DELTA = 10
 VSTART = 0
 IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
 
-class ScreenCMD():
-  SLIDE_TO = "slideto"
-  ZOOM_TO = "zoomto"
-  SET_IMG = "setimg"
-  SEP = '|'
-
-  @classmethod
-  def pack(self, cmd, path):
-    return "%s%s%s\n" % (cmd, self.SEP, path)
-
-  @classmethod
-  def unpack(self, cmd):
-    return cmd.strip().split(self.SEP)
-
-class ScreenServer(threading.Thread):
-  FRAMERATE = 30
-
-  def __init__(self, host, effect_list, port=PORT):
+class ScreenController(threading.Thread):
+  def __init__(self):
     threading.Thread.__init__(self)
-    self.s = socket.socket()         # Create a socket object
-    self.s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    self.s.settimeout(0.5)
-    self.s.bind((host, port))        # Bind to the port
-    self.s.listen(5)                 # Now wait for client connection.
     self.delta = DELTA
     self.last_img = None
-
-    self.effectClasses = effect_list
-    self.active_effects = {}
-
-    self.cmd_map = {
-      ScreenCMD.SLIDE_TO: self.sweep,
-      ScreenCMD.ZOOM_TO: self.zoom,
-      ScreenCMD.SET_IMG: self.setimg,
-    }
+    self.daemon = True
 
     if os.name is not 'nt':
       os.environ["DISPLAY"] = ":0"
@@ -56,36 +25,7 @@ class ScreenServer(threading.Thread):
     )
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
-
-  def handler_loop(self):
-    while True:
-      try:
-        c, addr = self.s.accept()     # Establish connection with client.
-      except socket.timeout:
-        continue
-
-      print 'Got connection from', addr
-
-      msg = c.recv(1024)
-      (cmd,opt) = ScreenCMD.unpack(msg)
-      eff = self.effect_map
-      self.cmd_map[cmd](loadimg(path))
-      c.close()      
-      last_img = img
-
-
-  def handle_forever(self):
-    # Start up the request handler
-    h = threading.Thread(target=self.handler_loop)
-    h.daemon = True
-    h.start()
-    
-    while True:
-      pygame.event.pump()
-      for e in self.effects:
-        self.effects[e][0](self.screen, self.effects[e][1])
-      self.clock.tick(self.FRAMERATE)
-
+  
   @classmethod
   def easeInOutQuad(self, currtime, start, delta, duration):
     currtime = float(currtime)
@@ -159,45 +99,22 @@ class ScreenServer(threading.Thread):
       pygame.event.pump()
       self.clock.tick(45)
 
-  def effect(self, effect):
-    self.effects[effect](self.screen)
-
   def setimg(self, img):
     img_start = float(-self.delta)
     self.screen.blit(img, (img_start,VSTART))
     pygame.display.flip()
 
-class ScreenController():
-  def __init__(self, host, imgpath="", port=PORT):
-    self.host = host
-    self.port = port
-    self.path = imgpath
-    self.last_img = None
-
-  def send_cmd(self, cmd, img):
-    if img != self.last_img:
-      s = socket.socket()         # Create a socket object
-      s.connect((self.host, self.port))
-      s.send(ScreenCMD.pack(cmd, path+img))
-      s.close()
-      self.last_img = img
-
-  def slide_to(self, img):
-    self.send_cmd(ScreenCMD.SLIDE_TO, img)
-
-  def set_img(self, img):
-    self.send_cmd(ScreenCMD.SET_IMG, img)
-
-  def zoom_to(self, img):
-    self.send_cmd(ScreenCMD.ZOOM_TO, img)
-
-def loadimg(path):
-  img = pygame.image.load(path).convert()
-  img = pygame.transform.scale(img, (IMW,IMH))   
-  return img
+  @classmethod
+  def loadimg(self, path):
+    img = pygame.image.load(path).convert()
+    img = pygame.transform.scale(img, (IMW,IMH))   
+    return img
 
 if __name__ == '__main__':
-  host = socket.gethostname() # Get local machine name
-  srv = ScreenServer(host)
-  srv.handle_forever()
+  con = ScreenController()
+  forest = ScreenController.loadimg('Assets/Images/forest.jpg')
+  con.setimg(forest)
+  time.sleep(2.0)
+
+
  

@@ -23,6 +23,7 @@ class ForestEffect(EffectTemplate):
       P.FLOOR: (self.floor, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.screen, 1),
     }
 
   def floor(self, prev):
@@ -33,6 +34,9 @@ class ForestEffect(EffectTemplate):
 
   def window_bot(self, prev):
     return [102, 55, 0]
+
+  def screen(self, prev):
+    return "forest.jpg"
 
 def flicker(rgb, flicker = 3):
   randomNum = randint(0,2)
@@ -119,7 +123,7 @@ class DayEffect(EffectTemplate):
 
 class FireEffect(EffectTemplate):
   META = {
-    'tab': "effects",
+    'tab': "atmosphere",
   }
 
   def get_mapping(self):
@@ -154,7 +158,7 @@ class FireEffect(EffectTemplate):
 
 class PaulEffect(EffectTemplate):
   META = {
-    'tab': "effects",
+    'tab': "atmosphere",
     'text': "Paul-ify",
   }
 
@@ -209,7 +213,7 @@ class PaulEffect(EffectTemplate):
 
 class TorchEffect(EffectTemplate):
   META = {
-    'tab': "effects",
+    'tab': "atmosphere",
   }
 
   def get_mapping(self):
@@ -248,7 +252,7 @@ class TorchEffect(EffectTemplate):
 
 class LightningEffect(EffectTemplate):
   META = {
-    'tab': "atmosphere",
+    'tab': "effects",
   }
 
   def setup(self):
