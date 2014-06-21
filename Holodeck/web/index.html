@@ -130,9 +130,11 @@
       hammertime.on("dragright swiperight", function(ev) {
         swiping = true;
         hammerpos = -contentWidth*(currentTab-1) + ev.gesture.deltaX;
-        $("#content").css({"-webkit-transform":"translate(" + hammerpos + " px, 0px)"});
+        $("#content").css({"-webkit-transform":"translate(" + hammerpos + "px, 0px)"});
       });
       hammertime.on("release", function(ev) {
+      	if (!swiping) return false;
+      	
         if (hammerpos < -contentWidth*(currentTab-0.9) && currentTab < maxTab) {
           currentTab += 1;
         } else if (hammerpos > -contentWidth*(currentTab-1.1) && currentTab > 1) {
@@ -141,6 +143,7 @@
         // move to next tab or reset to current tab
         hammerpos = -contentWidth*(currentTab-1);
         $(".tabs li:nth-child(" + currentTab + ")").click();
+        console.log(currentTab)
 
         setTimeout(function() { swiping = false; }, 100);
       });
@@ -162,6 +165,7 @@
 
       $('.tabs li').click(function(){
         currentTab = $(this).prevAll().length + 1;
+        console.log(currentTab)
         var dist = Math.abs(($(".tabs li.active").prevAll().length+1) - currentTab);
         $(".tabs li").removeClass("active");
         $(".tabs li:nth-child(" + currentTab + ")").addClass("active");
