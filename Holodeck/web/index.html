@@ -1,14 +1,19 @@
 <html>
 <header>
-	<title>HoloDeck Control Panel</title>
+	<title>Holodeck Control Panel</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<meta name="apple-mobile-web-app-capable" content="yes" />
 	<link rel="stylesheet" type="text/css" href="style.css">
 </header>
 <body>
+	<div id="loading">
+		<h1>Loading Holodeck Command...</h1>
+		<div class="spinner"></div>
+	</div>
+
 	<div id="page">
-	<div id="topBar">
-	    <div id="logo">HoloDeck Command<div id="currentPage">Locations</div></div>
+		<div id="topBar">
+	    <div id="logo">Holodeck Command<div id="currentPage">Locations</div></div>
     </div>
   	<ul class='tabs'>
   		<li id="locationsButton">Locations</li>
@@ -19,16 +24,13 @@
   	
     <div id="content">
       <ul id='locations' class='tabcontent'>
-        <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='atmosphere' class='tabcontent'>
-      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
+      	<!--<li data-effect="forest"><img src="img/forest.png" /><label>SAMPLE</label></li>-->
       </ul>
       <ul id='effects' class='tabcontent'>
-      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='settings' class='tabcontent'>
-      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
   	</div>
   </div>
@@ -40,12 +42,12 @@
   <script src="hammer.min.js"></script>
   <script>
   	// TODO this is supposed to remove address bar on mobile...
-	if (!window.location.hash && window.addEventListener) {
-		window.addEventListener('load', function() {
-			window.scrollTo( 0, 1 );
-			window.scrollTo( 0, 0 );
-		}, false);
-	}
+		if (!window.location.hash && window.addEventListener) {
+			window.addEventListener('load', function() {
+				window.scrollTo( 0, 1 );
+				window.scrollTo( 0, 0 );
+			}, false);
+		}
 
     $(document).ready(function() {
 	// for now, prevent mobile scrolling (until we have enough icons to worry)
@@ -93,11 +95,9 @@
                 $("#"+i).append(elem);
               }
             }
-            $('.tabcontent li').css({
-              'height':tileWidth, 
-              'display': 'list-item'
-            }); // make the icon elements square then display them
-
+            $('.tabcontent li').css('height', tileWidth); // make the icon elements square
+            $("#loading").hide();
+            $("#page").fadeIn();
           },
           delta: function(e) {
             console.log(e.data);
@@ -156,12 +156,14 @@
         if (swiping) return;
         var cID ={}
         if (!$(this).hasClass("on")) {
-          cID[$(this).data("effect")] = true;
+			cID[$(this).data("effect")] = true;
+			// TODO uncomment when less glitchy $(this).addClass("on");
         } else {
-          cID[$(this).data("effect")] = false;
+			cID[$(this).data("effect")] = false;
+			// TODO uncomment when less glitchy $(this).removeClass("on");
         }
         console.log(cID);
-  			ws.send('cmd',cID);
+		ws.send('cmd',cID);
         return false;
       });
 
