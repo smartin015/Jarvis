@@ -65,13 +65,6 @@
       $('.tabs li:nth-child(1)').addClass('active');
       var tileWidth = $('.tabcontent li').outerWidth();
 
-
-      // For local testing
-      $('.tabcontent li').css({
-        'height':tileWidth, 
-        'display': 'list-item'
-      });
-
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
         events: {
@@ -96,8 +89,10 @@
               }
             }
             $('.tabcontent li').css('height', tileWidth); // make the icon elements square
-            $("#loading").remove();
-            $("#page").fadeIn();
+            $("#loading").fadeOut(300, function() {
+            	$("#loading").remove();
+            	$("#page").animate({"opacity": 1}, 600);
+            });
           },
           delta: function(e) {
             console.log(e.data);
