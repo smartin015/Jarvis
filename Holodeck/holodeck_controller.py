@@ -54,6 +54,11 @@ class HolodeckController():
     return icon_meta
 
   def deck_broadcast(self, cmd_json):
+    if not cmd_json:
+      self.logger.warning("Websocket connection closed")
+      self.receiver.stop()
+      self.logger.error("TODO: CLOSE TARGET SOCKETS")
+      return
 
     for s in self.servers:
       if not s:
@@ -80,9 +85,9 @@ class HolodeckController():
         continue
   
   def handle_ws(self):
-    rcvr = MessageReceiver(self.request, self.deck_broadcast)
+    self.receiver = MessageReceiver(self.request, self.deck_broadcast)
     init_received = False
-    while not rcvr._stop_requested:
+    while not self.receiver._stop_requested:
       try:
         msg = self.q.get(True, 5.0)
       except Queue.Empty:
