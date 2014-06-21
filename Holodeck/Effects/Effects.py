@@ -4,9 +4,6 @@ from Holodeck.Engine import EffectTemplate
 from random import randint
 
 class BattleEffect(EffectTemplate):
-  META = {
-    'tab': "effects",
-  }
 
   def get_mapping(self):
     return {
@@ -21,9 +18,6 @@ class BattleEffect(EffectTemplate):
     return [255, 0, 0]
 
 class LightningEffect(EffectTemplate):
-  META = {
-    'tab': "effects",
-  }
 
   def setup(self):
     self.count = 0

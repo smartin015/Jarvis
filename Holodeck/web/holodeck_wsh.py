@@ -31,6 +31,7 @@ import logging
 import threading
 import Queue
 import socket
+import logging
 
 from mod_pywebsocket.msgutil import MessageReceiver
 from Holodeck.Engine import classname_to_id
@@ -39,7 +40,7 @@ from Holodeck.Settings import SERVER_LIST
 
 
 class HolodeckController():
-  TIMEOUT = 5.0
+  TIMEOUT = 1.0
 
   def __init__(self, ws_request, server_list, port=PORT):
     self.logger = logging.getLogger(self.__class__.__name__)

@@ -40,7 +40,7 @@ class Holodeck(HolodeckServer):
       ([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
       ([P.FLOOR], self.floor_leds),
       ([P.TOWER, P.RING], self.tower_ring),
-      ([P.WALLIMG], self.wall_img),
+      ([P.WALLIMG], self.wall_scrn),
       ([P.LIGHTS], self.lights),
     ]
 
@@ -51,7 +51,7 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    None,
+      P.WALLIMG:    self.devices['proj'].get_black_image(),
       P.LIGHTS:     False,
     }
 
@@ -69,13 +69,9 @@ class Holodeck(HolodeckServer):
   def lights(self, is_on):
     self.devices['lights'].set_state(is_on)
 
-  def wall_img(self, img):
-    # TODO: Slide
-    if img != self.last_img:
-      img_data = self.devices['proj'].loadimg(self.img_path + img)
-      self.devices['proj'].setimg(img_data)
-      self.last_img = img
-  
+  def wall_scrn(self, scrn):
+    print scrn
+    self.devices['proj'].set_screen(scrn)
 
 if __name__ == "__main__":
   h = Holodeck() 

@@ -6,6 +6,7 @@ import logging
 from pygame.time import Clock
 import types
 from string import capitalize
+import bisect
 
 def id_to_classname(cmd):
   return "%sEffect" % (capitalize(cmd))
@@ -37,13 +38,16 @@ class EffectTemplate():
 
   @classmethod
   def get_meta(self):
-    meta = self.META
+    meta = dict(self.META) #Make a copy
     if not meta.get('id'):
       meta['id'] = classname_to_id(self.__name__)
     if not meta.get('img'):
       meta['img'] = meta['id']+".png"
     if not meta.get('text'):
       meta['text'] = capitalize(meta['id'])
+    if not meta.get('tab'):
+      meta['tab'] = self.__module__.split(".")[-1].lower()
+  
     return meta
 
 
@@ -53,38 +57,47 @@ class EffectTemplate():
     """
     return []
 
+  def insert_into_pipeline(self):
+    for (pipe_id, con) in self._get_mapping().items():
+      if self.pipes.get(pipe_id) is None:
+        continue
+    
+      i = bisect.bisect_right([c[1] for c in self.pipes[pipe_id]], con[1])
+      self.pipes[pipe_id].insert(i,con)
+
   def register(self):
     """ Effect injects itself into its own location(s) 
         in the controller pipeline
     """
     # TODO: blacklist booting
-
+    
     # Add to pipeline
-    for (pipe_id, con) in self.get_mapping().items():
-      if self.pipes.get(pipe_id) is None:
-        continue
-
-      self.pipes[pipe_id].append(con)
-      self.pipes[pipe_id].sort(key=lambda con:con[1])
+    self.insert_into_pipeline()
 
     self.active_effects[self.__class__.__name__] = self
+
+  def _get_mapping(self):
+    # Useful for transitions on top of effects
+    return self.get_mapping()
 
   def get_mapping(self):
     raise Exception("Unimplemented")
 
-  def remove(self):
+  def remove_from_pipeline(self):
     """ Removes ourselves from the pipeline """
     # TODO: Mutex this!
-    for (pipe_id, con) in self.get_mapping().items():
+    for (pipe_id, con) in self._get_mapping().items():
       if not self.pipes.get(pipe_id):
         continue
-
       try:
         idx = self.pipes[pipe_id].index(con)
         del self.pipes[pipe_id][idx]
       except ValueError:
         print self.pipes
         raise
+
+  def remove(self):
+    self.remove_from_pipeline()
 
     # Remove from active effects
     del self.active_effects[self.__class__.__name__]
@@ -149,12 +162,18 @@ class HolodeckEngine(threading.Thread):
     c = Clock()
     self.logger.debug("Beginning main loop")
     while True:
-      self.update()
-      c.tick(30)
+      try:
+        self.update()
+        c.tick(30)
+      except:
+        import traceback
+        traceback.print_exc()
+        raise
 
   def update(self):
     # Compose controllers into single environment
     env = self.compose()
+
     # Use a separate function to complete updates
     # TODO: Multi-thread pipeline and updates
     for (deps, func) in self.update_funcs:
@@ -192,27 +211,32 @@ class HolodeckEngine(threading.Thread):
     #
     # See self.effectClasses for a full list
     self.logger.debug("Got request %s" % str(request))
-    for (req, turn_on) in request.items():
-      req = id_to_classname(req)
-      if turn_on:
-        self.logger.info("Adding " + req)
-        
-        if req in self.activeEffects:
-          raise Exception("Effect already in effect")
-        
-        # Create a new effect with this request.
-        # This may affect other active effects
-        eff = self.effectClasses[req](self.pipelines, self.activeEffects, self.handle_effect_exit)
+    try:
 
-        self.logger.info("Registering")
-        eff.register()
+      for (req, turn_on) in request.items():
+        req = id_to_classname(req)
+        if turn_on:
+          self.logger.info("Adding " + req)
+          
+          if req in self.activeEffects:
+            raise Exception("Effect already in effect")
+          
+          # Create a new effect with this request.
+          # This may affect other active effects
+          eff = self.effectClasses[req](self.pipelines, self.activeEffects, self.handle_effect_exit)
 
-        # Tell the server this was activated
-        self.state_callback({classname_to_id(req): True})
+          self.logger.info("Registering")
+          eff.register()
 
-      elif self.activeEffects.get(req):
-        self.logger.info("Removing " + req)
-        self.activeEffects[req].request_exit()
+          # Tell the server this was activated
+          self.state_callback({classname_to_id(req): True})
 
+        elif self.activeEffects.get(req):
+          self.logger.info("Removing " + req)
+          self.activeEffects[req].request_exit()
+    except:
+       import traceback
+       traceback.print_exc()
+       raise
 
 

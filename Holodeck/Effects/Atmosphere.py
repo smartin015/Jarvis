@@ -5,7 +5,6 @@ from random import randint
 
 class DayEffect(EffectTemplate):
   META = {
-    'tab': "atmosphere",
     'text': "Daytime",
   }
 
@@ -17,10 +16,34 @@ class DayEffect(EffectTemplate):
   def lights(self, prev):
     return True
 
+class RainEffect(EffectTemplate):
+
+  def setup(self):
+    self.count = 0
+    self.arrcount = 0
+    self.towerRGB = [[0, 0, 0] for i in xrange(NTOWER)]
+
+  def get_mapping(self): 
+    return {
+      P.TOWER: (self.tower, 1),
+      P.RING: (self.ring, 1),
+    }
+
+  def tower(self, prev):
+    for x in self.towerRGB:
+      if x[2] > 0:
+        x[2] = (x[2] - 5)
+      else:
+        if randint(1,200) == 5:
+          x[2] = 150
+    
+    return self.towerRGB
+
+  def ring(self, prev):
+    return [[128, 128, 255]]*NRING
+
+
 class FireEffect(EffectTemplate):
-  META = {
-    'tab': "atmosphere",
-  }
 
   def get_mapping(self):
     return {
@@ -53,10 +76,6 @@ class FireEffect(EffectTemplate):
     return [self.red, self.green, 0]
 
 class PaulEffect(EffectTemplate):
-  META = {
-    'tab': "atmosphere",
-    'text': "Paul-ify",
-  }
 
   def get_mapping(self):
     return {
@@ -108,9 +127,6 @@ class PaulEffect(EffectTemplate):
     return [100, 50, 20]
 
 class TorchEffect(EffectTemplate):
-  META = {
-    'tab': "atmosphere",
-  }
 
   def get_mapping(self):
     return {
