@@ -21,10 +21,13 @@
         <li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='atmosphere' class='tabcontent'>
+      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='effects' class='tabcontent'>
+      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
       <ul id='settings' class='tabcontent'>
+      	<li data-effect="forest" data-color="red"><img src="img/forest.png" /><label>SAMPLE</label></li>
       </ul>
   	</div>
   </div>
@@ -35,15 +38,13 @@
   <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
   <script src="hammer.min.js"></script>
   <script>
-  	// TODO use translate instead of LEFT/MARGIN-LEFT for positioning/sliding
-  	// http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
+  	// TODO this is supposed to remove address bar on mobile...
 	if (!window.location.hash && window.addEventListener) {
 		window.addEventListener('load', function() {
 			window.scrollTo( 0, 1 );
 			window.scrollTo( 0, 0 );
 		}, false);
 	}
-
 
     $(document).ready(function() {
 	// for now, prevent mobile scrolling (until we have enough icons to worry)
@@ -57,8 +58,16 @@
       $("#content ul").width(contentWidth).each(function(index) {
         $(this).css('left', contentWidth * index);
       });
+      $("#content").width(contentWidth * maxTab);
       $('.tabs li:nth-child(1)').addClass('active');
       var tileWidth = $('.tabcontent li').outerWidth();
+
+
+      // For local testing
+      $('.tabcontent li').css({
+              'height':tileWidth, 
+              'display': 'list-item'
+            });
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
@@ -84,7 +93,7 @@
             $('.tabcontent li').css({
               'height':tileWidth, 
               'display': 'list-item'
-            }); // make the icon elements square
+            }); // make the icon elements square then display them
 
           },
           delta: function(e) {
@@ -103,6 +112,9 @@
       });
       
       /* ======Interactions===== */
+        	// TODO use translate instead of LEFT/MARGIN-LEFT for positioning/sliding
+  	// http://www.paulirish.com/2012/why-moving-elements-with-translate-is-better-than-posabs-topleft/
+
       var element = document.getElementById('content');
       var options = {
         dragLockToAxis: true,
@@ -113,12 +125,12 @@
       hammertime.on("dragleft swipeleft", function(ev) {
         swiping = true;
         hammerpos = -contentWidth*(currentTab-1) + ev.gesture.deltaX;
-        $("#content").css('margin-left', hammerpos);
+        $("#content").css("-webkit-transform","translate(" + hammerpos + "px, 0px)");
       });
       hammertime.on("dragright swiperight", function(ev) {
         swiping = true;
         hammerpos = -contentWidth*(currentTab-1) + ev.gesture.deltaX;
-        $("#content").css('margin-left', hammerpos);
+        $("#content").css({"-webkit-transform":"translate(" + hammerpos + " px, 0px)"});
       });
       hammertime.on("release", function(ev) {
         if (hammerpos < -contentWidth*(currentTab-0.9) && currentTab < maxTab) {
@@ -134,7 +146,6 @@
       });
 
 
-
       $(document).on("click", ".tabcontent li", function() {
         if (swiping) return;
         var cID ={}
@@ -148,14 +159,15 @@
         return false;
       });
 
+
       $('.tabs li').click(function(){
         currentTab = $(this).prevAll().length + 1;
         var dist = Math.abs(($(".tabs li.active").prevAll().length+1) - currentTab);
         $(".tabs li").removeClass("active");
         $(".tabs li:nth-child(" + currentTab + ")").addClass("active");
         $("#content")
-          .css('transition', 'margin 0.' + (dist*2) + 's ease')
-          .css('margin-left', -contentWidth*(currentTab-1));
+          .css('transition', 'all 0.' + (dist + 1) + 's ease')
+          .css({"-webkit-transform":"translate(" + -contentWidth*(currentTab-1) + "px,0px)"});
 		$("#currentPage").html($(this).html());
         setTimeout(function() {
           $("#content").css('transition', 'none');

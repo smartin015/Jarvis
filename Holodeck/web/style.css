@@ -73,6 +73,7 @@ img {
 	height: 100%;
 	max-width: 900px;
 	margin: auto;
+	overflow: hidden;
 }
 
 #logo {
@@ -100,22 +101,19 @@ img {
 	width: 24.5%;
 	padding: 2% 0;
 
-	border-radius: 5%;
 	font-size: 2em;
 	text-align: center;
 	opacity: 0.7;
-	transition: all 0.1s ease;
+	transition: all 0.3s ease;
 }
 .tabs li:hover {
 	opacity: 0.9;
 	cursor: pointer;
 }
-.tabs li:active {
-	background-color: #747475;
-}
 .tabs li.active {
 	opacity: 1;
 	font-weight: 700;
+	background-color: #353637;
 }
 .tabs li:before {
 	z-index: 100;
@@ -180,8 +178,10 @@ img {
 	bottom: 2%;
 }
 
+
 /* =====Responsive Design===== */
-@media only screen and (max-device-width: 480px) {
+
+@media only screen and (max-device-width: 768px) {
 	#logo {
 		padding: 3%;
 		font-size: 1.1em;
@@ -218,6 +218,10 @@ img {
 	.tabcontent li {
 		padding: 5% 6% 6% 6%;
 	}
+}
+
+
+@media only screen and (max-device-width: 480px) {
 	.tabcontent li label {
 		bottom: 0;
 	}
