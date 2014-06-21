@@ -5,7 +5,7 @@ from Holodeck.effects import get_all_effects
 import json
 import logging
 from Holodeck.effects import get_all_effects
-PORT = 9614
+PORT = 9615
    
 class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
   def handle(self):

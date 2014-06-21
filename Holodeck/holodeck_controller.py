@@ -28,6 +28,9 @@ class HolodeckController():
         self.logger.debug("Connection to %s established" % host)
       except socket.timeout:
         self.logger.error("Connection to %s timed out" % host)
+      except:
+        self.logger.error("Could not connect to %s" % host)
+        continue
 
   def __del__(self):
     for s in self.servers:
