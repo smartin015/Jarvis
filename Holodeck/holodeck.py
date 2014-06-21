@@ -14,14 +14,17 @@ def classname_to_id(key):
 
 class Holodeck(threading.Thread):
   
-  def __init__(self, effect_list, pipelines, update_funcs):
-    self.logger = logging.getLogger('Holodeck')
+  def __init__(self, effect_list, pipelines, update_funcs, state_callback=None):
+    self.logger = logging.getLogger(self.__class__.__name__)
+    self.logger.setLevel(logging.DEBUG)
         
     threading.Thread.__init__(self)
     self.update_funcs = update_funcs
 
     # Create a dictionary of effects keyed by class name
     self.effectClasses = effect_list
+
+    self.state_callback = state_callback
 
     # When effects are instantiated, they are listed here.
     # New effects can request existing effects to go away,
@@ -53,6 +56,7 @@ class Holodeck(threading.Thread):
 
   def run(self):
     c = Clock()
+    self.logger.debug("Beginning main loop")
     while True:
       self.update()
       c.tick(30)
@@ -71,6 +75,10 @@ class Holodeck(threading.Thread):
     for (name, effect) in self.activeEffects.items():
       effect.post_render()
 
+  def handle_effect_exit(self, effect):
+    state = {classname_to_id(effect.__class__.__name__): False}
+    self.state_callback(state)
+
   def handle(self, request):
     # Request is in JSON format,
     # Specifying any of the following keys with a boolean true/false to update:
@@ -80,7 +88,7 @@ class Holodeck(threading.Thread):
     #    - battle (big, flashy, for beginning of fights)
     #
     # See self.effectClasses for a full list
-
+    self.logger.debug("Got request %s" % str(request))
     state_delta = {}
     for (req, turn_on) in request.items():
       req = id_to_classname(req)
@@ -92,15 +100,18 @@ class Holodeck(threading.Thread):
         
         # Create a new effect with this request.
         # This may affect other active effects
-        eff = self.effectClasses[req](self.activeEffects, self.pipelines)
+        eff = self.effectClasses[req](self.pipelines, self.activeEffects, self.handle_effect_exit)
+
+        self.logger.info("Registering")
         eff.register()
       elif self.activeEffects.get(req):
         self.logger.info("Removing " + req)
         state_delta[classname_to_id(req)] = False
         self.activeEffects[req].request_exit()
 
-    # Write back the change in state
-    return state_delta
+    # Write back the change in state to ALL clients
+    self.logger.debug("Handing off to callback")
+    self.state_callback(state_delta)
 
 
 last_sound = []

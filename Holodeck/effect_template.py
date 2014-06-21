@@ -1,4 +1,5 @@
 import types
+import logging
 
 class EffectTemplate():
   META = {
@@ -8,11 +9,16 @@ class EffectTemplate():
     'img': None,
   }
 
-  def __init__(self, active_effects, pipes):
+  def __init__(self, pipes, active_effects, remove_cb):
+    self.logger = logging.getLogger(self.__class__.__name__)
+    self.logger.setLevel(logging.DEBUG)
+    self.remove_cb = remove_cb
     self.should_exit = False
     self.pipes = pipes
     self.active_effects = active_effects
+    self.logger.debug("Entering setup")
     self.setup()
+    self.logger.debug("Setup complete")
 
   def setup(self):
     pass
@@ -37,7 +43,6 @@ class EffectTemplate():
       self.pipes[pipe_id].append(con)
       self.pipes[pipe_id].sort(key=lambda con:con[1])
 
-    # Add to active effects
     self.active_effects[self.__class__.__name__] = self
 
   def get_mapping(self):
@@ -60,7 +65,8 @@ class EffectTemplate():
     # Remove from active effects
     del self.active_effects[self.__class__.__name__]
 
-    # TODO: Notify the holodeck that we're dead
+    # Notify the holodeck that we're dead
+    self.remove_cb(self)
 
   def request_exit(self):
     """ Tell this effect to start the process of dying 

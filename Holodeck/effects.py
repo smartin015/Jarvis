@@ -5,6 +5,7 @@ from random import randint
 
 SKY = [20, 100, 205]
 SAND = [180, 140, 100]
+GRASS = [50, 125, 0]
 
 def get_all_effects():
   import inspect
@@ -32,19 +33,25 @@ class ForestEffect(EffectTemplate):
     return [55, 185, 55]
 
   def window_bot(self, prev):
-    return [55, 185, 55]
+    return [102, 55, 0]
 
 def flicker(rgb, flicker = 3):
   randomNum = randint(0,2)
 
   if randomNum == 0:
-    rgb[0] = rgb[0] + flicker
-    rgb[1] = rgb[1] + flicker
-    rgb[2] = rgb[2] + flicker
+    if rgb[0] <= 255 - flicker:
+      rgb[0] = rgb[0] + flicker
+    if rgb[1] <= 255 - flicker:
+      rgb[1] = rgb[1] + flicker
+    if rgb[2] <= 255 - flicker:
+      rgb[2] = rgb[2] + flicker
   elif randomNum == 1:
-    rgb[0] = rgb[0] - flicker
-    rgb[1] = rgb[1] - flicker
-    rgb[2] = rgb[2] - flicker
+    if rgb[0] > 0 + flicker:
+      rgb[0] = rgb[0] - flicker
+    if rgb[1] > 0 + flicker:
+      rgb[1] = rgb[1] - flicker
+    if rgb[2] > 0 + flicker:
+      rgb[2] = rgb[2] - flicker
 
   return rgb
     
@@ -107,7 +114,7 @@ class DayEffect(EffectTemplate):
 
   def get_mapping(self):
     return {
-      P.LIGHTS: (self.lights, 1)
+      P.LIGHTS: (self.lights, 1),
     }
 
   def lights(self, prev):
@@ -303,7 +310,6 @@ class LightningEffect(EffectTemplate):
       return False
 
   def post_render(self):
-
     self.count += 1
 
     if self.count >= 12 or self.should_exit:
@@ -347,7 +353,7 @@ class DesertEffect(EffectTemplate):
 class TundraEffect(EffectTemplate):
   META = {
     'tab': "locations",
-    'text': "Desert",
+    'text': "Tundra",
   }
 
   def tower(self, prev):
@@ -377,6 +383,60 @@ class WaterEffect(EffectTemplate):
     'text': "water",
   }
 
+  def setup(self):
+    self.count = 0
+
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.TOWER: (self.tower, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+    }
+
+
+
+  def floor(self, prev):
+    return [0,0,255]
+
+  def window_top(self, prev):
+    return SKY
+
+  def window_bot(self, prev):
+    return [0,0,255]
+
+class JungleEffect(EffectTemplate):
+  META = {
+    'tab': "locations",
+    'text': "Jungle",
+  }
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+    }
+
+  def floor(self, prev):
+    return [102, 55, 0]
+
+  def window_top(self, prev):
+    return [0, 125, 0]
+
+  def window_bot(self, prev):
+    return [0, 125, 0]
+
+class PlainsEffect(EffectTemplate):
+  META = {
+    'tab': "locations",
+    'text': "Plains",
+  }
+
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
 
@@ -390,12 +450,38 @@ class WaterEffect(EffectTemplate):
     }
 
   def floor(self, prev):
-    return [0,0,255]
+    return GRASS
 
   def window_top(self, prev):
     return SKY
 
   def window_bot(self, prev):
-    return [0,0,255]
+    return GRASS
 
+class BeachEffect(EffectTemplate):
+  META = {
+    'tab': "locations",
+    'text': "Beach",
+  }
+
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.TOWER: (self.tower, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+    }
+
+  def floor(self, prev):
+    return SAND
+
+  def window_top(self, prev):
+    return SKY
+
+  def window_bot(self, prev):
+    return SAND
 

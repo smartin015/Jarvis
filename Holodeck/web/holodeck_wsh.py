@@ -26,24 +26,11 @@
 # THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import json
-import threading
-from Holodeck.holodeck import classname_to_id
-from Holodeck.holodeck_controller import JarvisHolodeck, HolodeckController
-from Holodeck.effects import get_all_effects
+import socket
+from Holodeck.holodeck_controller import HolodeckController
 
-# This creates the holodeck once, making it global for all
-# future connections.
-jarvisdecksrv = JarvisHolodeck() 
-dt = threading.Thread(target=jarvisdecksrv.serve_forever)
-dt.daemon = True
-dt.start()
-print "Started holodeck thread"
-
-deck_controllers = [
-  HolodeckController(),
-  HolodeckController("192.168.1.100"),
-]
+# TODO: Put in config?
+holodeck_server_list = [socket.gethostname()] #TODO: Add todd
 
 def web_socket_do_extra_handshake(request):
     # This example handler accepts any request. See origin_check_wsh.py for how
@@ -51,56 +38,9 @@ def web_socket_do_extra_handshake(request):
     pass  # Always accept.
 
 
-def send_meta(ws_stream):
-  effect_list = get_all_effects()
-  
-  icon_meta = {}
-  for (ename, eclass) in effect_list.items():
-    meta = eclass.META
-    if not meta.get('id'):
-      meta['id'] = classname_to_id(ename)
-    if not meta.get('img'):
-      meta['img'] = meta['id']+".png"
-    
-    #TODO: Show active state
-    #meta['active'] = deck.is_active(meta['id'])
-    meta['active'] = False
-
-    # Create this tab if not already made
-    if not icon_meta.get(meta['tab'], None):
-      icon_meta[meta['tab']] = {}
-    icon_meta[meta['tab']][meta['id']] = meta 
-
-  print "Sending meta:"
-  for tab in icon_meta:
-    print tab
-    for icon in icon_meta[tab]:
-      print "-", icon
-
-  ws_stream.send_message(json.dumps(
-    {"type": "init", "data": icon_meta}
-  ), binary=False)
-
-
-
 def web_socket_transfer_data(request):
-    global deck_controllers
-    
-    send_meta(request.ws_stream)
-    while True:
-        msg = request.ws_stream.receive_message()
-        if msg is None:
-            print "Client connection aborted"
-            return
-      
-        # Forward it via each controller
-        responses = [con.send_cmd_json(msg) for con in deck_controllers]
-        responses = [r for r in responses if r is not None]
+  con = HolodeckController(request, holodeck_server_list)
+  con.handle_ws()
 
-        # Responses should be equal (lock-step)
-        print "Checking for response equality"
-        for r in responses:
-          assert (responses.count(r) == 1)
-        
-        print "Response:", r
-        request.ws_stream.send_message(r, binary=False)
+    
+      
