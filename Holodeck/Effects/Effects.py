@@ -42,6 +42,7 @@ class ForestEffect(EffectTemplate):
   def window_img(self, prev):
     return "forest.jpg"
 
+
 def flicker(rgb, flicker = 3):
   randomNum = randint(0,2)
 
