@@ -152,18 +152,17 @@ img {
 	margin: 1.5%;
 	padding: 3% 4% 4% 4%;
 	opacity: 0.6;
-	transition: all 0.1s ease;
+	transition: opacity 0.1s ease;
 }
-.tabcontent li.on {
-	background-color: #808080;
+.tabcontent li.on, .tabcontent li:active {
 	opacity: 1;
+	border-radius: 5%;
+	background-color: #4C4D4F;
+	border: 1px solid #444;
 }
 .tabcontent li:hover {
 	opacity: 1;
 	cursor: pointer;
-}
-.tabcontent li:active {
-	background-color: #747475;
 }
 .tabcontent li img {
 	width: 100%;
