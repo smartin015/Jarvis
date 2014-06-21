@@ -1,6 +1,4 @@
 from Holodeck.pipe import Pipe as P
-from Holodeck.holodeck import Holodeck
-from Holodeck.effects import get_all_effects
 from serial import Serial
 from Tests.TestSerial import TestSerial
 from Outputs.RelayController import RelayController
@@ -9,78 +7,18 @@ from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRI
 from Outputs.IRController import IRController
 from Outputs.ScreenController import ScreenController
 from Outputs.AudioController import AudioController
-import socket
 import time
 import json
-import SocketServer
 import logging
 import threading
 import Queue
+import socket
 
 from mod_pywebsocket.msgutil import MessageReceiver
 from Holodeck.holodeck import classname_to_id
-from Holodeck.effects import get_all_effects
-
-PORT = 9605
-   
-class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
-  def handle(self):
-    self.server.userlist.append(self.request)
-    logger = logging.getLogger(self.__class__.__name__)
-    logger.setLevel(logging.DEBUG)
-    logger.debug('Got connection')
-    while True:
-      try:
-        msg = json.loads(self.rfile.readline().strip())
-        logger.debug("Got %s" % str(msg))
-        self.server.deck.handle(msg['data'])
-      except:
-        if self.request in self.server.userlist:
-          self.server.userlist.remove(self.request)
-        self.request.close()
+from Holodeck.holodeck_server import HolodeckServer, PORT
 
 
-class HolodeckServer(SocketServer.ThreadingTCPServer):
-
-  def __init__(self, server_address=None):
-    self.logger = logging.getLogger(self.__class__.__name__)
-    self.logger.setLevel(logging.DEBUG)
-    self.userlist = []
-
-    if not server_address:
-      server_address = (socket.gethostname(), PORT)
-    
-    self.logger.debug("Using address "+str(server_address))
-
-    SocketServer.ThreadingTCPServer.__init__(self, server_address, HolodeckRequestHandler)
-    self.allow_reuse_address = True
-    self.begin()
-  
-  def broadcast_state(self, state):
-    self.logger.debug("Broadcasting state %s" % str(state))
-    for user in self.userlist:
-      user.send(json.dumps({"type":"delta", "data":state}))
-
-  def begin(self):
-    self.deck = Holodeck(
-      get_all_effects(), 
-      self.get_pipeline_defaults(),
-      self.get_pipeline_handlers(),
-      self.broadcast_state
-    )
-    self.deck.daemon = True
-    self.deck.start()
-    self.logger.debug("Holodeck started")
-    
-  def get_pipeline_handlers(self):
-    raise Exception("Unimplemented")
-
-  def get_pipeline_defaults(self):
-    raise Exception("Unimplemented")
-
-  def handle(self, data):
-    self.deck.handle(data)
-    
 # TODO: Move to websockets?
 class HolodeckController():
   TIMEOUT = 5.0
@@ -124,16 +62,15 @@ class HolodeckController():
 
     return icon_meta
 
-
   def deck_broadcast(self, cmd_json):
 
-    self.logger.debug("Sending %s to all decks" % cmd_json)
     for s in self.servers:
       if not s:
         self.logger.debug("Connection not open, skipping...")
         continue
       s.send(cmd_json+"\n")
-    self.logger.debug("Command sent")
+
+    self.logger.debug("Sent %s to all decks" % cmd_json)
 
   def get_response(self):
     return {"day": False}
@@ -141,31 +78,35 @@ class HolodeckController():
   def handle_deck(self, deck):
     while True: #TODO: could be done better
       try:
-        msg = deck.recv(1024)
-        self.logger.debug("Got %s" % msg)
+        msg = deck.recv(2048)
+        if not msg:
+          self.logger.warn("Deck connection closed")
+          return
+
+        self.logger.debug("Got %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
         self.q.put(msg)
       except socket.timeout:
         continue
   
   def handle_ws(self):
     rcvr = MessageReceiver(self.request, self.deck_broadcast)
-    # TODO: Allow sending via holodeck?
-    icon_meta = self.get_meta()
-    self.logger.debug("Sending meta:")
-    for tab in icon_meta:
-      self.logger.debug("%s:\n%s" % (tab, str(icon_meta[tab].keys())))
-
-    self.request.ws_stream.send_message(json.dumps(
-      {"type": "init", "data": icon_meta}
-    ), binary=False)
-    
+    init_received = False
     while not rcvr._stop_requested:
       try:
-        r = self.q.get(True, 5.0)
+        msg = self.q.get(True, 5.0)
       except Queue.Empty:
         continue
-      self.logger.debug("Web: Sending " + str(r))
-      self.request.ws_stream.send_message(r, binary=False)
+  
+      if json.loads(msg).get("type") == "init":
+        if init_received:
+          self.logger.debug("Ignoring duplicate init")
+          continue
+        else:
+          init_received = True
+
+
+      self.request.ws_stream.send_message(msg, binary=False)
+      self.logger.debug("Sent %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
 
 
 
@@ -274,8 +215,8 @@ class ToddHolodeck(HolodeckServer):
 
 
 if __name__ == "__main__":
-  import logging
-  logging.basicConfig()
+  #import logging
+  #logging.basicConfig()
   deck = JarvisHolodeck()
 
   # Test to see what the deck does

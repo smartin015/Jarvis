@@ -65,9 +65,9 @@
 
       // For local testing
       $('.tabcontent li').css({
-              'height':tileWidth, 
-              'display': 'list-item'
-            });
+        'height':tileWidth, 
+        'display': 'list-item'
+      });
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
@@ -79,6 +79,8 @@
             for (i in dataTEMP) {
               for(j in dataTEMP[i]) {
                 var meta = dataTEMP[i][j];
+                console.log(meta);
+                console.log(j);
                 var elem = $("<li/>");
                 elem.append("<img src=\"/img/"+meta['img']+"\"></img>");
                 elem.append("<label>"+meta['text']+"</label>");

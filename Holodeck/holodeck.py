@@ -36,9 +36,6 @@ class Holodeck(threading.Thread):
       self.pipelines[pipe] = []
       self.initial_pipe_values[pipe] = pipelines[pipe]
 
-  def is_active(self, cmd):
-    return (id_to_classname(cmd) in self.activeEffects)
-
   def compose(self):
     # Composes each controller pipeline into a single environment
     env = dict()
@@ -74,6 +71,19 @@ class Holodeck(threading.Thread):
     state = {classname_to_id(effect.__class__.__name__): False}
     self.state_callback(state)
 
+  def get_meta(self):
+    meta = {}
+    for e in self.effectClasses:
+      e_meta = self.effectClasses[e].get_meta()
+      e_meta['active'] = (e in self.activeEffects)
+
+      if not meta.get(e_meta['tab']):
+        meta[e_meta['tab']] = {}
+
+      meta[e_meta['tab']][e_meta['id']] = e_meta
+    return meta
+    
+
   def handle(self, request):
     # Request is in JSON format,
     # Specifying any of the following keys with a boolean true/false to update:
@@ -106,6 +116,7 @@ class Holodeck(threading.Thread):
 
     # Write back the change in state to ALL clients
     self.logger.debug("Handing off to callback")
+    
     self.state_callback(state_delta)
 
 
