@@ -14,7 +14,11 @@ class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
     self.logger.debug('Got connection')
 
     # Grab holodeck state and send to client
-    self.request.send(json.dumps({"type":"init", "data": self.server.deck.get_meta()}))
+    self.request.send(json.dumps({
+      "host": self.server.server_address, 
+      "type": "init", 
+      "data": self.server.deck.get_meta(),
+    }))
   
     self.server.userlist.append(self.request)
 
@@ -65,7 +69,11 @@ class HolodeckServer(SocketServer.ThreadingTCPServer):
       user.send(data)
 
   def broadcast_state(self, state):
-    self.broadcast(json.dumps({"type":"delta", "data":state}))
+    self.broadcast(json.dumps({
+      "host": self.server_address,
+      "type": "delta", 
+      "data": state
+    }))
      
   def handle(self, data):
     """ Use this for testing/debugging of commands without server """

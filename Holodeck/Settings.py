@@ -1,6 +1,8 @@
 
-SERVER_LIST = ["Jarvis", "ToddTrooper"]
+SERVER_LIST = ["Jarvis", "ToddTrooper", "TheMothership"]
 SERVER_PORT = 9601
+
+MASTER_SERVER = "Jarvis"
 
 class Pipe():
   RING = "towerRing"
