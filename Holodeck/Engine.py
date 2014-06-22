@@ -211,7 +211,8 @@ class HolodeckEngine():
           self.logger.info("Adding " + req)
           
           if req in self.activeEffects:
-            raise Exception("Effect already in effect")
+            self.logger.error("Effect already in effect")
+            continue
           
           # Create a new effect with this request.
           # This may affect other active effects
