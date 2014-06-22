@@ -10,41 +10,57 @@ SAND = [180, 140, 100]
 GRASS = [50, 125, 0]
 
 
-class LocationEffect(EffectTemplate):
-  TRANSITION_TIME = 1000
+class LocationTemplate(EffectTemplate):
+  TRANSITION_TIME = 120
 
   def setup(self):
     self.steady_mapping = dict(
       [(k,c[0]) for (k,c) in self.get_mapping().items()]
     )
-    self.sweep = None
+    self.screen_transition = None
     self.ttop = 0
+    self.tbot = 0
+    self.tfloor = 0
     self.transition = False
+    self.prev_window_bot = None
 
   def location_mapping(self):
     raise Exception("Unimplemented")
 
+  def linear_blend(self, i, rgb1, rgb2):
+    blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )
+    return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(rgb2, rgb1)]
+
+  def tween_blend(self, i, rgb1, rgb2, rgb3):
+    if i < self.TRANSITION_TIME / 2:
+      return self.linear_blend(2*i, rgb1, rgb2)
+    else:
+      return self.linear_blend(2*(i-self.TRANSITION_TIME/2), rgb2, rgb3)
+
   def trans_floor(self, prev):
-    return prev
+    self.tfloor += 1
+    if self.prev_window_bot:
+      final = self.steady_mapping[P.FLOOR](prev)
+      return self.tween_blend(self.tfloor, prev, self.prev_window_bot, final)
+    else:
+      return prev
   
   def trans_window_top(self, prev):
     self.ttop += 1
     final = self.steady_mapping[P.WINDOWTOP](prev)
-    blend_amount = self.ttop / self.TRANSITION_TIME
-    return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(final, prev)]
+    return self.linear_blend(self.ttop, prev, final)
     
   def trans_window_bot(self, prev):
-    return prev
+    self.tbot += 1
+    mid = self.steady_mapping[P.FLOOR](prev)
+    final = self.steady_mapping[P.WINDOWBOT](prev)
+    if not self.prev_window_bot:
+      self.prev_window_bot = final
+    return self.tween_blend(self.tbot, prev, mid, final)
 
-
-  def trans_wall_img(self, screen):
-    final = self.steady_mapping[P.WALLIMG](screen)
-    if not self.sweep:
-      self.transition_screen = screen.copy()
-      self.sweep = scl.gen_sweep(screen, final, self.transition_screen)
-
+  def handle_screen_transition(self, final):
     try:
-      self.sweep.next()
+      self.screen_transition.next()
       return self.transition_screen
     except StopIteration:
       self.handle_blacklist()
@@ -55,8 +71,21 @@ class LocationEffect(EffectTemplate):
       # TODO: Remove blacklisted thingies
       return final
 
+
+  def trans_wall_img(self, screen):
+    final = self.steady_mapping[P.WALLIMG](screen)
+    if not self.screen_transition:
+      self.transition_screen = screen.copy()
+      self.screen_transition = scl.gen_sweep(screen, final, self.transition_screen)
+    return self.handle_screen_transition(final)
+    
   def trans_window_img(self, screen):
-    return screen
+    final = self.steady_mapping[P.WALLIMG](screen)
+    if not self.screen_transition:
+      self.transition_screen = screen.copy()
+      self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
+    return self.handle_screen_transition(final)
+
 
   def _get_mapping(self): 
     if not self.transition:
@@ -73,10 +102,10 @@ class LocationEffect(EffectTemplate):
       return self.get_mapping()
 
 
-class ForestEffect(LocationEffect):
+class ForestEffect(LocationTemplate):
 
   def setup(self):
-    LocationEffect.setup(self)
+    LocationTemplate.setup(self)
     self.forest_screen = scl.loadimg("Holodeck/Images/forest.jpg")
 
   def get_mapping(self):
@@ -98,7 +127,7 @@ class ForestEffect(LocationEffect):
     return [55, 185, 55]
 
   def window_bot(self, prev):
-    return [102, 55, 0]
+    return [102, 155, 0]
 
   def wall_img(self, prev):
     return self.forest_screen
@@ -106,10 +135,10 @@ class ForestEffect(LocationEffect):
   def window_img(self, prev):
     return self.forest_screen
 
-class PlainsEffect(LocationEffect):
+class PlainsEffect(LocationTemplate):
 
   def setup(self):
-    LocationEffect.setup(self)
+    LocationTemplate.setup(self)
     self.plains_screen = scl.loadimg("Holodeck/Images/grassland.jpg")
 
   def tower(self, prev):
@@ -131,12 +160,14 @@ class PlainsEffect(LocationEffect):
 
   def floor(self, prev):
     return GRASS
+    #return [255, 255, 0]
 
   def window_top(self, prev):
     return SKY
 
   def window_bot(self, prev):
-    return GRASS
+    return [0, 128, 0]
+    #return [0, 255, 255]
 
   def wall_img(self, prev):
     return self.plains_screen

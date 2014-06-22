@@ -37,11 +37,11 @@ class Holodeck(HolodeckServer):
 
   def get_pipeline_handlers(self):
     return [
-      #([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
-      #([P.FLOOR], self.floor_leds),
-      #([P.TOWER, P.RING], self.tower_ring),
+      ([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
+      ([P.FLOOR], self.floor_leds),
+      ([P.TOWER, P.RING], self.tower_ring),
       ([P.WALLIMG], self.wall_scrn),
-      #([P.LIGHTS], self.lights),
+      ([P.LIGHTS], self.lights),
     ]
 
   def get_pipeline_defaults(self):

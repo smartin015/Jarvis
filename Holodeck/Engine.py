@@ -166,7 +166,7 @@ class HolodeckEngine():
 
     # Create a thread for each pipeline controller
     for (deps, func) in self.update_funcs:
-      t = threading.Thread(target = self.update, args=(deps, func, 24))
+      t = threading.Thread(target = self.update, args=(deps, func, 30))
       t.daemon = True
       t.start()
     

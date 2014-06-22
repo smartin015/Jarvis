@@ -5,7 +5,7 @@ import threading
 
 SW,SH = 1920, 1080
 DELTA = 500
-SCALE_DELTA = 10
+SCALE_DELTA = 30
 VSTART = 0
 IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
 
@@ -83,9 +83,9 @@ class ScreenController(threading.Thread):
     start = 0
     mid = 50
     overlap = 15
-    end = 80
+    end = 70
     alpha_end = 150
-    img1_start = float(-DELTA)
+    img1_start = 0#float(-DELTA)
     img2_start = img1_start
     delta = DELTA / 8
     aspect = float(IMW)/float(IMH)
@@ -114,7 +114,7 @@ class ScreenController(threading.Thread):
         alpha = s * alpha_end / float(end-(mid-overlap))
         img2_scale = pygame.transform.smoothscale(img2, (int(aspect*(im2h+s)), int(im2h+s)))
         img2_scale.set_alpha(alpha)
-        screen.blit(img2_scale,(img2_start - (s-img2_scaledist)/2,VSTART - (s-img2_scaledist)/2))
+        screen.blit(img2_scale,(img2_start + (img2_scaledist-s)/2,VSTART)) #- (s-img2_scaledist)/2))
 
       yield
     
@@ -152,9 +152,21 @@ if __name__ == '__main__':
   forest = ScreenController.loadimg('Assets/Images/forest.jpg')
   grass = ScreenController.loadimg('Assets/Images/grassland.jpg')
 
-  con.set_scrn(forest)
-  g = ScreenController.gen_zoom(forest, grass, con.screen)
   c = pygame.time.Clock()
+
+  con.set_scrn(grass)
+  g = ScreenController.gen_zoom(grass, forest, con.screen)
+  try:
+    while True:
+      g.next()
+      con.flip()
+      c.tick(24)
+  except StopIteration:
+    time.sleep(2.0)
+    con.set_scrn(forest)
+    raw_input("Enter to continue")
+
+  g = ScreenController.gen_zoom(forest, grass, con.screen)
   try:
     while True:
       g.next()
@@ -163,7 +175,6 @@ if __name__ == '__main__':
   except StopIteration:
     time.sleep(2.0)
     con.set_scrn(grass)
-    print grass
     raw_input("Enter to exit")
 
  
