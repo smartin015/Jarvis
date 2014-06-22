@@ -18,7 +18,6 @@ class LocationEffect(EffectTemplate):
       [(k,c[0]) for (k,c) in self.get_mapping().items()]
     )
     self.sweep = None
-    self.transition_screen = scl.get_black_image()
     self.ttop = 0
     self.transition = False
 
@@ -37,18 +36,23 @@ class LocationEffect(EffectTemplate):
   def trans_window_bot(self, prev):
     return prev
 
+
   def trans_wall_img(self, screen):
     final = self.steady_mapping[P.WALLIMG](screen)
     if not self.sweep:
+      self.transition_screen = screen.copy()
       self.sweep = scl.gen_sweep(screen, final, self.transition_screen)
 
     try:
       self.sweep.next()
       return self.transition_screen
     except StopIteration:
+      self.handle_blacklist()
       self.remove_from_pipeline()
       self.transition = True
       self.insert_into_pipeline()
+
+      # TODO: Remove blacklisted thingies
       return final
 
   def trans_window_img(self, screen):
@@ -84,6 +88,9 @@ class ForestEffect(LocationEffect):
       P.WINDOWIMG: (self.window_img, 1),
     }
 
+  def get_blacklist(self):
+    return [PlainsEffect]
+
   def floor(self, prev):
     return [102, 55, 0]
 
@@ -98,6 +105,45 @@ class ForestEffect(LocationEffect):
 
   def window_img(self, prev):
     return self.forest_screen
+
+class PlainsEffect(LocationEffect):
+
+  def setup(self):
+    LocationEffect.setup(self)
+    self.plains_screen = scl.loadimg("Holodeck/Images/grassland.jpg")
+
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.TOWER: (self.tower, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img, 1),
+      P.WINDOWIMG: (self.window_img, 1),
+    }
+
+  def get_blacklist(self):
+    return [ForestEffect]
+
+  def floor(self, prev):
+    return GRASS
+
+  def window_top(self, prev):
+    return SKY
+
+  def window_bot(self, prev):
+    return GRASS
+
+  def wall_img(self, prev):
+    return self.plains_screen
+
+  def window_img(self, prev):
+    return self.plains_screen
+
 
 def flicker(rgb, flicker = 3):
   randomNum = randint(0,2)
@@ -212,29 +258,6 @@ class JungleEffect(EffectTemplate):
 
   def window_bot(self, prev):
     return [0, 125, 0]
-
-class PlainsEffect(EffectTemplate):
-
-  def tower(self, prev):
-    return [(list(SKY)) for i in xrange(NTOWER)]
-
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-    }
-
-  def floor(self, prev):
-    return GRASS
-
-  def window_top(self, prev):
-    return SKY
-
-  def window_bot(self, prev):
-    return GRASS
 
 class BeachEffect(EffectTemplate): 
 

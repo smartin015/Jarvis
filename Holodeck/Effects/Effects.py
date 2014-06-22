@@ -57,12 +57,16 @@ class LightningEffect(EffectTemplate):
         self.sentinel = 0
         self.count = (self.count + 1)
         '''
+
+
+    self.count += 1
+    if self.count >= 12 or self.should_exit:
+      self.remove()
+
     if self.shouldLightning():
       return self.towerRGBON
     else:
       return self.towerRGBOFF
-
-    
 
   def shouldLightning(self):
     
@@ -71,12 +75,6 @@ class LightningEffect(EffectTemplate):
     else:
       return False
 
-  def post_render(self):
-    self.count += 1
-
-    if self.count >= 12 or self.should_exit:
-      self.remove()
-      
 
   def ring(self, prev):
     return [[0, 0, 0]]*NRING

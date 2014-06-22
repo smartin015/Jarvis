@@ -77,15 +77,9 @@ class ScreenController(threading.Thread):
         screen.blit(img2,(img2_start+v,VSTART))
 
       yield
- 
-  def set_scrn(self, scrn):
-    self.screen.blit(scrn, (-self.delta, VSTART))
-    pygame.display.flip()
-
-  def flip(self):
-    pygame.display.flip()
-
-  def zoom(self, img):
+  
+  @classmethod
+  def gen_zoom(self, img1, img2, screen):
     start = 0
     mid = 50
     overlap = 15
@@ -95,6 +89,15 @@ class ScreenController(threading.Thread):
     img2_start = img1_start
     delta = DELTA / 8
     aspect = float(IMW)/float(IMH)
+    
+    img1 = img1.copy()
+
+    img2_scaledist = end-(mid-overlap)
+    im2h = img2.get_size()[1]-img2_scaledist
+
+    img2_orig = img2
+    img2 = pygame.transform.smoothscale(img2, (int(aspect*im2h), im2h))
+
 
     for i in xrange(start, end):
       v = ScreenController.easeInOutQuad(i, start, delta, end) 
@@ -102,23 +105,31 @@ class ScreenController(threading.Thread):
       if i < mid+overlap:
         alpha = i * (alpha_end/float(mid+overlap))  
         img1_scale = pygame.transform.smoothscale(img1, (int(aspect*(IMH+v)), int(IMH+v)))
-        self.last_img.blit(img1_scale, (-aspect*v/2,-v/2))
+        img1.blit(img1_scale, (-aspect*v/2,-v/2))
         img1_scale.set_alpha((alpha_end-alpha))
-        self.screen.blit(img1_scale,(img1_start,VSTART))
+        screen.blit(img1_scale,(img1_start,VSTART))
       
       if i >= mid-overlap:
         s = i-(mid-overlap)
         alpha = s * alpha_end / float(end-(mid-overlap))
-        img2_scale = pygame.transform.smoothscale(img, (int(aspect*(IMH+s)), int(IMH+s)))
+        img2_scale = pygame.transform.smoothscale(img2, (int(aspect*(im2h+s)), int(im2h+s)))
         img2_scale.set_alpha(alpha)
-        self.screen.blit(img2_scale,(img2_start-aspect*(s/2),VSTART-s/2))
+        screen.blit(img2_scale,(img2_start - (s-img2_scaledist)/2,VSTART - (s-img2_scaledist)/2))
+
+      yield
     
-      pygame.display.flip()
-      pygame.event.pump()
-      self.clock.tick(45)
+    img2_orig.set_alpha(alpha)
+    screen.blit(img2_orig, (img2_start, VSTART))
+    yield
 
-    self.last_img = img
+  def set_scrn(self, scrn):
+    self.screen.blit(scrn, (-self.delta, VSTART))
+    pygame.display.flip()
 
+  def flip(self):
+    pygame.display.flip()
+
+  
   def clear(self):
     self.screen.fill((0,0,0))
     pygame.display.flip()
@@ -127,6 +138,7 @@ class ScreenController(threading.Thread):
   def get_black_image(self):
     img = pygame.Surface((IMW,IMH))
     img.fill((0,0,0))
+    img.set_alpha(255)
     return img
 
   @classmethod
@@ -141,13 +153,17 @@ if __name__ == '__main__':
   grass = ScreenController.loadimg('Assets/Images/grassland.jpg')
 
   con.set_scrn(forest)
-  g = ScreenController.gen_sweep(forest, grass, con.screen)
+  g = ScreenController.gen_zoom(forest, grass, con.screen)
+  c = pygame.time.Clock()
   try:
     while True:
       g.next()
       con.flip()
+      c.tick(24)
   except StopIteration:
+    time.sleep(2.0)
     con.set_scrn(grass)
+    print grass
     raw_input("Enter to exit")
 
  

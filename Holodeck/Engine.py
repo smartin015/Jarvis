@@ -57,6 +57,15 @@ class EffectTemplate():
     """
     return []
 
+  def handle_blacklist(self):
+    blacklist_names = [cls.__name__ for cls in self.get_blacklist()]
+
+    for ename in blacklist_names:
+      effect = self.active_effects.get(ename)
+      if effect:
+        effect.request_exit()
+    self.logger.debug("Blacklist handled")  
+
   def insert_into_pipeline(self):
     for (pipe_id, con) in self._get_mapping().items():
       if self.pipes.get(pipe_id) is None:
@@ -106,18 +115,11 @@ class EffectTemplate():
     self.remove_cb(self)
 
   def request_exit(self):
-    """ Tell this effect to start the process of dying 
+    """ Tell this effect to start the process of dying.
+        For most effects, it just removes it immediately.
     """
-    self.should_exit = True
-
-  def post_render(self):
-    """ Called once per frame for update purposes. 
-        Remember to check self.should_exit() here
-    """
-    if self.should_exit:
-      self.remove()
-
-
+    self.logger.debug("Exiting")
+    self.remove()
 
 class HolodeckEngine():
   
@@ -164,7 +166,7 @@ class HolodeckEngine():
 
     # Create a thread for each pipeline controller
     for (deps, func) in self.update_funcs:
-      t = threading.Thread(target = self.update, args=(deps, func, 30))
+      t = threading.Thread(target = self.update, args=(deps, func, 24))
       t.daemon = True
       t.start()
     
@@ -174,8 +176,6 @@ class HolodeckEngine():
       env = self.compose(deps)
       callback(*env)
       c.tick(max_fps)
-
-
 
   def handle_effect_exit(self, effect):
     state = {classname_to_id(effect.__class__.__name__): False}
