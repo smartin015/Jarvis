@@ -24,7 +24,7 @@ class ScreenController():
     os.environ["SDL_FBDEV"] = "/dev/fb1"
     self.screen = pygame.display.set_mode(
       (SW,SH), 
-      pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
+      pygame.HWSURFACE | pygame.DOUBLEBUF
     )
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
@@ -61,26 +61,31 @@ class ScreenController():
 
   @classmethod
   def gen_sweep(self, img1, img2, screen):
-    start = 0
-    mid = 50
-    overlap = 10
-    end = 120
+    start = 0.0
+    mid = 2.0
+    overlap = 0.25
+    end = 4.0
     alpha_end = 150
     delta = DELTA
     img1_start = 0
     img2_start = float(-delta)
+    start_time = time.time()
+    t = 0.0
+    img1 = img1.convert()
+    img2 = img2.convert()
+    
+    while t < end:
+      t = time.time() - start_time
+      v = ScreenController.easeInOutQuad(t, start, delta, end) 
 
-    for i in xrange(start, end):
-      v = ScreenController.easeInOutQuad(i, start, delta, end) 
-
-      if i < mid+overlap:
-        alpha = i * (alpha_end/float(mid+overlap))  
-        img1.set_alpha((alpha_end-alpha))
+      if t < mid+overlap:
+        alpha = alpha_end * t / (mid+overlap)
+        img1.set_alpha(int(alpha_end-alpha))
         screen.blit(img1,(img1_start+v,VSTART))
     
-      if i > mid-overlap:
-        alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
-        img2.set_alpha(alpha)
+      if t > mid-overlap:
+        alpha = alpha_end * (t-(mid-overlap)) / (end-(mid-overlap))  
+        img2.set_alpha(int(alpha))
         screen.blit(img2,(img2_start+v,VSTART))
 
       yield
@@ -88,37 +93,39 @@ class ScreenController():
   @classmethod
   def gen_zoom(self, img1, img2, screen):
     start = 0
-    mid = 50
-    overlap = 15
-    end = 70
+    mid = 2.0
+    overlap = 0.25
+    end = 4.0
     alpha_end = 150
-    img1_start = 0#float(-DELTA)
-    img2_start = img1_start
+    img1_start = 0
+    img2_start = 0
     delta = DELTA / 8
     aspect = float(IMW)/float(IMH)
-    
-    img1 = img1.copy()
+    start_time = time.time()
+    t = 0.0
+    img1 = img1.convert()
+    img2 = img2.convert()
 
     img2_scaledist = end-(mid-overlap)
-    im2h = img2.get_size()[1]-img2_scaledist
+    im2h = int(img2.get_size()[1]-img2_scaledist)
 
     img2_orig = img2
     img2 = pygame.transform.smoothscale(img2, (int(aspect*im2h), im2h))
 
+    while t < end:
+      t = time.time() - start_time
+      v = ScreenController.easeInOutQuad(t, start, delta, end) 
 
-    for i in xrange(start, end):
-      v = ScreenController.easeInOutQuad(i, start, delta, end) 
-
-      if i < mid+overlap:
-        alpha = i * (alpha_end/float(mid+overlap))  
+      if t < mid+overlap:
+        alpha = alpha_end * t / (mid+overlap)
         img1_scale = pygame.transform.smoothscale(img1, (int(aspect*(IMH+v)), int(IMH+v)))
         img1.blit(img1_scale, (-aspect*v/2,-v/2))
         img1_scale.set_alpha((alpha_end-alpha))
         screen.blit(img1_scale,(img1_start,VSTART))
       
-      if i >= mid-overlap:
-        s = i-(mid-overlap)
-        alpha = s * alpha_end / float(end-(mid-overlap))
+      if t >= mid-overlap:
+        alpha = alpha_end * (t-(mid-overlap)) / (end-(mid-overlap))  
+        s = t-(mid-overlap)
         img2_scale = pygame.transform.smoothscale(img2, (int(aspect*(im2h+s)), int(im2h+s)))
         img2_scale.set_alpha(alpha)
         screen.blit(img2_scale,(img2_start + (img2_scaledist-s)/2,VSTART)) #- (s-img2_scaledist)/2))
