@@ -188,9 +188,6 @@ class PlainsEffect(LocationTemplate):
 
 class TundraEffect(LocationTemplate):
 
-  def tower(self, prev):
-    return [(list(SKY)) for i in xrange(NTOWER)]
-
   def get_mapping(self):
     return {
       P.FLOOR: (self.floor, 1),
@@ -203,6 +200,9 @@ class TundraEffect(LocationTemplate):
 
   def floor(self, prev):
     return [255,255,255]
+    
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
 
   def window_top(self, prev):
     return SKY
@@ -212,12 +212,6 @@ class TundraEffect(LocationTemplate):
     
 class RiverEffect(LocationTemplate):
 
-  def setup(self):
-    self.img_front = scl.loadimg(IMG_PATH + "river.jpg")
-    self.img_right = scl.loadimg(IMG_PATH + "tundra_90.jpg")
-
-  def tower(self, prev):
-    return [(list(SKY)) for i in xrange(NTOWER)]
 
   def get_mapping(self):
     return {
@@ -230,6 +224,9 @@ class RiverEffect(LocationTemplate):
   def floor(self, prev):
     return [0,0,255]
 
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+    
   def window_top(self, prev):
     return SKY
 
