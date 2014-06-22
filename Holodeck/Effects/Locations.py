@@ -4,6 +4,8 @@ from Outputs.ScreenController import ScreenController as scl
 from Holodeck.Engine import EffectTemplate
 from random import randint
 import time
+import inspect
+import sys
 
 SKY = [20, 100, 205]
 SAND = [180, 140, 100]
@@ -69,6 +71,17 @@ class LocationTemplate(EffectTemplate):
       self.insert_into_pipeline()
       return final
 
+  def get_blacklist(self):
+    cs = inspect.getmembers(sys.modules[__name__], inspect.isclass)    
+    result = []
+    for n,c in cs:
+      if c is LocationTemplate or c is self.__class__:
+        continue
+      if not issubclass(c, LocationTemplate):
+        continue
+      result.append(c)
+    return result
+      
   def trans_wall_img(self, screen):
     final = self.steady_mapping[P.WALLIMG](screen)
     if not self.screen_transition:
@@ -77,7 +90,7 @@ class LocationTemplate(EffectTemplate):
     return self.handle_screen_transition(final)
     
   def trans_window_img(self, screen):
-    final = self.steady_mapping[P.WALLIMG](screen)
+    final = self.steady_mapping[P.WINDOWIMG](screen)
     if not self.screen_transition:
       self.transition_screen = screen.copy()
       self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
@@ -114,9 +127,6 @@ class ForestEffect(LocationTemplate):
       P.WINDOWIMG: (self.window_img, 1),
     }
 
-  def get_blacklist(self):
-    return [PlainsEffect]
-
   def floor(self, prev):
     return [102, 55, 0]
 
@@ -138,10 +148,6 @@ class PlainsEffect(LocationTemplate):
     LocationTemplate.setup(self)
     self.plains_screen = scl.loadimg("Holodeck/Images/grassland.jpg")
 
-  def tower(self, prev):
-    return [(list(SKY)) for i in xrange(NTOWER)]
-
-
   def get_mapping(self):
     return {
       P.FLOOR: (self.floor, 1),
@@ -152,13 +158,13 @@ class PlainsEffect(LocationTemplate):
       P.WINDOWIMG: (self.window_img, 1),
     }
 
-  def get_blacklist(self):
-    return [ForestEffect]
-
   def floor(self, prev):
     return GRASS
     #return [255, 255, 0]
-
+    
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+    
   def window_top(self, prev):
     return SKY
 
@@ -218,11 +224,15 @@ class DesertEffect(EffectTemplate):
   def window_bot(self, prev):
     return SAND
 
-class TundraEffect(EffectTemplate):
+class TundraEffect(LocationTemplate):
+
+  def setup(self):
+    LocationTemplate.setup(self)
+    self.img_front = scl.loadimg("Holodeck/Images/tundra.jpg")
+    self.img_right = scl.loadimg("Holodeck/Images/tundra_90.jpg")
 
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
-
 
   def get_mapping(self):
     return {
@@ -230,6 +240,8 @@ class TundraEffect(EffectTemplate):
       P.TOWER: (self.tower, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img, 1),
+      P.WINDOWIMG: (self.window_img, 1),
     }
 
   def floor(self, prev):
@@ -240,6 +252,12 @@ class TundraEffect(EffectTemplate):
 
   def window_bot(self, prev):
     return [255,255,255]
+    
+  def wall_img(self, prev):
+    return self.img_right
+
+  def window_img(self, prev):
+    return self.img_front
 
 class WaterEffect(EffectTemplate):
 

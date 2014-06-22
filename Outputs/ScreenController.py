@@ -131,10 +131,6 @@ class ScreenController():
         screen.blit(img2_scale,(img2_start + (img2_scaledist-s)/2,VSTART)) #- (s-img2_scaledist)/2))
 
       yield
-    
-    img2_orig.set_alpha(alpha)
-    screen.blit(img2_orig, (img2_start, VSTART))
-    yield
 
   def set_scrn(self, scrn):
     self.screen.blit(scrn, (-self.delta, VSTART))
