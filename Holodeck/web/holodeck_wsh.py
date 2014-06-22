@@ -108,7 +108,9 @@ class HolodeckController():
           return
 
         self.logger.debug("Got %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
-        if (json.loads(msg)['host'] is not MASTER_SERVER):
+
+        if deck is not self.servers[0]: # First to connect is host
+          self.logger.debug("Non-host message, ignoring.")
           continue
 
         self.logger.debug("Adding message to queue")
