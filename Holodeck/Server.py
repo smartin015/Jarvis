@@ -56,8 +56,7 @@ class HolodeckServer(SocketServer.ThreadingTCPServer):
       self.get_pipeline_handlers(),
       self.broadcast_state
     )
-    self.deck.daemon = True
-    self.deck.start()
+    self.deck.start_pipeline()
     self.logger.debug("Holodeck started")
   
   def broadcast(self, data):

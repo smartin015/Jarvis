@@ -37,11 +37,11 @@ class Holodeck(HolodeckServer):
 
   def get_pipeline_handlers(self):
     return [
-      ([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
-      ([P.FLOOR], self.floor_leds),
-      ([P.TOWER, P.RING], self.tower_ring),
+      #([P.WINDOWTOP, P.WINDOWBOT], self.window_leds),
+      #([P.FLOOR], self.floor_leds),
+      #([P.TOWER, P.RING], self.tower_ring),
       ([P.WALLIMG], self.wall_scrn),
-      ([P.LIGHTS], self.lights),
+      #([P.LIGHTS], self.lights),
     ]
 
   def get_pipeline_defaults(self):
@@ -51,7 +51,7 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    self.devices['proj'].get_black_image(),
+      P.WALLIMG:    ScreenController.get_black_image(),
       P.LIGHTS:     False,
     }
 
@@ -70,8 +70,7 @@ class Holodeck(HolodeckServer):
     self.devices['lights'].set_state(is_on)
 
   def wall_scrn(self, scrn):
-    print scrn
-    self.devices['proj'].set_screen(scrn)
+    self.devices['proj'].set_scrn(scrn)
 
 if __name__ == "__main__":
   h = Holodeck() 

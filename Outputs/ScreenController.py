@@ -21,50 +21,16 @@ class ScreenController(threading.Thread):
     if os.name is not 'nt':
       os.environ["DISPLAY"] = ":0"
     os.environ["SDL_FBDEV"] = "/dev/fb1"
-    self.display = pygame.display.set_mode(
+    self.screen = pygame.display.set_mode(
       (SW,SH), 
       pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
     )
-    self.screen = pygame.Surface((IMW, IMH))
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
     self.daemon = True
     self.start()
     self.clear()
   
-  def run(self):
-    while True:
-      time.sleep(0.5)
-      pygame.event.pump()
-
-  @classmethod
-  def gen_sweep(self, img1, img2):
-    start = 0
-    mid = 50
-    overlap = 10
-    end = 120
-    alpha_end = 150
-    delta = DELTA
-    img1_start = float(-delta)
-    img2_start = float(-2*delta)
-
-    scrn = pygame.Surface((IMW,IMH))
-    for i in xrange(start, end):
-      print i
-      v = ScreenController.easeInOutQuad(i, start, delta, end) 
-
-      if i < mid+overlap:
-        alpha = i * (alpha_end/float(mid+overlap))  
-        img1.set_alpha((alpha_end-alpha))
-        scrn.blit(img1,(img1_start+v,VSTART))
-    
-      if i > mid-overlap:
-        alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
-        img2.set_alpha(alpha)
-        scrn.blit(img2,(img2_start+v,VSTART))
-      yield scrn
-
-
   @classmethod
   def easeInOutQuad(self, currtime, start, delta, duration):
     currtime = float(currtime)
@@ -80,38 +46,44 @@ class ScreenController(threading.Thread):
     currtime -= 1; 
     return -delta/2 * (currtime*(currtime-2) - 1) + start;
 
-  
-  def set_screen(self, scrn, xy=(HSTART,VSTART)):
-    self.display.blit(scrn,xy)
-    pygame.display.flip()
 
-  def sweep(self, img):
+  def run(self):
+    while True:
+      time.sleep(0.5)
+      pygame.event.pump()
+
+  @classmethod
+  def gen_sweep(self, img1, img2, screen):
     start = 0
     mid = 50
     overlap = 10
     end = 120
     alpha_end = 150
-    img1_start = float(-self.delta)
-    img2_start = float(-2*self.delta)
+    delta = DELTA
+    img1_start = 0
+    img2_start = float(-delta)
 
     for i in xrange(start, end):
-      v = ScreenController.easeInOutQuad(i, start, self.delta, end) 
+      v = ScreenController.easeInOutQuad(i, start, delta, end) 
 
       if i < mid+overlap:
         alpha = i * (alpha_end/float(mid+overlap))  
-        self.last_img.set_alpha((alpha_end-alpha))
-        self.screen.blit(self.last_img,(img1_start+v,VSTART))
+        img1.set_alpha((alpha_end-alpha))
+        screen.blit(img1,(img1_start+v,VSTART))
     
       if i > mid-overlap:
         alpha = (i-(mid-overlap)) * (alpha_end/float(end-(mid-overlap)))  
-        img.set_alpha(alpha)
-        self.screen.blit(img,(img2_start+v,VSTART))
-  
-      pygame.display.flip()
-      pygame.event.pump()
-      self.clock.tick(30)
+        img2.set_alpha(alpha)
+        screen.blit(img2,(img2_start+v,VSTART))
 
-    self.last_img = img
+      yield
+ 
+  def set_scrn(self, scrn):
+    self.screen.blit(scrn, (-self.delta, VSTART))
+    pygame.display.flip()
+
+  def flip(self):
+    pygame.display.flip()
 
   def zoom(self, img):
     start = 0
@@ -119,9 +91,9 @@ class ScreenController(threading.Thread):
     overlap = 15
     end = 80
     alpha_end = 150
-    img1_start = float(-self.delta)
-    img2_start = float(-self.delta)
-    delta = self.delta / 8
+    img1_start = float(-DELTA)
+    img2_start = img1_start
+    delta = DELTA / 8
     aspect = float(IMW)/float(IMH)
 
     for i in xrange(start, end):
@@ -147,21 +119,15 @@ class ScreenController(threading.Thread):
 
     self.last_img = img
 
-
-  def setimg(self, img):
-    img_start = float(-self.delta)
-    self.screen.blit(img, (img_start,VSTART))
+  def clear(self):
+    self.screen.fill((0,0,0))
     pygame.display.flip()
-    self.last_img = img
 
+  @classmethod
   def get_black_image(self):
     img = pygame.Surface((IMW,IMH))
     img.fill((0,0,0))
     return img
-
-  def clear(self):
-    self.screen.fill((0,0,0))
-    pygame.display.flip()
 
   @classmethod
   def loadimg(self, path):
@@ -173,10 +139,15 @@ if __name__ == '__main__':
   con = ScreenController()
   forest = ScreenController.loadimg('Assets/Images/forest.jpg')
   grass = ScreenController.loadimg('Assets/Images/grassland.jpg')
-  con.setimg(forest)
-  raw_input("Enter to slide:")
-  con.sweep(grass)
-  time.sleep(10.0)
 
+  con.set_scrn(forest)
+  g = ScreenController.gen_sweep(forest, grass, con.screen)
+  try:
+    while True:
+      g.next()
+      con.flip()
+  except StopIteration:
+    con.set_scrn(grass)
+    raw_input("Enter to exit")
 
  

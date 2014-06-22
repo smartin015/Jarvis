@@ -119,13 +119,12 @@ class EffectTemplate():
 
 
 
-class HolodeckEngine(threading.Thread):
+class HolodeckEngine():
   
   def __init__(self, effect_list, pipelines, update_funcs, state_callback=None):
     self.logger = logging.getLogger(self.__class__.__name__)
     self.logger.setLevel(logging.DEBUG)
         
-    threading.Thread.__init__(self)
     self.update_funcs = update_funcs
 
     # Create a dictionary of effects keyed by class name
@@ -148,42 +147,35 @@ class HolodeckEngine(threading.Thread):
       self.pipelines[pipe] = []
       self.initial_pipe_values[pipe] = pipelines[pipe]
 
-  def compose(self):
+  def compose(self, pipe_names):
     # Composes each controller pipeline into a single environment
-    env = dict()
-    for name in self.pipelines:
+    env = []
+    for name in pipe_names:
       composite = self.initial_pipe_values[name]
       for (con, priority) in self.pipelines[name]:
         composite = con(composite)
-      env[name] = composite
+      env.append(composite)
+
     return env
 
-  def run(self):
+  def start_pipeline(self):
     c = Clock()
     self.logger.debug("Beginning main loop")
-    while True:
-      try:
-        self.update()
-        c.tick(30)
-      except:
-        import traceback
-        traceback.print_exc()
-        raise
 
-  def update(self):
-    # Compose controllers into single environment
-    env = self.compose()
-
-    # Use a separate function to complete updates
-    # TODO: Multi-thread pipeline and updates
+    # Create a thread for each pipeline controller
     for (deps, func) in self.update_funcs:
-      pipes = [env[pipe_id] for pipe_id in deps]
-      func(*pipes)
+      t = threading.Thread(target = self.update, args=(deps, func, 30))
+      t.daemon = True
+      t.start()
+    
+  def update(self, deps, callback, max_fps):
+    c = Clock()
+    while True:
+      env = self.compose(deps)
+      callback(*env)
+      c.tick(max_fps)
 
-    # Finally, give the effect objects a chance to adjust themselves
-    # (usually, to remove themselves from )
-    for (name, effect) in self.activeEffects.items():
-      effect.post_render()
+
 
   def handle_effect_exit(self, effect):
     state = {classname_to_id(effect.__class__.__name__): False}

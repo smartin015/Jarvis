@@ -11,49 +11,51 @@ GRASS = [50, 125, 0]
 
 
 class LocationEffect(EffectTemplate):
-  TRANSITION_TIME = 10.0
+  TRANSITION_TIME = 1000
 
   def setup(self):
-    self.t = time.time()
-    self.curr_t = None
     self.steady_mapping = dict(
       [(k,c[0]) for (k,c) in self.get_mapping().items()]
     )
     self.sweep = None
+    self.transition_screen = scl.get_black_image()
+    self.ttop = 0
+    self.transition = False
 
   def location_mapping(self):
     raise Exception("Unimplemented")
-
-  def location_post_render(self):
-    pass
 
   def trans_floor(self, prev):
     return prev
   
   def trans_window_top(self, prev):
+    self.ttop += 1
     final = self.steady_mapping[P.WINDOWTOP](prev)
-    blend_amount = (self.curr_t - self.t) / self.TRANSITION_TIME
+    blend_amount = self.ttop / self.TRANSITION_TIME
     return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(final, prev)]
     
   def trans_window_bot(self, prev):
     return prev
 
-  def trans_wall_img(self, prev):
-    final = self.steady_mapping[P.WALLIMG](prev)
+  def trans_wall_img(self, screen):
+    final = self.steady_mapping[P.WALLIMG](screen)
     if not self.sweep:
-      self.sweep = scl.gen_sweep(prev, final)
+      self.sweep = scl.gen_sweep(screen, final, self.transition_screen)
 
     try:
-      return self.sweep.next()
+      self.sweep.next()
+      return self.transition_screen
     except StopIteration:
-      print "BLEEEEGH"
+      self.remove_from_pipeline()
+      self.transition = True
+      self.insert_into_pipeline()
+      return final
 
-
-  def trans_window_img(self, prev):
-    return prev
+  def trans_window_img(self, screen):
+    return screen
 
   def _get_mapping(self): 
-    if self.t:
+    if not self.transition:
       priorities = dict([(k,c[1]) for (k,c) in self.get_mapping().items()])
       return {
         P.FLOOR: (self.trans_floor, priorities[P.FLOOR]),
@@ -65,19 +67,6 @@ class LocationEffect(EffectTemplate):
       }
     else:
       return self.get_mapping()
-
-  def post_render(self):
-    self.curr_t = time.time()
-    """
-    if self.t:
-      self.curr_t = time.time()
-      if self.curr_t - self.t > self.TRANSITION_TIME:
-        self.remove_from_pipeline()
-        self.t = None
-        del(self.curr_t)
-        self.insert_into_pipeline()
-    """
-    self.location_post_render()
 
 
 class ForestEffect(LocationEffect):
