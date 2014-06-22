@@ -1,9 +1,11 @@
 import pygame
+import pygame.locals
 import os
 import time
 import threading
+import sys
 
-SW,SH = 1920, 1080
+SW,SH = 1680, 1050
 DELTA = 500
 SCALE_DELTA = 30
 VSTART = 0
@@ -11,7 +13,7 @@ IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
 
 HSTART = -DELTA
 
-
+# TODO: Thread handoff?
 class ScreenController(threading.Thread):
   def __init__(self):
     threading.Thread.__init__(self)
@@ -49,7 +51,6 @@ class ScreenController(threading.Thread):
 
   def run(self):
     while True:
-      time.sleep(0.5)
       pygame.event.pump()
 
   @classmethod
