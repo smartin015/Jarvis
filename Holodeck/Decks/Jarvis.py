@@ -26,6 +26,7 @@ class Holodeck(HolodeckServer):
       "lights": RelayController(Serial("/dev/ttyUSB2", 9600)),
     }
 
+    # TODO: Base this on arduino communication to the computer
     time.sleep(2.5) # Need delay at least this long for arduino to startup
     self.devices['tower'].setState(RGBState.STATE_MANUAL)
     time.sleep(1.0)
@@ -34,6 +35,13 @@ class Holodeck(HolodeckServer):
     self.last_img = None
 
     HolodeckServer.__init__(self)
+
+  def mainloop(self):
+    t = threading.Thread(target = self.serve_forever)
+    t.daemon = True
+    t.start()
+
+    self.devices['proj'].mainloop()
 
   def get_pipeline_handlers(self):
     return [
@@ -74,5 +82,5 @@ class Holodeck(HolodeckServer):
 
 if __name__ == "__main__":
   h = Holodeck() 
-  h.serve_forever()
+  h.mainloop()
 

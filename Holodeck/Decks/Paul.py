@@ -4,7 +4,7 @@ import time
 
 class Holodeck(JarvisHolodeck):
   
-  def serve_forever(self):
+  def mainloop(self):
     self.deck.handle({'beach': True})
     time.sleep(2.0)
     self.deck.handle({'day': True})
@@ -13,5 +13,5 @@ class Holodeck(JarvisHolodeck):
 
 if __name__ == "__main__":
   deck = Holodeck()
-  deck.serve_forever()
+  deck.mainloop()
 
