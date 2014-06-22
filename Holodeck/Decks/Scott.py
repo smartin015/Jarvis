@@ -23,6 +23,13 @@ class Holodeck(HolodeckServer):
 
     HolodeckServer.__init__(self)
 
+  def mainloop(self):
+    t = threading.Thread(target=self.serve_forever)
+    t.daemon = True
+    t.start()
+    
+    self.devices['proj'].mainloop()
+    
   def get_pipeline_handlers(self):
     return [
       ([P.WINDOWIMG], self.window_scrn),
@@ -48,6 +55,6 @@ class Holodeck(HolodeckServer):
     self.last_sounds = sounds
 
 if __name__ == "__main__":
-  h = Holodeck() 
-  h.serve_forever()
+  h = Holodeck()  
+  h.mainloop()
 

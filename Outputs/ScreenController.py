@@ -14,9 +14,8 @@ IMW, IMH = SW+2*DELTA, SH+SCALE_DELTA
 HSTART = -DELTA
 
 # TODO: Thread handoff?
-class ScreenController(threading.Thread):
+class ScreenController():
   def __init__(self):
-    threading.Thread.__init__(self)
     self.delta = DELTA
     self.daemon = True
 
@@ -29,8 +28,6 @@ class ScreenController(threading.Thread):
     )
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
-    self.daemon = True
-    self.start()
     self.clear()
   
   @classmethod
@@ -49,9 +46,18 @@ class ScreenController(threading.Thread):
     return -delta/2 * (currtime*(currtime-2) - 1) + start;
 
 
-  def run(self):
+  def mainloop(self):
     while True:
-      pygame.event.pump()
+      for event in pygame.event.get():
+        if (event.type == pygame.locals.QUIT or (
+              event.type == pygame.locals.KEYDOWN and 
+              event.key == pygame.locals.K_ESCAPE
+            )):
+          pygame.quit()
+          return
+       
+      self.clock.tick(10)
+      
 
   @classmethod
   def gen_sweep(self, img1, img2, screen):

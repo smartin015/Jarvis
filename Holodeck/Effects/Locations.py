@@ -83,7 +83,7 @@ class LocationTemplate(EffectTemplate):
     final = self.steady_mapping[P.WALLIMG](screen)
     if not self.screen_transition:
       self.transition_screen = screen.copy()
-      self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
+      self.screen_transition = scl.gen_sweep(screen, final, self.transition_screen)
     return self.handle_screen_transition(final)
 
 
