@@ -161,4 +161,42 @@ class TorchEffect(EffectTemplate):
     self.ringRGB[0][2] = 0
 
     return self.ringRGB
+'''
+
+class TorchEffect(EffectTemplate):
+
+  def get_mapping(self):
+    return {
+      P.WINDOWTOP: (self.window_top, 1),
+    } 
+
+  RED_MAX = 150
+  GREEN_MAX = 40
+
+  RED_MIN = 120
+  GREEN_MIN = 10
+
+  def setup(self):
+    self.red = 170
+    self.green = 20
+    self.ringRGB = [0, 0, 0]
+
+  def window_top(self, prev):
+    if randint(0,1) == 1:
+      if self.red < (self.RED_MAX - 5):
+        self.red = (self.red + 5)
+      if self.green < (self.GREEN_MAX -5):
+        self.green = (self.green + 5)
+    else:
+      if self.red > (self.RED_MIN - 5):
+        self.red = (self.red - 5)
+      if self.green > (self.GREEN_MIN -5):
+        self.green = (self.green - 5)
+    
+    self.ringRGB[0] = self.red
+    self.ringRGB[1] = self.green
+    self.ringRGB[2] = 0
+
+    return self.ringRGB
+'''
 

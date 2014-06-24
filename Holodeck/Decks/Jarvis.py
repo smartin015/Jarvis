@@ -21,7 +21,7 @@ class Holodeck(HolodeckServer):
     self.devices = {
       "window": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
       "couch": RGBSingleController(Serial("/dev/ttyUSB0", 9600)),
-      "tower": RGBMultiController(Serial("/dev/ttyACM0", 115200)),
+      "tower": RGBMultiController(Serial("/dev/ttyUSB3", 115200)),
       "proj": ScreenController(),
       "lights": RelayController(Serial("/dev/ttyUSB2", 9600)),
     }

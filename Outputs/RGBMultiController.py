@@ -31,13 +31,11 @@ class RGBMultiController():
 
   def setState(self, state):
     self.ser.write(chr(state))
-    time.sleep(0.015)
+    assert(self.ser.read(1) == 'S')
 
   def manual_update(self):
     self.manual_write(RGBState.CMD_UPDATE, [0]*3)
-    # Delay determined empirically. 
-    # This is the lowest we could get before inconsistencies showed up
-    time.sleep(0.0095) 
+    assert(self.ser.read(1) == 'A')
 
   def manual_write(self, i, rgb):
     cmd = chr(i) + "".join([chr(c) for c in rgb])
@@ -45,14 +43,22 @@ class RGBMultiController():
 
   def manual_exit(self):
     self.manual_write(RGBState.CMD_EXIT_MANUAL, [0]*3)
+    assert(self.ser.read(1) == 'S')
 
-if __name__ == "__main__":
-  import serial
-  import time
-  ser = serial.Serial("/dev/ttyACM0", 115200)
-  time.sleep(3.0)
+def _basic_test(con):
+  con.setState(RGBState.STATE_MANUAL)
+  print "State manual"
+  time.sleep(4.0)
+  con.manual_write(5, [255, 255, 255])
+  print "Wrote color"
+  time.sleep(4.0)
+  con.manual_update()
+  print "Updating"
+  time.sleep(4.0)
+  print "Exiting"
+  con.manual_exit()
 
-  con = RGBMultiController(ser)
+def _fade_test(con):
   con.setState(RGBState.STATE_MANUAL)
   for j in xrange(55):
     for i in xrange(NTOWER+NRING):
@@ -64,6 +70,16 @@ if __name__ == "__main__":
     con.manual_update()
 
   con.manual_exit()
+
+if __name__ == "__main__":
+  import serial
+  import time
+  ser = serial.Serial("/dev/ttyUSB3", 115200)
+  time.sleep(3.0)
+
+  con = RGBMultiController(ser)
+  _fade_test(con)
+
     
 
     

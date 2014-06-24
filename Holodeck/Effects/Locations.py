@@ -8,9 +8,11 @@ import inspect
 import sys
 IMG_PATH = "Holodeck/Images/"
 
-SKY = [20, 100, 205]
+#SKY = [20, 100, 205]
+SKY = [200, 200, 230]
 SAND = [180, 140, 100]
-GRASS = [50, 125, 0]
+#GRASS = [50, 125, 0]
+GRASS = [139, 90, 19]
 
 def flicker(rgb, flicker = 3):
   randomNum = randint(0,2)
@@ -155,7 +157,7 @@ class ForestEffect(LocationTemplate):
     return [102, 55, 0]
 
   def window_top(self, prev):
-    return [55, 185, 55]
+    return SKY
 
   def window_bot(self, prev):
     return [102, 155, 0]
@@ -219,6 +221,8 @@ class RiverEffect(LocationTemplate):
       P.TOWER: (self.tower, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
     }
 
   def floor(self, prev):
@@ -234,7 +238,7 @@ class RiverEffect(LocationTemplate):
     return [0,0,255]
     
     
-class DesertEffect(EffectTemplate):
+class DesertEffect(LocationTemplate):
 
   def get_mapping(self):
     return {
@@ -242,6 +246,8 @@ class DesertEffect(EffectTemplate):
       P.TOWER: (self.tower, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
     }
 
   def floor(self, prev):
@@ -260,7 +266,7 @@ class DesertEffect(EffectTemplate):
 
 
     
-class WaterEffect(EffectTemplate):
+class WaterEffect(LocationTemplate):
 
   def setup(self):
     self.count = 0
@@ -275,6 +281,8 @@ class WaterEffect(EffectTemplate):
       P.TOWER: (self.tower, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
     }
 
 
@@ -287,14 +295,16 @@ class WaterEffect(EffectTemplate):
 
   def window_bot(self, prev):
     return [0,0,255]
-
-class JungleEffect(EffectTemplate):
+50 
+class JungleEffect(LocationTemplate):
 
   def get_mapping(self):
     return {
       P.FLOOR: (self.floor, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
     }
 
   def floor(self, prev):
@@ -306,7 +316,7 @@ class JungleEffect(EffectTemplate):
   def window_bot(self, prev):
     return [0, 125, 0]
 
-class BeachEffect(EffectTemplate): 
+class BeachEffect(LocationTemplate): 
 
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
@@ -318,6 +328,8 @@ class BeachEffect(EffectTemplate):
       P.TOWER: (self.tower, 1),
       P.WINDOWTOP: (self.window_top, 1),
       P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
     }
 
   def floor(self, prev):

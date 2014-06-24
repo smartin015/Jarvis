@@ -67,12 +67,15 @@ const FuncPtr initializers[NSTATES] = {
   init_manual,
 };
 
+#define CMD_UPDATE 0xff
+#define CMD_EXIT_MANUAL 0xfe
+
 void setup() {
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
 
   pinMode(LED, OUTPUT);
-  digitalWrite(LED, HIGH);
+  digitalWrite(LED, LOW);
 
   Serial.begin(115200);
   initializers[state]();
@@ -85,6 +88,7 @@ void loop() {
       state = STATE_OFF;
     }
     initializers[state]();
+    Serial.write('S');
   }
   updaters[state]();
   strip.show();
@@ -93,14 +97,11 @@ void loop() {
 
 void init_manual() {
   char i = 0;
-  digitalWrite(LED, HIGH);
-  // We want to stay in init until manual mode finishes.
   char IRGB[3];
 
-  while (Serial.available()) Serial.read();
-
+  Serial.write('S');
+  // We want to stay in init until manual mode finishes.
   while (true) {
-
     while (Serial.available()) {
       IRGB[i++] = Serial.read();
       
@@ -108,11 +109,14 @@ void init_manual() {
 
       i = 0;
       switch (IRGB[0]) {
-        case char(0xff):
+        case char(CMD_UPDATE):
           strip.show();
+          Serial.write('A');
           continue;
-        case char(0xfe):
-          return;
+        case char(CMD_EXIT_MANUAL):
+          state = DEFAULT_STATE;
+          initializers[DEFAULT_STATE]();
+          return; // 'S' written by main loop
         default:
           strip.setPixelColor(IRGB[0], IRGB[1], IRGB[2], IRGB[3]);
       }
@@ -122,9 +126,7 @@ void init_manual() {
 }
 
 void update_manual() {
-  // Transition back to default state
-  state = DEFAULT_STATE;
-  initializers[DEFAULT_STATE]();
+  return;
 }
 
 

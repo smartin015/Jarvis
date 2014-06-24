@@ -28,7 +28,7 @@ class RGBSingleController():
 if __name__ == "__main__":
   import serial
   import time
-  ser = serial.Serial("/dev/ttyUSB0", 9600, timeout=3)  
+  ser = serial.Serial("/dev/ttyUSB1", 9600, timeout=3)  
   time.sleep(0.5) # So arduino can initialize
 
   writer = RGBSingleController(ser)
