@@ -49,7 +49,7 @@ class ScreenController(threading.Thread):
 
   def run(self):
     while True:
-      time.sleep(0.5)
+      time.sleep(0.1)
       pygame.event.pump()
 
   @classmethod

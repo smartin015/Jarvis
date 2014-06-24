@@ -77,8 +77,8 @@
                 var meta = dataTEMP[i][j];
                 console.log(meta);
                 console.log(j);
-                var elem = $("<li/>");
-                elem.append("<img src=\"/img/"+meta['img']+"\"></img>");
+                var elem = $("<li/>"); onerror="this.src='img/battle.png';"
+                elem.append("<img src=\"/img/"+meta['img']+" onerror=\"this.src='img/fallback.png';\" /\">");
                 elem.append("<label>"+meta['text']+"</label>");
                 elem.attr("data-effect", meta['id']);
       
