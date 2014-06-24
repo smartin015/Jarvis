@@ -48,7 +48,7 @@ class LocationTemplate(EffectTemplate):
     self.tfloor = 0
     self.transition = False
     self.prev_window_bot = None
-    self.img_right = ["front","forest","clear","day"]
+    self.img_right = ["right","mountain","clear","day"]
     self.img_front = ["front","forest","clear","day"]
 
 #scl.loadimg(IMG_PATH + "right/%s.jpg" % classname_to_id(self.__class__.__name__))

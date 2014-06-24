@@ -31,7 +31,7 @@ class Holodeck(HolodeckServer):
     self.devices['tower'].setState(RGBState.STATE_MANUAL)
     time.sleep(1.0)
 
-    self.img_path = "Assets/Images/"
+    self.img_path = "Holodeck/Images/"
     self.last_img = None
 
     HolodeckServer.__init__(self)
@@ -59,7 +59,7 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    ["","","",""],
+      P.WALLIMG:    ["right","mountain","clear","day"],
       P.LIGHTS:     False,
     }
 
@@ -78,8 +78,7 @@ class Holodeck(HolodeckServer):
     self.devices['lights'].set_state(is_on)
 
   def wall_scrn(self, scrn):
-    print scrn
-    self.devices['proj'].set_scrn(scl.loadimg("Assets/Images/" + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
+    self.devices['proj'].set_scrn(scl.loadimg(self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
 
     '''
     self.devices['proj'].set_scrn(scrn)

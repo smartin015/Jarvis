@@ -6,7 +6,7 @@ logging.addLevelName( logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLeve
 logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
 
 from Holodeck.Settings import Pipe as P
-from Outputs.ScreenController import ScreenController
+from Outputs.ScreenController import ScreenController as scl
 from Outputs.AudioController import AudioController
 from Holodeck.Server import HolodeckServer
 import time
@@ -14,7 +14,7 @@ import time
 class Holodeck(HolodeckServer):
   def __init__(self):
     self.devices = {
-      "proj": ScreenController(),
+      "proj": scl(),
       "audio": AudioController(asset_path="Holodeck/Sounds/"),
     }
     self.last_sounds = ([],[])
@@ -39,12 +39,12 @@ class Holodeck(HolodeckServer):
     
   def get_pipeline_defaults(self):
     return {
-      P.WINDOWIMG:  ScreenController.get_black_image,
+      P.WINDOWIMG:  ["front","mountain","clear","day"],
       P.SOUND:      self.new_sound_val, 
     }
 
   def window_scrn(self, scrn):
-    self.devices['proj'].set_scrn(scrn)
+    self.devices['proj'].set_scrn(scl.loadimg(self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
      
   def sound(self, sounds):
     (ambient, effects) = sounds
