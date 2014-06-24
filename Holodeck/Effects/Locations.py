@@ -7,7 +7,7 @@ import time
 import inspect
 import sys
 IMG_PATH = "Holodeck/Images/"
-
+#location_weather_time
 #SKY = [20, 100, 205]
 SKY = [200, 200, 230]
 SAND = [180, 140, 100]
@@ -48,8 +48,10 @@ class LocationTemplate(EffectTemplate):
     self.tfloor = 0
     self.transition = False
     self.prev_window_bot = None
-    self.img_front = scl.loadimg(IMG_PATH + "front/%s.jpg" % classname_to_id(self.__class__.__name__))
-    self.img_right = scl.loadimg(IMG_PATH + "right/%s.jpg" % classname_to_id(self.__class__.__name__))
+    self.img_right = ["front","forest","clear","day"]
+    self.img_front = ["front","forest","clear","day"]
+
+#scl.loadimg(IMG_PATH + "right/%s.jpg" % classname_to_id(self.__class__.__name__))
   
   def location_mapping(self):
     raise Exception("Unimplemented")
@@ -107,19 +109,6 @@ class LocationTemplate(EffectTemplate):
       result.append(c)
     return result
       
-  def trans_wall_img(self, screen):
-    final = self.steady_mapping[P.WALLIMG](screen)
-    if not self.screen_transition:
-      self.transition_screen = screen.copy()
-      self.screen_transition = scl.gen_sweep(screen, final, self.transition_screen)
-    return self.handle_screen_transition(final)
-    
-  def trans_window_img(self, screen):
-    final = self.steady_mapping[P.WINDOWIMG](screen)
-    if not self.screen_transition:
-      self.transition_screen = screen.copy()
-      self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
-    return self.handle_screen_transition(final)
 
   def trans_audio(self, prev):
     prev[1].append("swoosh")
@@ -134,23 +123,7 @@ class LocationTemplate(EffectTemplate):
   def audio_default(self, prev):
     prev[0].append(classname_to_id(self.__class__.__name__))
     return prev
-    
-  def _get_mapping(self): 
-    if not self.transition:
-      priorities = dict([(k,c[1]) for (k,c) in self.get_mapping().items()])
-      return {
-        P.FLOOR: (self.trans_floor, priorities.get(P.FLOOR,1)),
-        P.WINDOWTOP: (self.trans_window_top, priorities.get(P.WINDOWTOP,1)),
-        P.WINDOWBOT: (self.trans_window_bot, priorities.get(P.WINDOWBOT,1)),
-        P.WALLIMG: (self.trans_wall_img, priorities.get(P.WALLIMG,1)),
-        P.WINDOWIMG: (self.trans_window_img, priorities.get(P.WINDOWIMG,1)),
-        P.SOUND: (self.trans_audio, priorities.get(P.SOUND,1))
-        #TODO: Other effects
-      }
-    else:
-      return self.get_mapping()
-
-
+  
 class ForestEffect(LocationTemplate):
 
   def get_mapping(self):
@@ -171,6 +144,9 @@ class ForestEffect(LocationTemplate):
 
   def window_bot(self, prev):
     return [102, 155, 0]
+  
+  def wall_img_default(self, prev):
+    return ["front","forest","clear","day"]
 
 class PlainsEffect(LocationTemplate):
 

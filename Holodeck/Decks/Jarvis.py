@@ -12,7 +12,7 @@ from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRING
 from Outputs.IRController import IRController
-from Outputs.ScreenController import ScreenController
+from Outputs.ScreenController import ScreenController as scl
 from Holodeck.Server import HolodeckServer
 import time
 
@@ -22,7 +22,7 @@ class Holodeck(HolodeckServer):
       "window": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
       "couch": RGBSingleController(Serial("/dev/ttyUSB0", 9600)),
       "tower": RGBMultiController(Serial("/dev/ttyUSB3", 115200)),
-      "proj": ScreenController(),
+      "proj": scl(),
       "lights": RelayController(Serial("/dev/ttyUSB2", 9600)),
     }
 
@@ -59,7 +59,7 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    ScreenController.get_black_image(),
+      P.WALLIMG:    ["","","",""],
       P.LIGHTS:     False,
     }
 
@@ -78,7 +78,28 @@ class Holodeck(HolodeckServer):
     self.devices['lights'].set_state(is_on)
 
   def wall_scrn(self, scrn):
+    print scrn
+    self.devices['proj'].set_scrn(scl.loadimg("Assets/Images/" + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
+
+    '''
     self.devices['proj'].set_scrn(scrn)
+    '''
+    
+
+  def trans_wall_img(self, screen):
+    final = self.steady_mapping[P.WALLIMG](screen)
+    if not self.screen_transition:
+      self.transition_screen = screen.copy()
+      self.screen_transition = scl.gen_sweep(screen, final, self.transition_screen)
+    return self.handle_screen_transition(final)
+    
+  def trans_window_img(self, screen):
+    final = self.steady_mapping[P.WINDOWIMG](screen)
+    if not self.screen_transition:
+      self.transition_screen = screen.copy()
+      self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
+    return self.handle_screen_transition(final)
+
 
 if __name__ == "__main__":
   h = Holodeck() 
