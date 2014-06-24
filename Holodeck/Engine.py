@@ -159,7 +159,7 @@ class HolodeckEngine():
     # Composes each controller pipeline into a single environment
     env = []
     for name in pipe_names:
-      composite = self.initial_pipe_values[name]
+      composite = self.initial_pipe_values[name]()
       for (con, priority) in self.pipelines[name]:
         composite = con(composite)
       env.append(composite)

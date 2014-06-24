@@ -176,6 +176,7 @@ class LightningEffect(EffectTemplate):
     self.audio_count += 1
     if self.audio_count >= 12:
       self.remove()
-    return ['thunder']
+    prev[1].append('thunder')
+    return prev
   
 

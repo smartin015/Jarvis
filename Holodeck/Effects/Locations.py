@@ -121,21 +121,30 @@ class LocationTemplate(EffectTemplate):
       self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
     return self.handle_screen_transition(final)
 
+  def trans_audio(self, prev):
+    prev[1].append("swoosh")
+    return prev
+    
   def wall_img_default(self, prev):
     return self.img_right
 
   def window_img_default(self, prev):
     return self.img_front
     
+  def audio_default(self, prev):
+    prev[0].append(classname_to_id(self.__class__.__name__))
+    return prev
+    
   def _get_mapping(self): 
     if not self.transition:
       priorities = dict([(k,c[1]) for (k,c) in self.get_mapping().items()])
       return {
-        P.FLOOR: (self.trans_floor, priorities[P.FLOOR]),
-        P.WINDOWTOP: (self.trans_window_top, priorities[P.WINDOWTOP]),
-        P.WINDOWBOT: (self.trans_window_bot, priorities[P.WINDOWBOT]),
-        P.WALLIMG: (self.trans_wall_img, priorities[P.WALLIMG]),
-        P.WINDOWIMG: (self.trans_window_img, priorities[P.WINDOWIMG]),
+        P.FLOOR: (self.trans_floor, priorities.get(P.FLOOR,1)),
+        P.WINDOWTOP: (self.trans_window_top, priorities.get(P.WINDOWTOP,1)),
+        P.WINDOWBOT: (self.trans_window_bot, priorities.get(P.WINDOWBOT,1)),
+        P.WALLIMG: (self.trans_wall_img, priorities.get(P.WALLIMG,1)),
+        P.WINDOWIMG: (self.trans_window_img, priorities.get(P.WINDOWIMG,1)),
+        P.SOUND: (self.trans_audio, priorities.get(P.SOUND,1))
         #TODO: Other effects
       }
     else:
@@ -151,6 +160,7 @@ class ForestEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):

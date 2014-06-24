@@ -15,11 +15,9 @@ class Holodeck(HolodeckServer):
   def __init__(self):
     self.devices = {
       "proj": ScreenController(),
-      "audio": AudioController(),
+      "audio": AudioController(asset_path="Holodeck/Sounds/"),
     }
-    self.last_sounds = []
-    self.last_img = None
-    self.img_path = "Assets/Images/"
+    self.last_sounds = ([],[])
 
     HolodeckServer.__init__(self)
 
@@ -36,23 +34,43 @@ class Holodeck(HolodeckServer):
       ([P.SOUND], self.sound),
     ]
 
+  def new_sound_val(self):
+    return ([],[])
+    
   def get_pipeline_defaults(self):
     return {
-      P.WINDOWIMG:  ScreenController.get_black_image(),
-      P.SOUND:      [], 
+      P.WINDOWIMG:  ScreenController.get_black_image,
+      P.SOUND:      self.new_sound_val, 
     }
 
   def window_scrn(self, scrn):
     self.devices['proj'].set_scrn(scrn)
      
-  def sound(self, sounds=[]):
-    for s in sounds:
-      if s not in self.last_sounds:
+  def sound(self, sounds):
+    (ambient, effects) = sounds
+    (last_ambient, last_effects) = self.last_sounds
+    for s in effects:
+      if s not in last_effects:
+        print "playing", s
         self.devices['audio'].play(s)
-    for s in self.last_sounds:
-      if s not in sounds:
+        
+    for s in ambient:
+      if s not in last_ambient:
+        print "fading in", s
+        self.devices['audio'].fadein(s)
+        
+    for s in last_ambient:
+      if s not in ambient:
+        print "fading out", s
         self.devices['audio'].fadeout(s)
+        
+    for s in last_effects:
+      if s not in effects:
+        print "stopping", s
+        self.devices['audio'].fadeout_fast(s)
     self.last_sounds = sounds
+    
+  
 
 if __name__ == "__main__":
   h = Holodeck()  

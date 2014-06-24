@@ -15,7 +15,8 @@ CHANNELS = 2   # 1 == mono, 2 == stereo
 BUFFER = 1024  # audio buffer size in no. of samples
     
 class AudioController(Controller):
-  FADE_MS = 2500
+  FADE_MS = 5000
+  FADE_FAST_MS = 2500
 
   def __init__(self, asset_path="Assets/Sounds/"):
     Controller.__init__(self)
@@ -23,22 +24,32 @@ class AudioController(Controller):
 
     self.logger.info("Loading assets...")
     self.sounds = {}
-    for sndfil in os.listdir(asset_path):
-      print sndfil
-      self.sounds[sndfil.split('.')[0]] = pygame.mixer.Sound(asset_path+sndfil)
+    for dirpath, dirnames, filenames in os.walk(asset_path):
+      for sndfil in filenames:
+          print sndfil
+          self.sounds[sndfil.split('.')[0]] = pygame.mixer.Sound(os.path.join(dirpath,sndfil))
+    
+      
     self.logger.info("All assets loaded.")
 
   def get_asset_list(self):
     return self.sounds.keys()
 
   def play(self, snd):
-    """ Loads from disk, then plays """
     self.logger.info("Playing %s" % snd)
     self.sounds[snd].play() 
 
+  def fadein(self, snd, loops=-1):
+    self.logger.info("Playing ambient %s" % snd)
+    self.sounds[snd].play(loops=loops, fade_ms=self.FADE_MS) 
+    
   def music(self, mus):
     raise Exception("Unimplemented")
 
+  def fadeout_fast(self, snd):
+    self.logger.info("Fading out %s" % snd)
+    self.sounds[snd].fadeout(self.FADE_FAST_MS)
+    
   def fadeout(self, snd):
     self.logger.info("Fading out %s" % snd)
     self.sounds[snd].fadeout(self.FADE_MS)
