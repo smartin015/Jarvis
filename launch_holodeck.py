@@ -16,5 +16,5 @@ if __name__ == "__main__":
     raise Exception("Usage: %s <holodeck>" % sys.argv[0])
 
   h = str_to_class(sys.argv[1]).Holodeck() 
-  h.serve_forever()
+  h.mainloop()
 

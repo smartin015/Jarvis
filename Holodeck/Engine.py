@@ -7,6 +7,7 @@ from pygame.time import Clock
 import types
 from string import capitalize
 import bisect
+import sys
 
 def id_to_classname(cmd):
   return "%sEffect" % (capitalize(cmd))
@@ -24,6 +25,8 @@ class EffectTemplate():
 
   def __init__(self, pipes, active_effects, remove_cb):
     self.logger = logging.getLogger(self.__class__.__name__)
+    ch = logging.StreamHandler(sys.stdout)
+    self.logger.addHandler(ch)
     self.logger.setLevel(logging.DEBUG)
     self.remove_cb = remove_cb
     self.should_exit = False
@@ -106,6 +109,9 @@ class EffectTemplate():
         raise
 
   def remove(self):
+    print "REMOVING"
+    self.logger.info("Removing")
+    
     self.remove_from_pipeline()
 
     # Remove from active effects
@@ -211,7 +217,8 @@ class HolodeckEngine():
           self.logger.info("Adding " + req)
           
           if req in self.activeEffects:
-            raise Exception("Effect already in effect")
+            self.logger.error("Effect already in effect")
+            continue
           
           # Create a new effect with this request.
           # This may affect other active effects
@@ -224,7 +231,6 @@ class HolodeckEngine():
           self.state_callback({classname_to_id(req): True})
 
         elif self.activeEffects.get(req):
-          self.logger.info("Removing " + req)
           self.activeEffects[req].request_exit()
     except:
        import traceback

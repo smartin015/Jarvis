@@ -115,6 +115,7 @@ class LightningEffect(EffectTemplate):
     self.count = 0
     self.towerRGBON = [[80, 80, 255]]*NTOWER
     self.towerRGBOFF = [[0, 0, 0]]*NTOWER
+    self.audio_count = 0
 
   def get_mapping(self): 
     return {
@@ -172,7 +173,9 @@ class LightningEffect(EffectTemplate):
     return [[0, 0, 0]]*NRING
   
   def audio(self, prev):
-    #prev.append('thunder')
+    self.audio_count += 1
+    if self.audio_count >= 12:
+      self.remove()
     return ['thunder']
   
 

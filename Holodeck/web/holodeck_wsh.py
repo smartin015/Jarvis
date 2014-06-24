@@ -99,9 +99,6 @@ class HolodeckController():
 
     self.logger.debug("Sent %s to all decks" % cmd_json)
 
-  def get_response(self):
-    return {"day": False}
-
   def handle_deck(self, deck):
     while True: #TODO: could be done better
       try:
@@ -111,6 +108,12 @@ class HolodeckController():
           return
 
         self.logger.debug("Got %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
+
+        if deck is not self.servers[0]: # First to connect is host
+          self.logger.debug("Non-host message, ignoring.")
+          continue
+
+        self.logger.debug("Adding message to queue")
         self.q.put(msg)
       except socket.timeout:
         continue

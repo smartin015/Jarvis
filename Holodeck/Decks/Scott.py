@@ -27,28 +27,24 @@ class Holodeck(HolodeckServer):
     t = threading.Thread(target=self.serve_forever)
     t.daemon = True
     t.start()
-
+    
     self.devices['proj'].mainloop()
-
+    
   def get_pipeline_handlers(self):
     return [
-      ([P.WINDOWIMG], self.window_img),
+      ([P.WINDOWIMG], self.window_scrn),
       ([P.SOUND], self.sound),
     ]
 
   def get_pipeline_defaults(self):
     return {
-      P.WINDOWIMG:  None,
+      P.WINDOWIMG:  ScreenController.get_black_image(),
       P.SOUND:      [], 
     }
 
-  def window_img(self, img):
-    # TODO: Zoom
-    if img != self.last_img:
-      img_data = self.devices['proj'].loadimg(self.img_path + img)
-      self.devices['proj'].setimg(img_data)
-      self.last_img = img
-  
+  def window_scrn(self, scrn):
+    self.devices['proj'].set_scrn(scrn)
+     
   def sound(self, sounds=[]):
     for s in sounds:
       if s not in self.last_sounds:
@@ -59,6 +55,6 @@ class Holodeck(HolodeckServer):
     self.last_sounds = sounds
 
 if __name__ == "__main__":
-  h = Holodeck() 
+  h = Holodeck()  
   h.mainloop()
 
