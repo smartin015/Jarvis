@@ -73,9 +73,6 @@ class HolodeckController():
     icon_meta = {}
     for (ename, eclass) in effect_list.items():
       meta = eclass.get_meta()
-      #TODO: Show active state
-      #meta['active'] = deck.is_active(meta['id'])
-      meta['active'] = False
 
       # Create this tab if not already made
       if not icon_meta.get(meta['tab'], None):

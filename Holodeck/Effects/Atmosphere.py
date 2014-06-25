@@ -3,6 +3,30 @@ from Outputs.RGBMultiController import NTOWER, NRING
 from Holodeck.Engine import EffectTemplate
 from random import randint
 
+class AtmosphereTemplate(EffectTemplate):
+
+  def location_mapping(self):
+    raise Exception("Unimplemented")
+
+  def get_blacklist(self):
+    cs = inspect.getmembers(sys.modules[__name__], inspect.isclass)    
+    result = []
+    for n,c in cs:
+      if c is LocationTemplate or c is self.__class__:
+        continue
+      if not issubclass(c, LocationTemplate):
+        continue
+      result.append(c)
+    return result
+    
+  def wall_img_default(self, prev):
+    prev[3] = classname_to_id(self.__class__.__name__)
+    return prev
+
+  def window_img_default(self, prev):
+    prev[3] = classname_to_id(self.__class__.__name__)
+    return prev
+
 class DayEffect(EffectTemplate):
   META = {
     'text': "Daytime",
@@ -41,6 +65,10 @@ class RainEffect(EffectTemplate):
 
   def ring(self, prev):
     return [[128, 128, 255]]*NRING
+
+  def wallimg(self, prev):
+    prev[2] = "rain"  
+    return prev
 
 
 class FireEffect(EffectTemplate):

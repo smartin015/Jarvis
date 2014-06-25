@@ -48,11 +48,8 @@ class LocationTemplate(EffectTemplate):
     self.tfloor = 0
     self.transition = False
     self.prev_window_bot = None
-    self.img_right = ["right","mountain","clear","day"]
-    self.img_front = ["front","forest","clear","day"]
+    self.handle_blacklist()
 
-#scl.loadimg(IMG_PATH + "right/%s.jpg" % classname_to_id(self.__class__.__name__))
-  
   def location_mapping(self):
     raise Exception("Unimplemented")
 
@@ -115,10 +112,12 @@ class LocationTemplate(EffectTemplate):
     return prev
     
   def wall_img_default(self, prev):
-    return self.img_right
+    prev[1] = classname_to_id(self.__class__.__name__)
+    return prev
 
   def window_img_default(self, prev):
-    return self.img_front
+    prev[1] = classname_to_id(self.__class__.__name__)
+    return prev
     
   def audio_default(self, prev):
     prev[0].append(classname_to_id(self.__class__.__name__))
@@ -144,9 +143,6 @@ class ForestEffect(LocationTemplate):
 
   def window_bot(self, prev):
     return [102, 155, 0]
-  
-  def wall_img_default(self, prev):
-    return ["front","forest","clear","day"]
 
 class PlainsEffect(LocationTemplate):
 
@@ -327,3 +323,26 @@ class BeachEffect(LocationTemplate):
   def window_bot(self, prev):
     return SAND
 
+class MountainEffect(LocationTemplate):
+
+  def get_mapping(self):
+    return {
+      P.FLOOR: (self.floor, 1),
+      P.TOWER: (self.tower, 1),
+      P.WINDOWTOP: (self.window_top, 1),
+      P.WINDOWBOT: (self.window_bot, 1),
+      P.WALLIMG: (self.wall_img_default, 1),
+      P.WINDOWIMG: (self.window_img_default, 1),
+    }
+
+  def floor(self, prev):
+    return [255,255,255]
+    
+  def tower(self, prev):
+    return [(list(SKY)) for i in xrange(NTOWER)]
+
+  def window_top(self, prev):
+    return SKY
+
+  def window_bot(self, prev):
+    return [255,255,255]
