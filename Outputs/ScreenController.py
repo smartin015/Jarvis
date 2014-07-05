@@ -152,6 +152,7 @@ class ScreenController():
 
   @classmethod
   def loadimg(self, path):
+    print path
     img = pygame.image.load(path).convert()
     img = pygame.transform.scale(img, (IMW,IMH))   
     return img

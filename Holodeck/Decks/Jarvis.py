@@ -19,11 +19,11 @@ import time
 class Holodeck(HolodeckServer):
   def __init__(self):
     self.devices = {
-      "window": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
-      "couch": RGBSingleController(Serial("/dev/ttyUSB0", 9600)),
-      "tower": RGBMultiController(Serial("/dev/ttyUSB3", 115200)),
+      "window": RGBSingleController(Serial("/dev/ttyUSB2", 9600)),
+      "couch": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
+      "tower": RGBMultiController(Serial("/dev/ttyUSB0", 115200)),
       "proj": scl(),
-      "lights": RelayController(Serial("/dev/ttyUSB2", 9600)),
+      "lights": RelayController(Serial("/dev/ttyUSB3", 9600)),
     }
 
     # TODO: Base this on arduino communication to the computer
@@ -32,7 +32,9 @@ class Holodeck(HolodeckServer):
     time.sleep(1.0)
 
     self.img_path = "Holodeck/Images/"
-    self.last_img = None
+    self.last_img = ["right","mountain","clear","day"]
+    self.cur_img = ["right","mountain","clear","day"]
+    self.screen_transition = None
 
     HolodeckServer.__init__(self)
 
@@ -78,12 +80,15 @@ class Holodeck(HolodeckServer):
     self.devices['lights'].set_state(is_on)
 
   def wall_scrn(self, scrn):
-    self.devices['proj'].set_scrn(scl.loadimg(self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
-
-    '''
-    self.devices['proj'].set_scrn(scrn)
-    '''
-    
+    self.last_img = self.cur_img
+    self.cur_img = self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"
+    if self.last_img != self.cur_img:
+      if not self.screen_transition:
+        self.transition_screen = scl.loadimg(self.last_img).copy()
+        self.screen_transition = scl.gen_sweep(scl.loadimg(self.last_img), final, self.transition_screen)
+      return self.handle_screen_transition(final)
+      
+    self.devices['proj'].set_scrn(scl.loadimg(self.cur_img))
 
   def trans_wall_img(self, screen):
     final = self.steady_mapping[P.WALLIMG](screen)
@@ -98,6 +103,47 @@ class Holodeck(HolodeckServer):
       self.transition_screen = screen.copy()
       self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
     return self.handle_screen_transition(final)
+  def linear_blend(self, i, rgb1, rgb2):
+    blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )
+    return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(rgb2, rgb1)]
+
+  def tween_blend(self, i, rgb1, rgb2, rgb3):
+    if i < self.TRANSITION_TIME / 2:
+      return self.linear_blend(2*i, rgb1, rgb2)
+    else:
+      return self.linear_blend(2*(i-self.TRANSITION_TIME/2), rgb2, rgb3)
+
+  def trans_floor(self, prev):
+    self.tfloor += 1
+    if self.prev_window_bot:
+      final = self.steady_mapping[P.FLOOR](prev)
+      return self.tween_blend(self.tfloor, prev, self.prev_window_bot, final)
+    else:
+      return prev
+  
+  def trans_window_top(self, prev):
+    self.ttop += 1
+    final = self.steady_mapping[P.WINDOWTOP](prev)
+    return self.linear_blend(self.ttop, prev, final)
+    
+  def trans_window_bot(self, prev):
+    self.tbot += 1
+    mid = self.steady_mapping[P.FLOOR](prev)
+    final = self.steady_mapping[P.WINDOWBOT](prev)
+    if not self.prev_window_bot:
+      self.prev_window_bot = final
+    return self.tween_blend(self.tbot, prev, mid, final)
+
+  def handle_screen_transition(self, final):
+    try:
+      self.screen_transition.next()
+      return self.transition_screen
+    except StopIteration:
+      self.handle_blacklist()
+      self.remove_from_pipeline()
+      self.transition = True
+      self.insert_into_pipeline()
+      return final
 
 
 if __name__ == "__main__":

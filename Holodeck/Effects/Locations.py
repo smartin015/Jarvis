@@ -52,7 +52,7 @@ class LocationTemplate(EffectTemplate):
 
   def location_mapping(self):
     raise Exception("Unimplemented")
-
+  '''
   def linear_blend(self, i, rgb1, rgb2):
     blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )
     return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(rgb2, rgb1)]
@@ -94,7 +94,7 @@ class LocationTemplate(EffectTemplate):
       self.transition = True
       self.insert_into_pipeline()
       return final
-
+  '''
   def get_blacklist(self):
     cs = inspect.getmembers(sys.modules[__name__], inspect.isclass)    
     result = []
