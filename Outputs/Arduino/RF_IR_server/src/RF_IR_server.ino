@@ -35,8 +35,6 @@ void setup(){
   Mirf.setRADDR((byte *)ADDY);
   Mirf.payload = DATA_LEN;
   Mirf.config();
-  
-  Serial.println("Beginning ... "); 
 }
 
 void loop(){
@@ -45,18 +43,8 @@ void loop(){
     Mirf.setTADDR((byte *)"ctrl1");
     Mirf.send((byte *)data);
 
-    //Serial.println("Sending...");
     while(Mirf.isSending()){}
 
-    /*
-    Serial.print("Delivered");
-    for (int i = 0; i < DATA_LEN; i++) {
-      Serial.print(" 0x");
-      Serial.print((unsigned char) data[i], HEX);
-    }
-    Serial.println("");
-    Serial.println("END");
-    */
     Serial.println("");
   }
 }

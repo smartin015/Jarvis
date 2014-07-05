@@ -15,10 +15,12 @@ class BinaryObject(JarvisBase):
      
   def parse(self, room, words):
     oldState = self.state
-    if 'on' in words:
+    if not oldState:
       self.turnOn(room)
-    elif 'off' in words:
+      self.state = 1
+    else:
       self.turnOff(room)
+      self.state = 0
       
   def turnOff(self, room):
     self.logger.error("TODO: Implement turnOff")
@@ -37,19 +39,39 @@ class MainLight(BinaryObject):
       
 class Projector(BinaryObject):
   name = "Projector"
- 
+
   def isValid(self, words):
     return True
 
-  def parse(self, room, words):
-    room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
+  def turnOn(self, room):
+    #room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
     #self.play_sound("Outputs/VoiceFiles/confirm.wav")
+    self.logger.info("Pressing power button")
     self.powerbtn(room)
+    self.logger.info("Lowering screen")
+    self.screendown(room)
+    self.logger.info("Done")
+
+  def turnOff(self, room):
+    #room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
+    self.logger.info("Pressing power button")
     self.powerbtn(room)
+    self.logger.info("Raising screen")
+    self.screenup(room)
+    self.logger.info("Done")
+
+
+  def screenup(self, room):
+    room['RF'].send_IR("ProjectorScreenStop.txt")
+    room['RF'].send_IR("ProjectorScreenUp.txt")
+
+  def screendown(self, room):
+    room['RF'].send_IR("ProjectorScreenStop.txt")
+    room['RF'].send_IR("ProjectorScreenDown.txt")
 
   def powerbtn(self, room):
-    room['projector'].send("ProjectorPower.txt")
-    room['projector'].send("ProjectorPower.txt")
+    room['RF'].send_IR("ProjectorPower.txt")
+    room['RF'].send_IR("ProjectorPower.txt")
 
 
 # MODE OBJECTS

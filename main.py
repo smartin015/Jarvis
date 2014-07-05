@@ -18,7 +18,7 @@ from serial import Serial
 from Outputs.ArduinoSerial import ArduinoSerial
 from Outputs.RFSerial import RFSerial
 
-from Outputs.IRController import IRController
+from Outputs.RFController import RFController
 from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState
@@ -34,15 +34,15 @@ from Outputs.UNIMPLEMENTED.ScriptController import ScriptController
 # TODO: Do by bus ID
 # TODO: Startup speech indicating which devices missing, plus new devices
 logging.debug("Initializing serial devices")
-LIVINGROOM_IR = TestSerial("LR")
+LIVINGROOM_RF_SER = Serial("/dev/ttyUSB1", 115200)
 TRACKLIGHT = Serial("/dev/ttyUSB2", 9600)
 RF_BROADCAST = TestSerial("RF") 
 RGBLIGHT = TestSerial("/dev/ttyACM0")#, timeout=4)
-WINDOWLIGHT = Serial("/dev/ttyUSB1", 9600)
+WINDOWLIGHT = Serial("/dev/ttyUSB4", 9600)
 COUCHLIGHT = Serial("/dev/ttyUSB0", 9600)
 
 MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
-HACKSPACE_IR = RFSerial(RF_BROADCAST, "HACKIR")
+HACKSPACE_RF = RFController(TestSerial("HS"))
 HACKSPACE = RFSerial(RF_BROADCAST, "HACK")
 KITCHEN = RFSerial(RF_BROADCAST, "KITCHEN")
 TODDROOM = RFSerial(RF_BROADCAST, "TODD")
@@ -56,10 +56,7 @@ logging.debug("Initializing room contexts")
 
 # TODO: Per-room voice
 livingroom_ctx = {
-  "AC": IRController(LIVINGROOM_IR),
-  "projector": IRController(LIVINGROOM_IR),
-  "speakers": IRController(LIVINGROOM_IR),
-  "projectorscreen": IRController(LIVINGROOM_IR),
+  "RF": RFController(LIVINGROOM_RF_SER),
   "tracklight": RelayController(TRACKLIGHT),
   "windowlight": RGBSingleController(WINDOWLIGHT),
   "couchlight": RGBSingleController(COUCHLIGHT)
@@ -78,8 +75,7 @@ toddroom_ctx = {
 hackspace_ctx = {
   "mainlight": RelayController(HACKSPACE),
   "recording": RecordingController(KAICONG_HACKSPACE),
-  "AC": IRController(HACKSPACE_IR),
-  "projector": IRController(HACKSPACE_IR),
+  "RF": HACKSPACE_RF,
 }
 
 global_ctx = {
