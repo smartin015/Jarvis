@@ -35,7 +35,10 @@ class RelayController(Controller):
 if __name__ == "__main__":
   import serial
   import time
-  ser = serial.Serial("/dev/ttyUSB2", 9600)
+  from Inputs.USBDiscovery import get_connected_usb_devices
+  usb_devices = get_connected_usb_devices()
+
+  ser = serial.Serial(usb_devices["A602QORA"], 9600)
   time.sleep(1.5)
   
   con = RelayController(ser)

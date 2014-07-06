@@ -74,7 +74,11 @@ def _fade_test(con):
 if __name__ == "__main__":
   import serial
   import time
-  ser = serial.Serial("/dev/ttyUSB3", 115200)
+  
+  from Inputs.USBDiscovery import get_connected_usb_devices
+  usb_devices = get_connected_usb_devices()
+
+  ser = serial.Serial(usb_devices["A9OZNP19"], 115200)
   time.sleep(3.0)
 
   con = RGBMultiController(ser)

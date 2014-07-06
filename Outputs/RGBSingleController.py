@@ -28,19 +28,35 @@ class RGBSingleController():
 if __name__ == "__main__":
   import serial
   import time
-  ser = serial.Serial("/dev/ttyUSB1", 9600, timeout=3)  
-  time.sleep(0.5) # So arduino can initialize
+  from Inputs.USBDiscovery import get_connected_usb_devices
 
+  usb_devices = get_connected_usb_devices()
+  
+  sstr = raw_input("1 for couch, 2 for window")
+  if sstr == "2":
+    count = 6
+    path = usb_devices["A9MX5JNZ"]
+  elif sstr == "1":
+    path = usb_devices["A70257T7"]
+    count = 3
+
+  ser = serial.Serial(path, 9600, timeout=3)  
+  time.sleep(0.5) # So arduino can initialize
   writer = RGBSingleController(ser)
-    
+
   while True:
-    sstr = raw_input("R G B: ")
+    sstr = raw_input("RGB: ")
     
-    if not sstr or len(sstr.split(" ")) != 6:
+    if not sstr or len(sstr.split(" ")) != count:
       break
 
     cols = sstr.split(" ")
-    c1 = [int(cols[i]) for i in xrange(3)]
-    c2 = [int(cols[i+3]) for i in xrange(3)]
+    if count > 3:
+      c2 = [int(cols[i+3]) for i in xrange(3)]
+      c1 = [int(cols[i]) for i in xrange(3)]
+    else:
+      c1 = [int(cols[i]) for i in xrange(3)]
+      c2 = c1
     writer.write(c1, c2)
+
      

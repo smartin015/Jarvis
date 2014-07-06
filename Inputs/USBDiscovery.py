@@ -2,14 +2,21 @@ import re
 import subprocess
 
 def get_connected_usb_devices():
-  device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
-  df = subprocess.check_output("lsusb", shell=True)
-  devices = []
+  #device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
+  device_re = re.compile("ATTRS{serial}==\"(.+?)\"")
+  df = subprocess.check_output("ls -l /dev/ttyUSB*", shell=True)
+  try:
+    df += subprocess.check_output("ls -l /dev/ttyACM*", shell=True, stderr=subprocess.PIPE)
+  except subprocess.CalledProcessError:
+    pass
+
+  devices = {}
   for i in df.split('\n'):
-      if i:
-          info = device_re.match(i)
-          if info:
-              dinfo = info.groupdict()
-              dinfo['device'] = '/dev/bus/usb/%s/%s' % (dinfo.pop('bus'), dinfo.pop('device'))
-              devices.append(dinfo)
+    if not i:
+      continue
+    path = i.split()[-1]
+    df2 = subprocess.check_output(("udevadm info -a -n %s" % path).split(" "))
+    usbid = re.search(device_re, df2).group(1)
+    devices[usbid] = path
+
   return devices

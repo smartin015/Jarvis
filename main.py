@@ -30,19 +30,19 @@ from Outputs.UNIMPLEMENTED.LockitronController import LockitronController
 from Outputs.UNIMPLEMENTED.TimerController import TimerController
 from Outputs.UNIMPLEMENTED.ScriptController import ScriptController
 
+usb_devices = get_connected_usb_devices()
+print usb_devices
+raise Exception()
 # Spool up output devices, create room contexts
-# TODO: Do by bus ID
+# TODO: Get bus ID via database
 # TODO: Startup speech indicating which devices missing, plus new devices
 logging.debug("Initializing serial devices")
-LIVINGROOM_RF_SER = Serial("/dev/ttyUSB1", 115200)
-TRACKLIGHT = Serial("/dev/ttyUSB2", 9600)
-RF_BROADCAST = TestSerial("RF") 
-RGBLIGHT = TestSerial("/dev/ttyACM0")#, timeout=4)
-WINDOWLIGHT = Serial("/dev/ttyUSB4", 9600)
-COUCHLIGHT = Serial("/dev/ttyUSB0", 9600)
+RF_BROADCAST = Serial(usb_devices["A9MDTZJF"], 115200)
+TRACKLIGHT   = Serial(usb_devices["A602QORA"], 9600)
+RGBLIGHT     = Serial(usb_devices["A9OZNP19"], 115200)
+WINDOWLIGHT  = Serial(usb_devices["A9MX5JNZ"], 9600)
+COUCHLIGHT   = Serial(usb_devices["A70257T7"], 9600)
 
-MAINLIGHT = RFSerial(RF_BROADCAST, "LIVINGROOM")
-HACKSPACE_RF = RFController(TestSerial("HS"))
 HACKSPACE = RFSerial(RF_BROADCAST, "HACK")
 KITCHEN = RFSerial(RF_BROADCAST, "KITCHEN")
 TODDROOM = RFSerial(RF_BROADCAST, "TODD")
@@ -56,20 +56,20 @@ logging.debug("Initializing room contexts")
 
 # TODO: Per-room voice
 livingroom_ctx = {
-  "RF": RFController(LIVINGROOM_RF_SER),
+  "RF": RFController(RF_BROADCAST),
   "tracklight": RelayController(TRACKLIGHT),
   "windowlight": RGBSingleController(WINDOWLIGHT),
   "couchlight": RGBSingleController(COUCHLIGHT)
 }
 
-
+"""
 kitchen_ctx = {
   "mainlight": RelayController(KITCHEN),
   "speakers": RelayController(KITCHEN),
 }
 
 toddroom_ctx = {
-  "mainlight": RelayController(TODDROOM),
+  "mainlight": RFController(RF_BROADCAST),
 }
 
 hackspace_ctx = {
@@ -77,6 +77,7 @@ hackspace_ctx = {
   "recording": RecordingController(KAICONG_HACKSPACE),
   "RF": HACKSPACE_RF,
 }
+"""
 
 global_ctx = {
   "music": GMusicController(),
@@ -142,15 +143,10 @@ audio_sources = {
     gen_microphone_src(5),
     LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
   ),
-#  "kitchen": SpeechParser(
-#    gen_kaicong_audio_src(KAICONG_KITCHEN), gen_callback(kitchen_ctx)
-#  ),
-#  "hackspace": SpeechParser(
-#    gen_kaicong_audio_src(KAICONG_HACKSPACE), gen_callback(hackspace_ctx)
-#  ),
-#  "toddroom": SpeechParser(
-#    gen_kaicong_audio_src(KAICONG_TODDROOM), gen_callback(toodroom_ctx)
-#  ),
+  "hackspace": CommandParser("hs",
+    gen_microphone_src(8),
+    LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
+  )
 }
 
 # Loop the gstreamer pipeline in the background
