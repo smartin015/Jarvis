@@ -9,10 +9,9 @@ import pygst
 pygst.require('0.10')
 import gst
 
-
 from JarvisBase import JarvisBase
 
-class DummyCommandParser(JarvisBase):
+class CommandParser(JarvisBase):
   SILENCE_INTERVAL = 2.5 #Seconds
 
   def __init__(self, audiosrc, isValid, callback, trigger="jarvis", maxlength=10):
@@ -92,74 +91,25 @@ class DummyCommandParser(JarvisBase):
   def inject(self, text):
     self.buffer_and_send([word.strip(string.punctuation).lower() for word in text.split()])
 
-class CommandParser(DummyCommandParser):
-
-  def __init__(self, name, audiosrc, lm_path, dict_path, isValid, callback):
-    DummyCommandParser.__init__(self, audiosrc, isValid, callback)
-    
-    self.logger.info("Creating audio pipeline")
-    pipeline = gst.Pipeline()
-    
-    self.name = name
-
-    conv = gst.element_factory_make("audioconvert", "audioconv")
-    #conv.set_property("noise-shaping", 4)
-
-    cheb = gst.element_factory_make("audiocheblimit")
-    cheb.set_property("mode", "high-pass")
-    cheb.set_property("cutoff", 200)
-    cheb.set_property("poles", 4)
-  
-    cheb2 = gst.element_factory_make("audiocheblimit")
-    cheb2.set_property("mode", "low-pass")
-    cheb2.set_property("cutoff", 2500)
-    cheb2.set_property("poles", 4)
-
-    amp = gst.element_factory_make("audioamplify", "audioamp")
-    amp.set_property("amplification", 15)
-
-    res = gst.element_factory_make("audioresample", "audioresamp")
-    
-    vader = gst.element_factory_make("vader", "vad")
-    vader.set_property("auto-threshold", True)
-    
-    asr = gst.element_factory_make("pocketsphinx", "asr")
-    asr.connect('partial_result', self.asr_partial_result)
-    asr.connect('result', self.asr_result)
-    
-    # Set the language model and dictionary.
-    asr.set_property('lm', lm_path)
-    asr.set_property('dict', dict_path)
-
-    # Now tell gstreamer and pocketsphinx to start converting speech!
-    asr.set_property('configured', True)
-    
-    sink = gst.element_factory_make("fakesink", "fs")
-    
-    pipeline.add(audiosrc, conv, cheb, cheb2, amp, res, vader, asr, sink)
-    gst.element_link_many(audiosrc, conv, amp, res, vader, asr, sink)
-    pipeline.set_state(gst.STATE_PLAYING)
-    
-  def asr_partial_result(self, asr, text, uttid):
-    """ This function is called when pocketsphinx gets a partial
-        transcription of spoken audio. 
-    """
-    # TODO: Send activity to the brain
-    self.logger.debug("%s %sP: %s" % (self.name, uttid, text))
-    
-  def asr_result(self, asr, text, uttid):
-    """ This function is called when pocketsphinx gets a 
-        full result (spoken command with a pause)
-    """
-
-    self.logger.debug(text)
-    self.inject(text)
-    
 if __name__ == "__main__":
   import gobject 
+  import logging
   gobject.threads_init()
+  
+  def cb(s):
+    print "COMMAND:", s
+
+  cp = CommandParser(
+    "test", 
+    gst.element_factory_make("autoaudiosrc", "audiosrc"),
+    None,
+    None,
+    lambda x: True,
+    cb
+  )
 
   # This loops the program until Ctrl+C is pressed
-  g_loop = threading.Thread(target=GObject.MainLoop().run)
+  g_loop = threading.Thread(target=gobject.MainLoop().run)
   g_loop.daemon = False
   g_loop.start()
+
