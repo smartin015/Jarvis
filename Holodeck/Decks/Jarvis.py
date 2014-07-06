@@ -8,34 +8,23 @@ logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelN
 from Holodeck.Settings import Pipe as P
 from serial import Serial
 from Tests.TestSerial import TestSerial
-from Outputs.RelayController import RelayController
-from Outputs.RGBSingleController import RGBSingleController
-from Outputs.RGBMultiController import RGBMultiController, RGBState, NTOWER, NRING
-from Outputs.IRController import IRController
 from Outputs.ScreenController import ScreenController as scl
+from Outputs.RGBMultiController import RGBState, NTOWER, NRING
 from Holodeck.Server import HolodeckServer
 import time
 
 class Holodeck(HolodeckServer):
-  def __init__(self):
-    self.devices = {
-      "window": RGBSingleController(Serial("/dev/ttyUSB2", 9600)),
-      "couch": RGBSingleController(Serial("/dev/ttyUSB1", 9600)),
-      "tower": RGBMultiController(Serial("/dev/ttyUSB0", 115200)),
-      "proj": scl(),
-      "lights": RelayController(Serial("/dev/ttyUSB3", 9600)),
-    }
+  def __init__(self, devices):
+    self.devices = devices['livingroom']
+    self.devices['proj'] = scl()
 
-    # TODO: Base this on arduino communication to the computer
-    time.sleep(2.5) # Need delay at least this long for arduino to startup
+    time.sleep(2.0) # Need delay at least this long for arduino to startup
     self.devices['tower'].setState(RGBState.STATE_MANUAL)
     time.sleep(1.0)
 
     self.img_path = "Holodeck/Images/"
-    self.last_img = ["right","mountain","clear","day"]
-    self.cur_img = ["right","mountain","clear","day"]
+    self.last_img = None
     self.screen_transition = None
-
     HolodeckServer.__init__(self)
 
   def mainloop(self):
@@ -61,15 +50,15 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    ["right","mountain","clear","day"],
+      P.WALLIMG:    None,
       P.LIGHTS:     False,
     }
 
   def window_leds(self, top, bot):
-    self.devices['window'].write(top, bot)  
+    self.devices['windowlight'].write(top, bot)  
 
   def floor_leds(self, rgb):
-    self.devices['couch'].write(rgb)
+    self.devices['couchlight'].write(rgb)
   
   def tower_ring(self, trgb, rrgb):
     for (i,c) in enumerate(trgb+rrgb):
@@ -77,18 +66,18 @@ class Holodeck(HolodeckServer):
     self.devices['tower'].manual_update()
 
   def lights(self, is_on):
-    self.devices['lights'].set_state(is_on)
+    self.devices['tracklight'].set_state(is_on)
 
   def wall_scrn(self, scrn):
-    self.last_img = self.cur_img
-    self.cur_img = self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"
-    if self.last_img != self.cur_img:
+    if self.last_img != scrn:
+      print "up"
+      path = "%s/%s_%s_%s.jpg" % tuple([self.img_path] + scrn)
       if not self.screen_transition:
         self.transition_screen = scl.loadimg(self.last_img).copy()
         self.screen_transition = scl.gen_sweep(scl.loadimg(self.last_img), final, self.transition_screen)
       return self.handle_screen_transition(final)
-      
-    self.devices['proj'].set_scrn(scl.loadimg(self.cur_img))
+    
+      self.devices['proj'].set_scrn(scl.loadimg(self.cur_img))
 
   def trans_wall_img(self, screen):
     final = self.steady_mapping[P.WALLIMG](screen)
@@ -147,6 +136,9 @@ class Holodeck(HolodeckServer):
 
 
 if __name__ == "__main__":
-  h = Holodeck() 
+  from main import init_outputs
+  devices = init_outputs()
+  # TODO: Base this on arduino communication to the computer
+  h = Holodeck(devices) 
   h.mainloop()
 

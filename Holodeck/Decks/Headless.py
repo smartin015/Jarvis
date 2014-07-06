@@ -6,8 +6,6 @@ logging.addLevelName( logging.WARNING, "\033[1;31m%s\033[1;0m" % logging.getLeve
 logging.addLevelName( logging.ERROR, "\033[1;41m%s\033[1;0m" % logging.getLevelName(logging.ERROR))
 
 from Holodeck.Settings import Pipe as P
-from Outputs.ScreenController import ScreenController
-from Outputs.AudioController import AudioController
 from Holodeck.Server import HolodeckServer
 import time
 

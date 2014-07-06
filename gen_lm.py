@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import urllib2
 import poster.encode
 import poster.streaminghttp
@@ -35,7 +36,30 @@ with open(FOLDER + "/commands.lm", "w") as f:
 dic_path = BASE_URL + download_path + base_id + ".dic"
 response = urllib2.urlopen(dic_path)
 html = response.read()
+i = {}
 with open(FOLDER + "/commands.dic", "w") as f:
   f.write(html)
+
+  with open(FOLDER + "/extra.dic", "r") as f2:
+    extras = f2.read().split("\n")
+  
+  for e in extras:
+    if not e.strip():
+      continue
+
+    (name, phonemes) = e.split(" ", 1)
+
+    if not i.get(name):
+      # Get the max number of speakings of a word
+      allnums = [int(n) for n in re.findall(name + "\((.+?)\)", html)]
+      if not len(allnums):
+        i[name] = 0
+      else:
+        i[name] = max(allnums)
+
+    i[name] += 1
+    f.write("%s(%s) %s\n" % (name, i[name], phonemes))
+
+
 
 

@@ -2,6 +2,7 @@ import logging
 import subprocess
 import os
 import threading
+from config import SOUND_PATH
 
 class JarvisBase():
   def __init__(self):
@@ -17,6 +18,6 @@ class JarvisBase():
   def play_sound(self, fil):
     # TODO: should probably safeguard this to prevent hijacking
     # TODO: Specify standard directory
-    t1 = threading.Thread(target=self._play_sound_process, args=(fil,))
+    t1 = threading.Thread(target=self._play_sound_process, args=(SOUND_PATH + fil,))
     t1.daemon = True
     t1.start()

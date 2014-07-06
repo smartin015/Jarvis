@@ -1,8 +1,12 @@
 #!/usr/bin/env python
-
+import config
 import threading
 import logging
-logger = logging.getLogger('simple_example')
+import time
+import sys
+logging.basicConfig()
+
+logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 
 from Tests.TestSerial import TestSerial
@@ -10,160 +14,69 @@ from Tests.TestSerial import TestSerial
 from Inputs.USBDiscovery import get_connected_usb_devices
 from Inputs.Kaicong.KaicongAudioGst import KaicongAudioSource
 from Inputs.Kaicong.KaicongVideo import KaicongVideo
+from Inputs.TTSClient import TTSClient
 
 from Brain.Brain import JarvisBrain
-from Brain.CommandParser import CommandParser, DummyCommandParser
-
-from serial import Serial
-from Outputs.ArduinoSerial import ArduinoSerial
-from Outputs.RFSerial import RFSerial
+from Brain.CommandParser import CommandParser
 
 from Outputs.RFController import RFController
 from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState
+from serial import Serial
 
-# TODO: Implement these!
-from Outputs.UNIMPLEMENTED.RecordingController import RecordingController
-from Outputs.UNIMPLEMENTED.GMusicController import GMusicController
-from Outputs.UNIMPLEMENTED.LockitronController import LockitronController
-from Outputs.UNIMPLEMENTED.TimerController import TimerController
-from Outputs.UNIMPLEMENTED.ScriptController import ScriptController
+def init_outputs():
+  logger.info("Initializing output devices")
+  usb_devices = get_connected_usb_devices()
 
-usb_devices = get_connected_usb_devices()
-print usb_devices
-raise Exception()
-# Spool up output devices, create room contexts
-# TODO: Get bus ID via database
-# TODO: Startup speech indicating which devices missing, plus new devices
-logging.debug("Initializing serial devices")
-RF_BROADCAST = Serial(usb_devices["A9MDTZJF"], 115200)
-TRACKLIGHT   = Serial(usb_devices["A602QORA"], 9600)
-RGBLIGHT     = Serial(usb_devices["A9OZNP19"], 115200)
-WINDOWLIGHT  = Serial(usb_devices["A9MX5JNZ"], 9600)
-COUCHLIGHT   = Serial(usb_devices["A70257T7"], 9600)
+  # TODO: Error speech indicating if devices are missing 
+  outputs = {}
+  for room in config.OUTPUTS:
+    outputs[room] = {}
+    for name in config.OUTPUTS[room]:
+      (cls, usb_id, baud) = config.OUTPUTS[room][name]
+      cls = reduce(getattr, cls.split("."), sys.modules[__name__])
+      outputs[room][name] = cls(Serial(usb_devices[usb_id], baud))
+  return outputs
+    
+def init_inputs(brain, outputs):
+  logger.info("Initializing input devices")
 
-HACKSPACE = RFSerial(RF_BROADCAST, "HACK")
-KITCHEN = RFSerial(RF_BROADCAST, "KITCHEN")
-TODDROOM = RFSerial(RF_BROADCAST, "TODD")
+  def cb(data):
+    return brain.processInput(outputs, data)
 
-KAICONG_LIVINGROOM = "192.168.1.19"
-KAICONG_KITCHEN = "192.168.1.17"
-KAICONG_HACKSPACE = "192.168.1.19"
-KAICONG_TODDROOM = "192.168.1.20"
+  inputs = {}
+  for name in config.INPUTS:
+    parser = CommandParser(brain.isValid, cb)
+    tts = []
+    for tts_name in config.INPUTS[name]['tts']:
+      host = config.TTS[tts_name]['host']
+      port = config.TTS[tts_name]['port']
+      t = TTSClient(tts_name, host, port, parser.inject)
+      t.daemon = True
+      t.start()
+      tts.append(t)
 
-logging.debug("Initializing room contexts")
+    # TODO: eventually we'll have CV here
 
-# TODO: Per-room voice
-livingroom_ctx = {
-  "RF": RFController(RF_BROADCAST),
-  "tracklight": RelayController(TRACKLIGHT),
-  "windowlight": RGBSingleController(WINDOWLIGHT),
-  "couchlight": RGBSingleController(COUCHLIGHT)
-}
+    inputs[name] = {"parser": parser, "tts": tts}
+  return inputs
 
-"""
-kitchen_ctx = {
-  "mainlight": RelayController(KITCHEN),
-  "speakers": RelayController(KITCHEN),
-}
+if __name__ == "__main__":
+  outputs = init_outputs()
+  brain = JarvisBrain()
+  inputs = init_inputs(brain, outputs)
 
-toddroom_ctx = {
-  "mainlight": RFController(RF_BROADCAST),
-}
+  time.sleep(0.2)
 
-hackspace_ctx = {
-  "mainlight": RelayController(HACKSPACE),
-  "recording": RecordingController(KAICONG_HACKSPACE),
-  "RF": HACKSPACE_RF,
-}
-"""
-
-global_ctx = {
-  "music": GMusicController(),
-  "lockitron": LockitronController(),
-  "timer": TimerController(),
-  "scripts": ScriptController(),
-  "tower": RGBMultiController(RGBLIGHT, default=RGBState.STATE_FADE),
-}
-
-# Initialize the brain
-brain = JarvisBrain()
-
-logger.info("Spooling up audio pipelines")
-import gobject 
-gobject.threads_init()
-
-import pygst
-pygst.require('0.10')
-import gst
-
-gobject.type_register(KaicongAudioSource)
-gst.element_register(KaicongAudioSource, 'kaicongaudiosrc', gst.RANK_MARGINAL)
-
-def gen_kaicong_audio_src(ip):
-  src = gst.element_factory_make("kaicongaudiosrc", "audiosrc")
-  src.set_property("ip", ip)
-  src.set_property("user", "jarvis_admin")
-  src.set_property("pwd", "oakdale43")
-  src.set_property("on", True)
-  return src
-
-def gen_microphone_src(device_number):
-  src = gst.element_factory_make("pulsesrc", "src")
-  src.set_property("device", device_number)
-  return src
-
-def gen_auto_src(*args, **kwargs):
-  src = gst.element_factory_make("autoaudiosrc", "audiosrc")
-  return src
-
-# Initialize input devices and attach callbacks (with contexts)
-def gen_callback(ctx):
-  joined_ctx = dict(global_ctx.items() + ctx.items())
-  def cb(input):
-    return brain.processInput(joined_ctx, input)
-  return cb
-
-# Here's where you edit the vocabulary.
-# Point these variables to your *.lm and *.dic files. A default exists, 
-# but new models can be created for better accuracy. See instructions at:
-# http://cmusphinx.sourceforge.net/wiki/tutoriallm
-LM_PATH = '/home/jarvis/Jarvis/Brain/commands.lm'
-DICT_PATH = '/home/jarvis/Jarvis/Brain/commands.dic'
-
-livingroom_cb = gen_callback(livingroom_ctx)
-
-audio_sources = {
-  "livingroom": CommandParser("lr",
-    gen_microphone_src(3), 
-    LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
-  ), 
-  "livingroom_desks": CommandParser("lrd",
-    gen_microphone_src(5),
-    LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
-  ),
-  "hackspace": CommandParser("hs",
-    gen_microphone_src(8),
-    LM_PATH, DICT_PATH, brain.isValid, livingroom_cb
-  )
-}
-
-# Loop the gstreamer pipeline in the background
-logger.info("Starting main audio thread")
-g_loop = threading.Thread(target=gobject.MainLoop().run)
-g_loop.daemon = True
-g_loop.start()
-
-# TODO: Setup and run CV stuff as well
-while True:
-  #cmd = raw_input("ROOM:")
-  cmd = raw_input("CMD: ")
-
-  if cmd == "quit":
-    print "Exiting..."
-    break
-  else:
-    audio_sources['livingroom'].inject(cmd)
+  while True:
+    #cmd = raw_input("ROOM:")
+    cmd = raw_input("CMD: ")
+  
+    if cmd == "quit":
+      logger.warn("Exiting...")
+      break
+    else:
+      inputs['livingroom']['parser'].inject(cmd)
 
 

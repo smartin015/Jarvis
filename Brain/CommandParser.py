@@ -14,11 +14,10 @@ from JarvisBase import JarvisBase
 class CommandParser(JarvisBase):
   SILENCE_INTERVAL = 2.5 #Seconds
 
-  def __init__(self, audiosrc, isValid, callback, trigger="jarvis", maxlength=10):
+  def __init__(self, isValid, callback, trigger="jarvis", maxlength=10):
     JarvisBase.__init__(self)
 
     self.trigger = trigger
-    self.audiosrc = audiosrc
     self.callback = callback
     self.isValid = isValid
 
@@ -77,7 +76,7 @@ class CommandParser(JarvisBase):
       # If a pause occurs and a trigger is at the start of the word list, 
       # Try to run what remains as a command
       currtime = int(time.time())
-      timeout = self.last_injection + DummyCommandParser.SILENCE_INTERVAL
+      timeout = self.last_injection + CommandParser.SILENCE_INTERVAL
       if currtime > timeout and len(self.buf):
         if self.buf[0] == self.trigger:
           command_slice = [self.buf.popleft() for i in xrange(len(self.buf))]

@@ -1,4 +1,5 @@
 from JarvisBase import JarvisBase
+from Holodeck.Decks.Jarvis import Holodeck
 import time
 import threading
 import datetime
@@ -13,29 +14,40 @@ class BinaryObject(JarvisBase):
   def isValid(self, words):
    return ('on' in words) or ('off' in words)
      
-  def parse(self, room, words):
-    oldState = self.state
-    if not oldState:
-      self.turnOn(room)
+  def parse(self, outputs, words):
+    if not self.state:
+      self.turnOn(outputs)
       self.state = 1
     else:
-      self.turnOff(room)
+      self.turnOff(outputs)
       self.state = 0
       
-  def turnOff(self, room):
+  def turnOff(self, outputs):
     self.logger.error("TODO: Implement turnOff")
 
-  def turnOn(self, room):
+  def turnOn(self, outputs):
     self.logger.error("TODO: Implement turnOn")
+
+class AC(BinaryObject):
+  def isValid(self, words):
+    return True
+
+  def parse(self, outputs, words):
+    rf = outputs['livingroom']['RF']
+    rf.send_IR("AirConditionerPower.txt")
+    self.logger.debug("Toggled")
 
 class MainLight(BinaryObject):
   def isValid(self, words):
     return True
 
-  def parse(self, room, words):
-    room['tracklight'].toggle()
-    #self.play_sound("Outputs/VoiceFiles/confirm2.wav")
-    print "Toggled"
+  def parse(self, outputs, words):
+    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    outputs['livingroom']['tracklight'].toggle()
+    self.play_sound("confirm.wav")
+    time.sleep(1.0)
+    self.logger.debug("Toggled")
+    outputs['livingroom']['tower'].defaultState()
       
 class Projector(BinaryObject):
   name = "Projector"
@@ -43,40 +55,58 @@ class Projector(BinaryObject):
   def isValid(self, words):
     return True
 
-  def turnOn(self, room):
-    #room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
-    #self.play_sound("Outputs/VoiceFiles/confirm.wav")
+  def parse(self, outputs, words):
+    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    self.play_sound("confirm.wav")
+
+    rf = outputs['livingroom']['RF']
+
+    if "screen" in words:
+      # Just do screen, not projector
+      if not self.state:
+        self.screendown(rf)
+      else:
+        self.screenup(rf)
+    else:
+      if not self.state:
+        self.turnOn(rf)
+      else:
+        self.turnOff(rf)
+    self.state = 1 - self.state
+
+    outputs['livingroom']['tower'].defaultState()
+
+
+  def turnOn(self, rf):
     self.logger.info("Pressing power button")
-    self.powerbtn(room)
+    self.powerbtn(rf)
     self.logger.info("Lowering screen")
-    self.screendown(room)
+    self.screendown(rf)
     self.logger.info("Done")
 
-  def turnOff(self, room):
-    #room['tower'].queueState(RGBState.STATE_CHASE, 1.0)
+  def turnOff(self, rf):
     self.logger.info("Pressing power button")
-    self.powerbtn(room)
+    self.powerbtn(rf)
     self.logger.info("Raising screen")
-    self.screenup(room)
+    self.screenup(rf)
     self.logger.info("Done")
 
+  def screenup(self, rf):
+    rf.send_IR("ProjectorScreenStop.txt")
+    rf.send_IR("ProjectorScreenUp.txt")
 
-  def screenup(self, room):
-    room['RF'].send_IR("ProjectorScreenStop.txt")
-    room['RF'].send_IR("ProjectorScreenUp.txt")
+  def screendown(self, rf):
+    rf.send_IR("ProjectorScreenStop.txt")
+    rf.send_IR("ProjectorScreenDown.txt")
 
-  def screendown(self, room):
-    room['RF'].send_IR("ProjectorScreenStop.txt")
-    room['RF'].send_IR("ProjectorScreenDown.txt")
-
-  def powerbtn(self, room):
-    room['RF'].send_IR("ProjectorPower.txt")
-    room['RF'].send_IR("ProjectorPower.txt")
+  def powerbtn(self, rf):
+    rf.send_IR("ProjectorPower.txt")
+    rf.send_IR("ProjectorPower.txt")
 
 
 # MODE OBJECTS
 class ModeObject(BinaryObject):
-  def parse(self, room, words):
+  def parse(self, outputs, words):
     self.state = not self.state
     self.updateState()
        
@@ -90,7 +120,7 @@ class PartyMode(BinaryObject):
   def isValid(self, words):
     return True
 
-  def parse(self, room, words):
+  def parse(self, outputs, words):
     if self.partying:
       self.partying = False
       print "Stopping the party :("
@@ -98,26 +128,27 @@ class PartyMode(BinaryObject):
 
     print "Partying..."
     self.partying = True
-    t = threading.Thread(target=self.party, args=(room,))
+    t = threading.Thread(target=self.party, args=(outputs,))
     t.start()
 
     #self.play_sound("Outputs/VoiceFiles/confirm.wav")
-  def party(self, room):
+  def party(self, outputs):
+    lr = outputs['livingroom']
     import random
-    self.play_sound("Outputs/VoiceFiles/mariachi.wav")
+    self.play_sound("mariachi.wav")
 
     while self.partying:
       cols = [random.randint(0, 255) for i in xrange(3)]
       cols2 = [random.randint(0, 255) for i in xrange(3)]
-      room['windowlight'].write(cols, cols2)
+      lr['windowlight'].write(cols, cols2)
   
       cols3 = [random.randint(0, 255) for i in xrange(3)]
-      room['couchlight'].write(cols3)
+      lr['couchlight'].write(cols3)
       time.sleep(0.1)
 
     # Turn things off
-    room['windowlight'].clear()
-    room['couchlight'].clear()
+    lr['windowlight'].clear()
+    lr['couchlight'].clear()
 
         
         
@@ -131,6 +162,7 @@ class JarvisBrain(JarvisBase):
     self.last_command_time = datetime.datetime.now()
     self.logger.info("Initializing Jarvis Virtual Control Matrix")
     
+    # TODO: Shift to DB
     # object name -> synonyms
     self.objectMap = {
         'party': ['party', 'fiesta', 'rave'],
@@ -139,7 +171,7 @@ class JarvisBrain(JarvisBase):
       'lights': ['lights', 'light', 'lighting'],
       'projector': ['projector', 'screen'],
       'music': ['music', 'song', 'audio', 'sound'],
-      'environment': ['temperature', 'warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'AC', 'heater', 'fan']
+      'environment': ['temperature', 'warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'ac', 'heater', 'conditioner', 'fan']
     }
     
     # object name -> actual object to command
@@ -147,6 +179,7 @@ class JarvisBrain(JarvisBase):
     self.objects['projector'] = Projector()
     self.objects['party'] = PartyMode()
     self.objects['lights'] = MainLight()
+    self.objects['environment'] = AC()
 
   def findTarget(self, command):
     # TODO: Flatten the mapping (word -> key, not key -> words)
@@ -164,7 +197,7 @@ class JarvisBrain(JarvisBase):
     c = datetime.datetime.now() - self.last_command_time 
     return (c.days * 24 * 60 * 60 + c.seconds) * 1000 + c.microseconds / 1000.0
 
-  def processInput(self, room, command):
+  def processInput(self, outputs, command):
     target = self.findTarget(command)
     #TODO: Potential concurrency issues - should really be using a lock here.
     self.l.acquire(True)
@@ -172,7 +205,7 @@ class JarvisBrain(JarvisBase):
       self.last_command_time = datetime.datetime.now()
       self.l.release()
       self.logger.info("Commanding " + target)
-      t = threading.Thread(target=self.objects[target].parse, args=(room, command))
+      t = threading.Thread(target=self.objects[target].parse, args=(outputs, command))
       t.daemon = True
       t.start()
       return True

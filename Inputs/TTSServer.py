@@ -8,7 +8,7 @@ from Queue import Queue
 
 class TTSRequestHandler(SocketServer.StreamRequestHandler):
   def handle(self):
-    self.logger = logging.getLogger(self.__class.__name__)
+    self.logger = logging.getLogger("TTS:")
     self.logger.setLevel(logging.DEBUG)
     self.logger.debug('Got connection')
     self.q = Queue()
@@ -28,8 +28,8 @@ class TTSServer(SocketServer.ThreadingTCPServer):
   daemon_threads = True
   allow_reuse_address = True
 
-  def __init__(self, server_address, audiosrc, lm_path, dict_path):
-    self.logger = logging.getLogger(self.__class__.__name__)
+  def __init__(self, name, server_address, audiosrc, lm_path, dict_path):
+    self.logger = logging.getLogger(name)
     self.logger.setLevel(logging.DEBUG)
     self.userlist = []
 
@@ -98,15 +98,15 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     self.inject(text)
 
   def inject(self, text):
-    for usr_queue in self.userlist:
+    for usr_queue in list(self.userlist):
       usr_queue.put(text)
-
     
 if __name__ == "__main__":
   import gobject 
   gobject.threads_init()
   
   srv = TTSServer(
+    "Test",
     None,
     gst.element_factory_make("autoaudiosrc", "asrc"), 
     None, 
