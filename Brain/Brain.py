@@ -15,12 +15,19 @@ class BinaryObject(JarvisBase):
    return ('on' in words) or ('off' in words)
      
   def parse(self, outputs, words):
+    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    t = time.time()
+    self.play_sound("confirm.wav")
     if not self.state:
       self.turnOn(outputs)
       self.state = 1
     else:
       self.turnOff(outputs)
       self.state = 0
+
+    while (time.time() - t < 1.0):
+      time.sleep(0.1)
+    outputs['livingroom']['tower'].defaultState()
       
   def turnOff(self, outputs):
     self.logger.error("TODO: Implement turnOff")
@@ -33,9 +40,12 @@ class AC(BinaryObject):
     return True
 
   def parse(self, outputs, words):
+    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    self.play_sound("confirm.wav")
     rf = outputs['livingroom']['RF']
     rf.send_IR("AirConditionerPower.txt")
     self.logger.debug("Toggled")
+    outputs['livingroom']['tower'].defaultState()
 
 class MainLight(BinaryObject):
   def isValid(self, words):
@@ -43,12 +53,28 @@ class MainLight(BinaryObject):
 
   def parse(self, outputs, words):
     outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
-    outputs['livingroom']['tracklight'].toggle()
     self.play_sound("confirm.wav")
+    outputs['livingroom']['tracklight'].toggle()
     time.sleep(1.0)
     self.logger.debug("Toggled")
     outputs['livingroom']['tower'].defaultState()
       
+class Audio(BinaryObject):
+  def isValid(self, words):
+    return True
+
+  def turnOff(self, outputs):
+    self.chan(1, outputs['livingroom']['RF'])
+
+  def turnOn(self, outputs):
+    self.chan(2, outputs['livingroom']['RF'])
+
+  def chan(self, c, rf):
+    rf.send_IR("SoundSystemA%d.txt" % c)
+    time.sleep(0.5)
+    rf.send_IR("SoundSystemB%d.txt" % c)
+    time.sleep(0.5)
+
 class Projector(BinaryObject):
   name = "Projector"
 
@@ -171,6 +197,7 @@ class JarvisBrain(JarvisBase):
       'lights': ['lights', 'light', 'lighting'],
       'projector': ['projector', 'screen'],
       'music': ['music', 'song', 'audio', 'sound'],
+      'audio': ['audio'],
       'environment': ['temperature', 'warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'ac', 'heater', 'conditioner', 'fan']
     }
     
@@ -180,6 +207,7 @@ class JarvisBrain(JarvisBase):
     self.objects['party'] = PartyMode()
     self.objects['lights'] = MainLight()
     self.objects['environment'] = AC()
+    self.objects['audio'] = Audio()
 
   def findTarget(self, command):
     # TODO: Flatten the mapping (word -> key, not key -> words)
