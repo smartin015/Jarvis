@@ -25,16 +25,15 @@ class EffectTemplate():
 
   def __init__(self, pipes, active_effects, remove_cb):
     self.logger = logging.getLogger(self.__class__.__name__)
-    ch = logging.StreamHandler(sys.stdout)
-    self.logger.addHandler(ch)
+    #ch = logging.StreamHandler(sys.stdout)
+    #self.logger.addHandler(ch)
     self.logger.setLevel(logging.DEBUG)
     self.remove_cb = remove_cb
     self.should_exit = False
     self.pipes = pipes
     self.active_effects = active_effects
-    self.logger.debug("Entering setup")
     self.setup()
-    self.logger.debug("Setup complete")
+    self.logger.debug("Ready")
 
   def setup(self):
     pass
@@ -109,7 +108,6 @@ class EffectTemplate():
         raise
 
   def remove(self):
-    print "REMOVING"
     self.logger.info("Removing")
     
     self.remove_from_pipeline()
@@ -231,6 +229,7 @@ class HolodeckEngine():
           self.state_callback({classname_to_id(req): True})
 
         elif self.activeEffects.get(req):
+          self.logger.info("Removing " + req)
           self.activeEffects[req].request_exit()
     except:
        import traceback

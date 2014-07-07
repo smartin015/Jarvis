@@ -75,6 +75,23 @@ class Audio(BinaryObject):
     rf.send_IR("SoundSystemB%d.txt" % c)
     time.sleep(0.5)
 
+class AuxProjector(BinaryObject):
+  def isValid(self, words):
+    return True
+
+  def turnOn(self, outputs):
+    self.togglePower(outputs)
+
+  def turnOff(self, outputs):
+    self.togglePower(outputs)
+
+  def togglePower(self, outputs):
+    rf = outputs['livingroom']['RF']
+    rf.send_IR("SideProjectorPower.txt")
+    time.sleep(0.5)
+    rf.send_IR("SideProjectorPower.txt")
+    
+
 class Projector(BinaryObject):
   name = "Projector"
 
@@ -198,7 +215,8 @@ class JarvisBrain(JarvisBase):
       'projector': ['projector', 'screen'],
       'music': ['music', 'song', 'audio', 'sound'],
       'audio': ['audio'],
-      'environment': ['temperature', 'warm', 'hot', 'cool', 'cold', 'warmer', 'hotter', 'cooler', 'colder', 'ac', 'heater', 'conditioner', 'fan']
+      'environment': ['ac'],
+      'sideprojector': ['auxillary']
     }
     
     # object name -> actual object to command
@@ -208,6 +226,7 @@ class JarvisBrain(JarvisBase):
     self.objects['lights'] = MainLight()
     self.objects['environment'] = AC()
     self.objects['audio'] = Audio()
+    self.objects['sideprojector'] = AuxProjector()
 
   def findTarget(self, command):
     # TODO: Flatten the mapping (word -> key, not key -> words)

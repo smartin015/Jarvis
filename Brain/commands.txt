@@ -10,3 +10,4 @@ AC
 screen
 projector screen
 audio
+auxillary
