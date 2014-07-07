@@ -216,7 +216,7 @@ class JarvisBrain(JarvisBase):
       'music': ['music', 'song', 'audio', 'sound'],
       'audio': ['audio'],
       'environment': ['ac'],
-      'sideprojector': ['auxillary']
+      'sideprojector': ['auxillary'],
     }
     
     # object name -> actual object to command

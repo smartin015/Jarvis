@@ -37,6 +37,8 @@ def init_outputs():
       (cls, usb_id, baud) = config.OUTPUTS[room][name]
       cls = reduce(getattr, cls.split("."), sys.modules[__name__])
       outputs[room][name] = cls(Serial(usb_devices[usb_id], baud))
+
+  logger.info("Outputs initialized")
   return outputs
     
 def init_inputs(brain, outputs):

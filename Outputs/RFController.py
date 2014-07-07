@@ -3,6 +3,7 @@ import serial
 import struct
 import logging
 from Controller import Controller
+from config import RF_IDS
 
 class RFController(Controller):
   CMD_FET1 = 0x00
@@ -13,46 +14,67 @@ class RFController(Controller):
   CMD_IR_RESET = 0x12
   CMD_IR_TEST = 0x14
 
-  def __init__(self, ser, ir_path = "Outputs/IRCommandFiles/"):
-    Controller.__init__(self)
-    self.ser = ser
-    self.ir_path = ir_path
-    self.logger.setLevel(logging.INFO)
+  DATA_LEN = 5
 
-  def send_cmd(self, cmd, val):
-    if val == "ON":
-      val = 0x01
-    elif val == "OFF":
-      val = 0x00
-    
-    self.logger.debug("Sending " + str(cmd) + str(val))
-    self.ser.write(chr(cmd));
-    self.ser.write(struct.pack('>h', int(val)));
-
+  def write(self, chars):
+    assert(len(chars) == 5)
+    self.ser.write(chars);
     v = self.ser.readline()
     while v.strip() != "":
       self.logger.warn(v)
       v = self.ser.readline()
 
-  def send_IR(self, fil):
+  def __init__(self, ser, default_target = 'livingroom', ir_path = "Outputs/IRCommandFiles/"):
+    Controller.__init__(self)
+    self.ser = ser
+    self.ir_path = ir_path
+    self.logger.setLevel(logging.INFO)
+    assert (ser.readline().strip() == "Ready")
+
+    self.set_default_target(default_target)
+
+  def set_default_target(self, tgt):
+    self.default_target = RF_IDS[tgt]
+    self.write(self.default_target)
+
+  def send_cmd(self, cmd, val, target = None):
+    if val == "ON":
+      val = 0x01
+    elif val == "OFF":
+      val = 0x00
+
+    if target:
+      self.set_target(target)
+    
+    self.logger.debug("Sending " + str(cmd) + str(val))
+    chars = chr(cmd) + struct.pack('>h', int(val)) + ('\0' * (self.DATA_LEN - 3))
+    self.write(chars)
+
+    if target:
+      self.set_target(self.default_target)
+
+  def send_IR(self, fil, target = None):
     with open(self.ir_path + fil, 'r') as f:
       data = f.read()
     data = [d.strip() for d in data.split(",")]
 
-    self.send_cmd(self.CMD_IR_RESET, 0)
+    self.send_cmd(self.CMD_IR_RESET, 0, target)
     for b in data:
-      self.send_cmd(self.CMD_IR_BUFFER, int(b))
+      self.send_cmd(self.CMD_IR_BUFFER, int(b), target)
 
-    self.send_cmd(self.CMD_IR_SEND, 3)
+    self.send_cmd(self.CMD_IR_SEND, 3, target)
 
     self.logger.info("IR written")
     time.sleep(0.5)
 
 if __name__ == "__main__":
   import logging
+  import time
   logging.basicConfig()
   ser = serial.Serial("/dev/ttyUSB1", 115200)
-  con = RFController(ser)
+
+  tgt = raw_input("livingroom or hackspace? ")
+  con = RFController(ser, tgt)
 
   while True:
     cmdstr = raw_input("CMD (RELAY/FET1/2 ON/OFF, IR <file>):")

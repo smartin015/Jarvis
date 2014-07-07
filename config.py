@@ -4,6 +4,11 @@ _hostname = socket.gethostname()
 
 # TODO: Store ALL these settings in a database
 
+RF_IDS = {
+  "livingroom": "livrm",
+  "hackspace": "ctlhs",
+}
+
 ROOMS = ["livingroom", "hackspace"]
 
 SOUND_PATH = "Assets/Sounds/"

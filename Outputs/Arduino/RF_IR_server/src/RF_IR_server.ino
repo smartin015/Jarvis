@@ -24,27 +24,39 @@
 
 #define ADDY "serv1"
 
-char data[DATA_LEN];
-char data_conf[DATA_LEN];
+#define SERIAL_LEN 5
+char data[SERIAL_LEN+1];
 
 void setup(){
   Serial.begin(115200);
-  Mirf.spi = &MirfHardwareSpi;
+  
+  data[SERIAL_LEN] = '\0';
+
+  Mirf.spi = &MirfHardwareSpi; //new MirfSpiDriver();//&MirfHardwareSpi;
   Mirf.init();
    
   Mirf.setRADDR((byte *)ADDY);
   Mirf.payload = DATA_LEN;
   Mirf.config();
+  Serial.println("Ready");
 }
 
 void loop(){
-  if (Serial.available() >= DATA_LEN) {
-    Serial.readBytes(data, DATA_LEN);
-    Mirf.setTADDR((byte *)"ctrl1");
-    Mirf.send((byte *)data);
-
-    while(Mirf.isSending()){}
-
+  if (Serial.available() >= SERIAL_LEN) {
+    Serial.readBytes(data, SERIAL_LEN);
+    if (data[DATA_LEN]) {
+      // If we have more than DATA_LEN in data, 
+      // we must be trying to set TADDR
+      Mirf.setTADDR((byte *)data);
+      Serial.print("SET TARGET TO ");
+      Serial.println(data);
+      for (int i = 0; i < SERIAL_LEN; i++) {
+        data[i] = 0;
+      }
+    } else {
+      Mirf.send((byte *)data);
+      while(Mirf.isSending()){}
+    }
     Serial.println("");
   }
 }

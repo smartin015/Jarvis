@@ -60,7 +60,7 @@ Nrf24l::Nrf24l(){
 	csnPin = 7;
 	channel = 1;
 	payload = 16;
-	spi = NULL;
+	spi = NULL; //new MirfSpiDriver();
 }
 
 void Nrf24l::transferSync(uint8_t *dataout,uint8_t *datain,uint8_t len){
