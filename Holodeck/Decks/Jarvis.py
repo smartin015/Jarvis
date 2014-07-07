@@ -14,6 +14,8 @@ from Holodeck.Server import HolodeckServer
 import time
 
 class Holodeck(HolodeckServer):
+  EMPTY_IMG = ["", "clear", "day"]
+
   def __init__(self, devices):
     self.devices = devices['livingroom']
     self.devices['proj'] = scl()
@@ -22,8 +24,9 @@ class Holodeck(HolodeckServer):
     self.devices['tower'].setState(RGBState.STATE_MANUAL)
     time.sleep(1.0)
 
-    self.img_path = "Holodeck/Images/"
-    self.last_img = None
+    self.img_path = "Holodeck/Images/right/"
+    self.last_img = self.EMPTY_IMG
+    self.last_img_screen = scl.get_black_image()
     self.screen_transition = None
     HolodeckServer.__init__(self)
 
@@ -50,7 +53,7 @@ class Holodeck(HolodeckServer):
       P.FLOOR:      [0,0,0],
       P.TOWER:      [[0,0,0]]*NTOWER,
       P.RING:       [[0,0,0]]*NRING,
-      P.WALLIMG:    None,
+      P.WALLIMG:    list(self.EMPTY_IMG),
       P.LIGHTS:     False,
     }
 
@@ -69,29 +72,28 @@ class Holodeck(HolodeckServer):
     self.devices['tracklight'].set_state(is_on)
 
   def wall_scrn(self, scrn):
-    if self.last_img != scrn:
-      print "up"
-      path = "%s/%s_%s_%s.jpg" % tuple([self.img_path] + scrn)
-      if not self.screen_transition:
-        self.transition_screen = scl.loadimg(self.last_img).copy()
-        self.screen_transition = scl.gen_sweep(scl.loadimg(self.last_img), final, self.transition_screen)
-      return self.handle_screen_transition(final)
-    
-      self.devices['proj'].set_scrn(scl.loadimg(self.cur_img))
+    if self.screen_transition is not None:
+      try:
+        self.screen_transition.next()
+        self.devices['proj'].flip()
+      except StopIteration:
+        print "Transition complete"
+        self.screen_transition = None
+    elif self.last_img != scrn:
+      print "Transitioning"
+      if scrn == self.EMPTY_IMG:  
+        self.devices['proj'].set_scrn(scl.get_black_image())
+      else:
+        path = "%s%s_%s_%s.jpg" % tuple([self.img_path] + scrn)
+        next_img = scl.loadimg(path)
+        self.screen_transition = scl.gen_sweep(
+          self.last_img_screen, 
+          next_img, 
+          self.devices['proj'].screen
+        )
+        self.last_img_screen = next_img
+        self.last_img = list(scrn)
 
-  def trans_wall_img(self, screen):
-    final = self.steady_mapping[P.WALLIMG](screen)
-    if not self.screen_transition:
-      self.transition_screen = screen.copy()
-      self.screen_transition = scl.gen_sweep(screen, final, self.transition_screen)
-    return self.handle_screen_transition(final)
-    
-  def trans_window_img(self, screen):
-    final = self.steady_mapping[P.WINDOWIMG](screen)
-    if not self.screen_transition:
-      self.transition_screen = screen.copy()
-      self.screen_transition = scl.gen_zoom(screen, final, self.transition_screen)
-    return self.handle_screen_transition(final)
   def linear_blend(self, i, rgb1, rgb2):
     blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )
     return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(rgb2, rgb1)]
@@ -123,16 +125,6 @@ class Holodeck(HolodeckServer):
       self.prev_window_bot = final
     return self.tween_blend(self.tbot, prev, mid, final)
 
-  def handle_screen_transition(self, final):
-    try:
-      self.screen_transition.next()
-      return self.transition_screen
-    except StopIteration:
-      self.handle_blacklist()
-      self.remove_from_pipeline()
-      self.transition = True
-      self.insert_into_pipeline()
-      return final
 
 
 if __name__ == "__main__":

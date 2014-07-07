@@ -137,7 +137,6 @@ class ScreenController():
 
   def flip(self):
     pygame.display.flip()
-
   
   def clear(self):
     self.screen.fill((0,0,0))

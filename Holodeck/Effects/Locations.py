@@ -52,49 +52,7 @@ class LocationTemplate(EffectTemplate):
 
   def location_mapping(self):
     raise Exception("Unimplemented")
-  '''
-  def linear_blend(self, i, rgb1, rgb2):
-    blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )
-    return [(a*blend_amount) + (b*(1-blend_amount)) for (a,b) in zip(rgb2, rgb1)]
 
-  def tween_blend(self, i, rgb1, rgb2, rgb3):
-    if i < self.TRANSITION_TIME / 2:
-      return self.linear_blend(2*i, rgb1, rgb2)
-    else:
-      return self.linear_blend(2*(i-self.TRANSITION_TIME/2), rgb2, rgb3)
-
-  def trans_floor(self, prev):
-    self.tfloor += 1
-    if self.prev_window_bot:
-      final = self.steady_mapping[P.FLOOR](prev)
-      return self.tween_blend(self.tfloor, prev, self.prev_window_bot, final)
-    else:
-      return prev
-  
-  def trans_window_top(self, prev):
-    self.ttop += 1
-    final = self.steady_mapping[P.WINDOWTOP](prev)
-    return self.linear_blend(self.ttop, prev, final)
-    
-  def trans_window_bot(self, prev):
-    self.tbot += 1
-    mid = self.steady_mapping[P.FLOOR](prev)
-    final = self.steady_mapping[P.WINDOWBOT](prev)
-    if not self.prev_window_bot:
-      self.prev_window_bot = final
-    return self.tween_blend(self.tbot, prev, mid, final)
-
-  def handle_screen_transition(self, final):
-    try:
-      self.screen_transition.next()
-      return self.transition_screen
-    except StopIteration:
-      self.handle_blacklist()
-      self.remove_from_pipeline()
-      self.transition = True
-      self.insert_into_pipeline()
-      return final
-  '''
   def get_blacklist(self):
     cs = inspect.getmembers(sys.modules[__name__], inspect.isclass)    
     result = []
@@ -106,17 +64,16 @@ class LocationTemplate(EffectTemplate):
       result.append(c)
     return result
       
-
   def trans_audio(self, prev):
     prev[1].append("swoosh")
     return prev
     
   def wall_img_default(self, prev):
-    prev[1] = classname_to_id(self.__class__.__name__)
+    prev[0] = classname_to_id(self.__class__.__name__)
     return prev
 
   def window_img_default(self, prev):
-    prev[1] = classname_to_id(self.__class__.__name__)
+    prev[0] = classname_to_id(self.__class__.__name__)
     return prev
     
   def audio_default(self, prev):
