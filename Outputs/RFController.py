@@ -3,7 +3,7 @@ import serial
 import struct
 import logging
 from Controller import Controller
-from config import RF_IDS
+from config import RF
 
 class RFController(Controller):
   CMD_FET1 = 0x00
@@ -34,7 +34,7 @@ class RFController(Controller):
     self.set_default_target(default_target)
 
   def set_default_target(self, tgt):
-    self.default_target = RF_IDS[tgt]
+    self.default_target = RF[tgt]
     self.write(self.default_target)
 
   def send_cmd(self, cmd, val, target = None):

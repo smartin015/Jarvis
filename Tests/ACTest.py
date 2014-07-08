@@ -3,8 +3,8 @@
 import serial
 import time
 
-ser = serial.Serial("/dev/ttyUSB3", 9600)
-
+ser = serial.Serial("/dev/ttyUSB4", 9600)
+time.sleep(2.0)
 
 while True:
   print "Turning on"

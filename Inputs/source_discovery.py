@@ -47,14 +47,14 @@ def get_sources():
   return sources
 
 if __name__ == "__main__":
-  import config
+  from config import TTS
   print "USB Audio Devices:"
-  fmt = "{:14s}{:3d}{:20s}"
+  fmt = "{:20}{:<10}{:70}"
+  print fmt.format("NAME", "SRC_ID", "PATH")
   def print_source(sid, src):
-    for s in config.TTS:
-      sid2 = config.TTS[s]['device']
-      if sid2 == sid:
-        print fmt.format(s, sid, src['path'])
+    for s in TTS:
+      if s.device == src['path']:
+        print fmt.format(s.id, sid, src['path'])
         return
     print fmt.format("unused", sid, src['path'])
 

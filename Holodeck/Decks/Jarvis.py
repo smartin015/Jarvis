@@ -40,8 +40,15 @@ class Holodeck(HolodeckServer):
 
   def shutdown(self):
     super(Holodeck, self).shutdown() # Shut down things that rely on devices first
+
+    defaults = self.get_pipeline_defaults()
+    tup = self.get_pipeline_handlers()
+    for i in tup :
+      i[1](*[defaults[p] for p in i[0]])
+
     self.devices['proj'].quit()
     self.devices['tower'].manual_exit()
+    
 
   def mainloop(self):
     self.devices['proj'].mainloop()

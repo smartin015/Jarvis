@@ -2,7 +2,7 @@ import logging
 import subprocess
 import os
 import threading
-from config import SOUND_PATH
+from config import PATHS
 
 class StoppableThread(threading.Thread):
   """Thread class with a stop() method. The thread itself has to check
@@ -32,6 +32,6 @@ class JarvisBase():
   def play_sound(self, fil):
     # TODO: should probably safeguard this to prevent hijacking
     # TODO: Specify standard directory
-    t1 = threading.Thread(target=self._play_sound_process, args=(SOUND_PATH + fil,))
+    t1 = threading.Thread(target=self._play_sound_process, args=(PATHS['sound'] + fil,))
     t1.daemon = True
     t1.start()

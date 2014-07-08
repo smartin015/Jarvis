@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import config
 import gobject
 from Inputs.TTSServer import TTSServer
 import logging
@@ -10,13 +9,11 @@ pygst.require('0.10')
 import gst
 import threading
 
+from config import TTS, PATHS
 
-LM_PATH = "/home/jarvis/Jarvis/Brain/commands.lm"
-DICT_PATH = "/home/jarvis/Jarvis/Brain/commands.dic"
-
-def path_to_name(path):
-  for i in config.TTS:
-    if config.TTS[i]['device'] == path:
+def path_to_TTS(path):
+  for i in TTS:
+    if i.device == path:
       return i
   return None
 
@@ -27,22 +24,23 @@ if __name__ == "__main__":
 
   logging.info("Discovered sources:")
   mics = {}
-  for src_id in sources:
-    source = sources[src_id]
-    name = path_to_name(source['path'])
-    if not name:
+  for (src_id, source) in sources.items():
+    tts = path_to_TTS(source['path'])
+    if not tts:
       logging.error(
         "UNUSED\t(%d) %s %s" % (
           source['id'], source['name'], source['path']
         )
       )
     else:
-      port = config.TTS[name]['port']
-      host = config.TTS[name]['host']
       logging.info(
-        "%s\t(%d) %s:%d" % (name, source['id'], host, port)
+        "%s\t(%d) %s:%d" % (tts.id, source['id'], tts.host, tts.port)
       )
-      mics[name] = {"port": port, "host": host, "source_id": source['id']}
+      mics[tts.id] = {
+        "port": tts.port, 
+        "host": tts.host, 
+        "source_id": source['id']
+      }
 
   # TODO: Indicate missing input devices
   # TODO: Probably want to do this per-process eventually
@@ -51,12 +49,17 @@ if __name__ == "__main__":
   for (name, mic) in mics.items():
     src = gst.element_factory_make("pulsesrc", "src")
     src.set_property("device", mic['source_id'])
-    srv = TTSServer(name, (mic['host'], mic['port']), src, LM_PATH, DICT_PATH)
+    srv = TTSServer(
+      name, 
+      (mic['host'], mic['port']), 
+      src, 
+      PATHS['language_model'], 
+      PATHS['language_dict']
+    )
     t = threading.Thread(target = srv.serve_forever)
     t.daemon = True
     t.start()
     servers[name] = srv
-  
 
   import threading
   # This loops the program until Ctrl+C is pressed
@@ -64,9 +67,6 @@ if __name__ == "__main__":
   g_loop.daemon = True
   g_loop.start()
   logging.info("Audio servers started")
-
-
-
 
   raw_input("Enter to exit")
 

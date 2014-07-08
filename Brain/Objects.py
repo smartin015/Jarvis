@@ -12,7 +12,7 @@ class BinaryObject(JarvisBase):
    return ('on' in words) or ('off' in words)
      
   def parse(self, outputs, words):
-    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    outputs['tower'].setState(RGBState.STATE_CHASE)
     t = time.time()
     self.play_sound("confirm.wav")
     if not self.state:
@@ -24,7 +24,7 @@ class BinaryObject(JarvisBase):
 
     while (time.time() - t < 1.0):
       time.sleep(0.1)
-    outputs['livingroom']['tower'].defaultState()
+    outputs['tower'].defaultState()
       
   def turnOff(self, outputs):
     self.logger.error("TODO: Implement turnOff")
@@ -37,34 +37,34 @@ class AC(BinaryObject):
     return True
 
   def parse(self, outputs, words):
-    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    outputs['tower'].setState(RGBState.STATE_CHASE)
     self.play_sound("confirm.wav")
-    rf = outputs['livingroom']['RF']
+    rf = outputs['RF']
     rf.send_IR("AirConditionerPower.txt")
     self.logger.debug("Toggled")
-    outputs['livingroom']['tower'].defaultState()
+    outputs['tower'].defaultState()
 
 class MainLight(BinaryObject):
   def isValid(self, words):
     return True
 
   def parse(self, outputs, words):
-    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    outputs['tower'].setState(RGBState.STATE_CHASE)
     self.play_sound("confirm.wav")
-    outputs['livingroom']['tracklight'].toggle()
+    outputs['tracklight'].toggle()
     time.sleep(1.0)
     self.logger.debug("Toggled")
-    outputs['livingroom']['tower'].defaultState()
+    outputs['tower'].defaultState()
       
 class Audio(BinaryObject):
   def isValid(self, words):
     return True
 
   def turnOff(self, outputs):
-    self.chan(1, outputs['livingroom']['RF'])
+    self.chan(1, outputs['RF'])
 
   def turnOn(self, outputs):
-    self.chan(2, outputs['livingroom']['RF'])
+    self.chan(2, outputs['RF'])
 
   def chan(self, c, rf):
     rf.send_IR("SoundSystemA%d.txt" % c)
@@ -83,7 +83,7 @@ class AuxProjector(BinaryObject):
     self.togglePower(outputs)
 
   def togglePower(self, outputs):
-    rf = outputs['livingroom']['RF']
+    rf = outputs['RF']
     rf.send_IR("SideProjectorPower.txt")
     time.sleep(0.5)
     rf.send_IR("SideProjectorPower.txt")
@@ -96,10 +96,10 @@ class Projector(BinaryObject):
     return True
 
   def parse(self, outputs, words):
-    outputs['livingroom']['tower'].setState(RGBState.STATE_CHASE)
+    outputs['tower'].setState(RGBState.STATE_CHASE)
     self.play_sound("confirm.wav")
 
-    rf = outputs['livingroom']['RF']
+    rf = outputs['RF']
 
     if "screen" in words:
       # Just do screen, not projector
@@ -114,7 +114,7 @@ class Projector(BinaryObject):
         self.turnOff(rf)
     self.state = 1 - self.state
 
-    outputs['livingroom']['tower'].defaultState()
+    outputs['tower'].defaultState()
 
 
   def turnOn(self, rf):

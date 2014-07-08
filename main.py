@@ -31,12 +31,9 @@ def init_outputs():
 
   # TODO: Error speech indicating if devices are missing 
   outputs = {}
-  for room in config.OUTPUTS:
-    outputs[room] = {}
-    for name in config.OUTPUTS[room]:
-      (cls, usb_id, baud) = config.OUTPUTS[room][name]
-      cls = reduce(getattr, cls.split("."), sys.modules[__name__])
-      outputs[room][name] = cls(Serial(usb_devices[usb_id], baud))
+  for o in config.OUTPUTS:
+    cls = reduce(getattr, o.controller.split("."), sys.modules[__name__])
+    outputs[o.name] = cls(Serial(usb_devices[o.id], o.rate))
 
   logger.info("Outputs initialized")
   return outputs
@@ -48,20 +45,19 @@ def init_inputs(brain, outputs):
     return brain.processInput(outputs, data)
 
   inputs = {}
-  for name in config.INPUTS:
-    parser = CommandParser(brain.isValid, cb)
-    tts = []
-    for tts_name in config.INPUTS[name]['tts']:
-      host = config.TTS[tts_name]['host']
-      port = config.TTS[tts_name]['port']
-      t = TTSClient(tts_name, host, port, parser.inject)
-      t.daemon = True
-      t.start()
-      tts.append(t)
+  for i in config.TTS:
+    if not inputs.get(i.room_id):
+      inputs[i.room_id] = {
+        "parser": CommandParser(brain.isValid, cb),
+        "tts": []
+      }
 
-    # TODO: eventually we'll have CV here
-
-    inputs[name] = {"parser": parser, "tts": tts}
+    t = TTSClient(i.id, i.host, i.port, inputs[i.room_id]['parser'].inject)
+    t.daemon = True
+    t.start()
+    
+    inputs[i.room_id]['tts'].append(t)
+    
   return inputs
 
 if __name__ == "__main__":

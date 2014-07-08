@@ -1,5 +1,5 @@
 
-DB_FILE_PATH = 'jarvis.db'
+DB_FILE_PATH = 'Database/jarvis.db'
 
 def connect(echo=False):
   from sqlalchemy import create_engine
