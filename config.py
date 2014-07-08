@@ -1,51 +1,17 @@
-import socket
 
-_hostname = socket.gethostname()
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-# TODO: Store ALL these settings in a database
+def _dict_from_query(query, key)
+  result = dict((row.key, row) for row in query.all())
 
-RF_IDS = {
-  "livingroom": "livrm",
-  "hackspace": "ctlhs",
-}
+(_engine, _session) = connect()
 
-ROOMS = ["livingroom", "hackspace"]
+RF = _dict_from_query(_session.query(RFModule))
 
-SOUND_PATH = "Assets/Sounds/"
+PATHS = _dict_from_query(_session.query(Path))
 
-OUTPUTS = {
-  "livingroom": {
-    #"RF": ("RFController", "A9MDTZJF", 115200),
-    "tracklight": ("RelayController", "A602QORA", 9600),
-    "windowlight": ("RGBSingleController", "A9MX5JNZ", 9600),
-    "couchlight": ("RGBSingleController", "A70257T7", 9600),
-    "tower": ("RGBMultiController", "A9OZNP19", 115200),
-  }
-}
+OUTPUTS = _dict_from_query(_session.query(USBOutput))
 
-TTS = {
-  "desk_tts": {
-    "device": "pci-0000:00:1d.7-usb-0:4.7.4:1.0",
-    "host": _hostname,
-    "port": 9000,
-  },
-  "livingroom_tts": {
-    "device": "pci-0000:00:1d.7-usb-0:4.6:1.0",
-    "host": _hostname,
-    "port": 9001,
-  },
-  "hackspace_tts": {
-    "device": "pci-0000:00:1d.7-usb-0:4.5:1.0",
-    "host": _hostname,
-    "port": 9002,
-  },
-}
+TTS = _dict_from_query(_session.query(TTSInput))
 
-INPUTS = {
-  "livingroom": {
-    "tts": ["desk_tts", "livingroom_tts"],
-  },
-  "hackspace": {
-    "tts": ["hackspace_tts"]
-  }
-}
