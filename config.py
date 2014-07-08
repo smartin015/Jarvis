@@ -15,7 +15,7 @@ SOUND_PATH = "Assets/Sounds/"
 
 OUTPUTS = {
   "livingroom": {
-    "RF": ("RFController", "A9MDTZJF", 115200),
+    #"RF": ("RFController", "A9MDTZJF", 115200),
     "tracklight": ("RelayController", "A602QORA", 9600),
     "windowlight": ("RGBSingleController", "A9MX5JNZ", 9600),
     "couchlight": ("RGBSingleController", "A70257T7", 9600),

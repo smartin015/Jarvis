@@ -8,6 +8,8 @@ from Holodeck.Effects import get_all_effects
 from Holodeck.Settings import SERVER_PORT as PORT
    
 class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
+  timeout = 5
+
   def handle(self):
     self.logger = logging.getLogger(self.__class__.__name__)
     self.logger.setLevel(logging.DEBUG)
@@ -28,17 +30,24 @@ class HolodeckRequestHandler(SocketServer.StreamRequestHandler):
         self.logger.debug("Got %s" % str(msg))
         self.server.deck.handle(msg['data'])
       except socket.timeout:
-        print "timeout"
-        continue
+        if not self.server.running:
+          self.close()
+          return
+        else:   
+          continue
       except:
-        if self.request in self.server.userlist:
-          self.server.userlist.remove(self.request)
-        self.logger.warn("Closing")
-        self.request.close()
+        self.close()
         return
 
+  def close(self):
+    if self.request in self.server.userlist:
+      self.server.userlist.remove(self.request)
+    self.logger.warn("Closing")
+    self.request.close()
 
-class HolodeckServer(SocketServer.ThreadingTCPServer):
+
+
+class HolodeckServer(SocketServer.ThreadingTCPServer, object):
   daemon_threads = True
   allow_reuse_address = True
 
@@ -62,9 +71,16 @@ class HolodeckServer(SocketServer.ThreadingTCPServer):
     )
     
     self.deck.start_pipeline()
-    
+    self.running = True
     self.logger.debug("Holodeck started")
   
+  def shutdown(self):
+    self.deck.shutdown()
+    super(HolodeckServer, self).shutdown()
+    self.server_close()
+    self.running = False
+
+
   def broadcast(self, data):
     self.logger.debug("Broadcast %s" % str(data))
     for user in self.userlist:

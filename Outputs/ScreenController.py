@@ -45,18 +45,23 @@ class ScreenController():
     currtime -= 1; 
     return -delta/2 * (currtime*(currtime-2) - 1) + start;
 
+  def update(self):
+    for event in pygame.event.get():
+      if (event.type == pygame.locals.QUIT or (
+            event.type == pygame.locals.KEYDOWN and 
+            event.key == pygame.locals.K_ESCAPE
+          )):
+        self.quit()
+        return
+     
+    self.clock.tick(10)
 
   def mainloop(self):
     while True:
-      for event in pygame.event.get():
-        if (event.type == pygame.locals.QUIT or (
-              event.type == pygame.locals.KEYDOWN and 
-              event.key == pygame.locals.K_ESCAPE
-            )):
-          pygame.quit()
-          return
-       
-      self.clock.tick(10)
+      self.update()
+      
+  def quit(self):
+    pygame.quit()
 
   @classmethod
   def gen_sweep(self, img1, img2, screen):

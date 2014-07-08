@@ -30,11 +30,20 @@ class Holodeck(HolodeckServer):
     self.screen_transition = None
     HolodeckServer.__init__(self)
 
-  def mainloop(self):
+  def setup(self):
     t = threading.Thread(target = self.serve_forever)
     t.daemon = True
     t.start()
 
+  def update(self):
+    self.devices['proj'].update()
+
+  def shutdown(self):
+    super(Holodeck, self).shutdown() # Shut down things that rely on devices first
+    self.devices['proj'].quit()
+    self.devices['tower'].manual_exit()
+
+  def mainloop(self):
     self.devices['proj'].mainloop()
 
   def get_pipeline_handlers(self):

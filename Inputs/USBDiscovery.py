@@ -1,6 +1,5 @@
 import re
 import subprocess
-import config
 
 def get_connected_usb_devices():
   #device_re = re.compile("Bus\s+(?P<bus>\d+)\s+Device\s+(?P<device>\d+).+ID\s(?P<id>\w+:\w+)\s(?P<tag>.+)$", re.I)
@@ -24,17 +23,18 @@ def get_connected_usb_devices():
 
 
 if __name__ == "__main__":
+  import config
   print "USB Devices:"
-
+  fmt = "{:14s}{:10s}{:10s}"
   def print_device(uid, path):
     for room in config.OUTPUTS:
       rm = config.OUTPUTS[room]
       for out_id in rm:
         if rm[out_id][1] == uid:
-          print "{:14s}{:10s}{:10s}".format(out_id, uid, path)
+          print fmt.format(out_id, uid, path)
           return
      
-    print "unused      {:10s} {:10s}".format(uid, path)
+    print fmt.format("unused", uid, path)
   
 
   for (uid, path) in get_connected_usb_devices().items():

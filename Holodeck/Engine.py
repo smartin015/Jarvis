@@ -15,7 +15,7 @@ def id_to_classname(cmd):
 def classname_to_id(key):
   return key[:-6].lower()
 
-class EffectTemplate():
+class EffectTemplate(object):
   META = {
     'tab': None,
     'id': None,
@@ -125,7 +125,7 @@ class EffectTemplate():
     self.logger.debug("Exiting")
     self.remove()
 
-class HolodeckEngine():
+class HolodeckEngine(object):
   
   def __init__(self, effect_list, pipelines, update_funcs, state_callback=None):
     self.logger = logging.getLogger(self.__class__.__name__)
@@ -153,6 +153,12 @@ class HolodeckEngine():
       self.pipelines[pipe] = []
       self.initial_pipe_values[pipe] = pipelines[pipe]
 
+    self.running = True
+
+  def shutdown(self):
+    # TODO: Blocking join?
+    self.running = False
+
   def compose(self, pipe_names):
     # Composes each controller pipeline into a single environment
     env = []
@@ -176,10 +182,11 @@ class HolodeckEngine():
     
   def update(self, deps, callback, max_fps):
     c = Clock()
-    while True:
+    while self.running:
       env = self.compose(deps)
       callback(*env)
       c.tick(max_fps)
+    self.logger.debug("Thread with deps %s ending" % (str(deps)))
 
   def handle_effect_exit(self, effect):
     state = {classname_to_id(effect.__class__.__name__): False}

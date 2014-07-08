@@ -46,8 +46,18 @@ def get_sources():
     sources[source['id']] = source
   return sources
 
-def get_usb_serial_devices():
-  # For each /dev/ttyUSB and /dev/ttyACM,
+if __name__ == "__main__":
+  import config
+  print "USB Audio Devices:"
+  fmt = "{:14s}{:3d}{:20s}"
+  def print_source(sid, src):
+    for s in config.TTS:
+      sid2 = config.TTS[s]['device']
+      if sid2 == sid:
+        print fmt.format(s, sid, src['path'])
+        return
+    print fmt.format("unused", sid, src['path'])
 
-  # Grab their ls -l info in /sys/dev/char/#:#
-  pass
+  
+  for (sid, src) in get_sources().items():
+    print_source(sid, src)

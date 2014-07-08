@@ -92,7 +92,14 @@ class HolodeckController():
       if not s:
         self.logger.debug("Connection not open, skipping...")
         continue
-      s.send(cmd_json+"\n")
+      
+      try: 
+        s.send(cmd_json+"\n")
+      except socket.error, e:
+        if isinstance(e.args, tuple) and e[0] == errno.EPIPE:
+          self.logger.error("Remote \"%s\" disconnected" % (s.getpeername()))
+        else:
+          raise
 
     self.logger.debug("Sent %s to all decks" % cmd_json)
 

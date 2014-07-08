@@ -1,0 +1,14 @@
+
+
+
+
+
+.build/nano328/src/Motion_Sensor.cpp : src/Motion_Sensor.ino
+	@mkdir -p .build/nano328/src
+	@echo [93msrc/Motion_Sensor.ino[0m
+	@/usr/local/bin/ino preproc  -o $@ $^
+
+
+all : .build/nano328/src/Motion_Sensor.cpp
+	@true
+

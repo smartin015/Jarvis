@@ -46,7 +46,9 @@ class RGBMultiController():
 
   def manual_exit(self):
     self.manual_write(RGBState.CMD_EXIT_MANUAL, [0]*3)
-    assert(self.ser.read(1) == 'S')
+    val = self.ser.read(1)
+    print "Val is", ord(val), val
+    assert(val == 'S')
 
 def _basic_test(con):
   con.setState(RGBState.STATE_MANUAL)
