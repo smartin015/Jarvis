@@ -27,6 +27,7 @@ class TTSRequestHandler(SocketServer.StreamRequestHandler):
 class TTSServer(SocketServer.ThreadingTCPServer):
   daemon_threads = True
   allow_reuse_address = True
+  SEP = '|'
 
   def __init__(self, name, server_address, audiosrc, lm_path, dict_path):
     self.logger = logging.getLogger(name)
@@ -88,6 +89,7 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     """
     # TODO: Send activity to the brain
     self.logger.debug("%sP: %s" % (uttid, text))
+    self.inject("%s%s%s" % (uttid, self.SEP, text))
     
   def asr_result(self, asr, text, uttid):
     """ This function is called when pocketsphinx gets a 
@@ -95,7 +97,7 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     """
 
     self.logger.debug(text)
-    self.inject(text)
+    self.inject("%s%s%s" % (uttid, self.SEP, text))
 
   def inject(self, text):
     for usr_queue in list(self.userlist):
