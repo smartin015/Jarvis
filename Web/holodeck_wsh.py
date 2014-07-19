@@ -31,7 +31,6 @@ import logging
 import threading
 import Queue
 import socket
-import logging
 
 from mod_pywebsocket.msgutil import MessageReceiver
 from Holodeck.Engine import classname_to_id

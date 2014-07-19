@@ -87,16 +87,14 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     """ This function is called when pocketsphinx gets a partial
         transcription of spoken audio. 
     """
-    # TODO: Send activity to the brain
-    self.logger.debug("%sP: %s" % (uttid, text))
+    self.logger.info("%sP: %s" % (uttid, text))
     self.inject("%s%s%s" % (uttid, self.SEP, text))
     
   def asr_result(self, asr, text, uttid):
     """ This function is called when pocketsphinx gets a 
         full result (spoken command with a pause)
     """
-
-    self.logger.debug(text)
+    self.logger.info(text)
     self.inject("%s%s%s" % (uttid, self.SEP, text))
 
   def inject(self, text):

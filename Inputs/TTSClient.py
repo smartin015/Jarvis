@@ -2,6 +2,7 @@ import json
 import threading
 import socket
 import logging
+from TTSServer import TTSServer
 
 class TTSClient(threading.Thread):
   def __init__(self, name, host, port, callback):
@@ -31,9 +32,10 @@ class TTSClient(threading.Thread):
         if not msg:
           self.logger.warn("Server connection closed")
           return
-
-        self.logger.debug("%s" % ((msg[:40] + '..') if len(msg) > 40 else msg.strip()))
-        self.callback(msg)
+        
+        (uttid, text) = msg.split(TTSServer.SEP)
+        self.logger.debug("%s: %s" % (uttid, (text[:40] + '..') if len(text) > 40 else text.strip()))
+        self.callback(text, uttid)
       except:
         self.logger.warn("Connection closed")
         return

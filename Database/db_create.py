@@ -41,6 +41,10 @@ session.add_all([
     id="ctlhs",
     room_id="hackspace", 
   ),
+  RFModule(
+    id="extra",
+    room_id="extra",
+  ),
 
   USBOutput(
     id="A9MDTZJF", 

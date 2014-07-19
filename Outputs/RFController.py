@@ -13,6 +13,8 @@ class RFController(Controller):
   CMD_IR_SEND = 0x11
   CMD_IR_RESET = 0x12
   CMD_IR_TEST = 0x14
+  CMD_IR_ON = 0x15
+  CMD_IR_OFF = 0x16
 
   DATA_LEN = 5
 
@@ -71,7 +73,7 @@ if __name__ == "__main__":
   import logging
   import time
   logging.basicConfig()
-  ser = serial.Serial("/dev/ttyUSB1", 115200)
+  ser = serial.Serial("/dev/ttyUSB2", 115200)
 
   tgt = raw_input("livingroom or hackspace? ")
   con = RFController(ser, tgt)
@@ -87,6 +89,10 @@ if __name__ == "__main__":
         con.send_IR("ProjectorScreenUp.txt")
       elif cmdstr == "IRTEST":
         con.send_cmd(con.CMD_IR_TEST, val)
+      elif cmdstr == "IRON":
+        con.send_cmd(con.CMD_IR_ON, 0)
+      elif cmdstr == "IROFF":
+        con.send_cmd(con.CMD_IR_OFF, 0)
       continue
       
 

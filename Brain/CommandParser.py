@@ -3,6 +3,7 @@
 import time
 import string
 from collections import deque
+import Queue
 import threading
 
 import pygst
@@ -12,8 +13,8 @@ import gst
 from JarvisBase import JarvisBase
 
 class CommandParser(JarvisBase):
-  SILENCE_INTERVAL = 1.5 #Seconds
-  PARTIAL_APPEND_INTERVAL = 0.5 #Seconds
+  INJECTION_DELAY = 0.05
+  SPEECH_TIMEOUT = 0.5
 
   def __init__(self, isValid, callback, trigger="jarvis", maxlength=10):
     JarvisBase.__init__(self)
@@ -37,110 +38,104 @@ class CommandParser(JarvisBase):
     # For partial transcription, the number of words we've already buffered
     self.cutoff = 0  
 
-    # The time of last injection. If longer than SILENCE_INTERVAL ago, 
-
-    self.last_injection = int(time.time())
+    self.inj_queue = Queue.Queue()
 
     t = threading.Thread(target=self.worker_thread)
     t.daemon = True
     t.start()
 
-  def add_to_buffer(self, word_list, uttid = None):
+  def worker_thread(self):
+    while True:
+      try:
+        (words, uttid) = self.inj_queue.get(timeout = self.SPEECH_TIMEOUT)
+      except Queue.Empty:
+        self.clear_buffer()
+        continue
+
+      # Wait just a little bit to ensure no other incoming transcriptions
+      # with the same UTTID (i.e. better transcriptions).
+      time.sleep(self.INJECTION_DELAY)
+      if not self.inj_queue.empty() and self.inj_queue.queue[0][1] == uttid:
+        continue # Discard this transcription in favor of the new one
+
+      self.buffer_and_send(words, uttid)
+
+  def clear_buffer(self):
+    self.buf.clear()
+    self.cutoff = len(self.partial)
+
+  def buffer_and_send(self, word_list, uttid = None):
     last_injection = int(time.time())
 
     if uttid is None:
       self.buf.extend(word_list)
       self.logger.debug("BUF: " + str(list(self.buf)))
-    else:
-      if uttid != self.uttid:
-        self.dump_partial_to_buffer()
-        self.cutoff = 0
-        self.uttid = uttid
+      self.process_buffer()
+      return
 
-      self.partial = word_list[(self.cutoff):]
-      self.logger.debug("PAR: " + str(list(self.partial)))
+    if uttid != self.uttid:
+      self.uttid = uttid
+      if len(self.partial) > self.cutoff:
+        self.buf.extend(self.partial[self.cutoff:])
+        self.logger.debug("BUF: " + str(list(self.buf)))
+      self.cutoff = 0
+ 
+    self.partial = word_list
+    self.logger.debug("PAR: " + str(list(self.partial[self.cutoff:])))
+    self.process_buffer()
 
 
-  def extract_command(self):
-    ntrigs = self.buf.count(self.trigger)
-    consumed = False
+  def extract_command(self, buf):
+    ntrigs = buf.count(self.trigger)
+
+    # Don't bother extracting if no triggers or buffer is only the trigger
+    if not ntrigs or (len(buf) == 1 and buf[0] == self.trigger):
+      return (None, 0)
+  
+    # INVARIANT: At least one trigger is in buf to consume
 
     # If we're starting on a trigger, consume it 
     # and everything up to the next trigger, leaving   
     # the next one in the buffer
-    if ntrigs > 1 and self.buf[0] == self.trigger:
-      assert(self.buf.popleft() == self.trigger)
-      consumed = True
+    start_trig = int(buf[0] == self.trigger)
     
-    # Pull out all words prefixing a trigger
-    # And attempt to run them as a command.
-    if ntrigs > 0:
-      command_slice = []
-      while self.buf[0] != self.trigger:
-        command_slice.append(self.buf.popleft())
-      #print "Extracted", command_slice
-      if len(command_slice) and self.isValid(command_slice):
-        self.callback(command_slice)
-
-        # If we found a command prefixing a trigger and didn't
-        # already consume one, pop the one at the buffer head
-        if not consumed:
-          assert(self.buf.popleft() == self.trigger)
-        return True
-
-    # If the above fails and there is more 
-    # than one trigger in our buffer, pop the head trigger
-    # so that we can run the next command
-    if ntrigs > 1:
-      assert(self.buf.popleft() == self.trigger)
-      return True
+    # Cut off the rest of the buffer if a trigger is present later
+    if ntrigs > start_trig:
+      trig_i = buf.index(self.trigger, start_trig)
+      buf = buf[:trig_i]
+     
+    cmd_slice = [w for w in buf if w != self.trigger]
+    if len(cmd_slice) and self.isValid(cmd_slice):
+      return (cmd_slice, len(buf))
     else:
-      # Leave the trigger alone - wait until a pause before running
-      return False
+      return (None, len(buf))
+    # POSTCONDITION: Exactly one trigger in the buffer has been consumed
 
-  def dump_partial_to_buffer(self):
-    partial_len = len(self.partial)
-    self.buf.extend(self.partial)
-    self.cutoff += partial_len
-    self.partial = []
-    if partial_len:
-      self.logger.debug("BUF: " + str(list(self.buf)))
-
-
-  def worker_thread(self):
-    # Periodically check for pauses in transcription.
-    # Send if a pause follows a target command,
-    # Else expire if too much time elapses
-
+  def process_buffer(self):
     while True:
-      time.sleep(0.5)
-      currtime = int(time.time())
-
-      # Append partial transcriptions if expired
-      if currtime > self.last_injection + self.PARTIAL_APPEND_INTERVAL: 
-        self.dump_partial_to_buffer()
+      # Append partial transcriptions
+      buf = list(self.buf)
+      part = self.partial[self.cutoff:]
+      #print buf, part
 
       # Try to pull out commands
-      while self.extract_command():
-        continue
+      (cmd, words_used) = self.extract_command(buf+part)
 
-      # If a pause occurs and a trigger is at the start of the word list, 
-      # Try to run what remains as a command
-      if currtime > self.last_injection + self.SILENCE_INTERVAL and len(self.buf):
-        #print "Silence, have:", list(self.buf)
-        if self.buf[0] == self.trigger:
-          command_slice = [self.buf.popleft() for i in xrange(len(self.buf))]
-          command_slice = [c for c in command_slice if c != self.trigger]        
-          if self.isValid(command_slice):
-            self.callback(command_slice)
-        else:
-          # Discard old stuff
-          #print "Discarding", list(self.buf)
-          for i in xrange(len(self.buf)):
-            self.buf.popleft()
+      if words_used == 0: # We can't pull out any more commands
+        break
 
+      if cmd:
+        self.callback(cmd)
+
+      # Remove what was used from the actual queue and partials list
+      buflen = len(buf)
+      if words_used > buflen:
+        self.cutoff += words_used - buflen
+      for i in xrange(min(buflen, words_used)):
+        self.buf.popleft()
+      
   def inject(self, text, uttid = None):
-    self.add_to_buffer([word.strip(string.punctuation).lower() for word in text.split()], uttid)
+    self.inj_queue.put(([word.strip(string.punctuation).lower() for word in text.split()], uttid))
 
 if __name__ == "__main__":
   import logging
@@ -162,15 +157,17 @@ if __name__ == "__main__":
   def test(parser, words, *args):
     parser.callback = gen_cb(list(args), cp.evt)
     parser.inject(words)
-    cp.evt.wait()
-    cp.evt.clear()
+    parser.evt.wait()
+    parser.evt.clear()
 
   def uttid_test(parser, *args, **kwargs):
+    time.sleep(0.1)
+    print "UTTID TEST ", str(args), "expecting ", kwargs['results']
     parser.callback = gen_cb(kwargs['results'], cp.evt)
     for (uttid, text) in args:
       parser.inject(text, uttid)
-    cp.evt.wait()
-    cp.evt.clear()
+    parser.evt.wait()
+    parser.evt.clear()
 
   cp = CommandParser(
     lambda x: True,
@@ -179,7 +176,7 @@ if __name__ == "__main__":
   cp.evt = threading.Event()
 
   # Test basic injection and ordering
-  
+   
   test(cp, "projector jarvis", ['projector'])
   test(cp, "jarvis projector", ['projector'])
   test(cp, "herp de derp jarvis", ['herp', 'de', 'derp'])
@@ -190,8 +187,23 @@ if __name__ == "__main__":
 
   # Test injection with uttid
   uttid_test(cp, (1, "jarvis projector"), (1, "jarvis lights"), results=[['lights']])
+  
   uttid_test(cp, (2, "jarvis"), (3, "projector"), results=[['projector']])
+  
   uttid_test(cp, (3, "projector jarvis lights"), results=[['lights']])
   uttid_test(cp, (3, "projector jarvis lights audio jarvis"), results=[['audio']])
   uttid_test(cp, (4, "jarvis"), (5, "jarvis"), (6, "jarvis"), (7, "lights"), results=[['lights']])
+  uttid_test(cp, (8, "jarvis"), (9, "jarvis"), (10, "projector"), results=[['projector']])
+  uttid_test(cp, (11, "projector"), (12, "jarvis"), results=[['projector']])
+
+  # Test command timeout
+  def timeout_cb(s):
+   raise Exception("Got command %s" % (s))
+  cp.callback = timeout_cb
+  cp.inject("jarvis", 999)
+  time.sleep(cp.SPEECH_TIMEOUT + 0.1)
+  cp.inject("projector", 1000)
+  time.sleep(1.0)
+
+  print "All tests passed"
 
