@@ -31,7 +31,7 @@ class LineReader(object):
     return lines
 
 class ProcessMonitor(threading.Thread):
-  def __init__(self, script, callback, auto_restart = True, ):
+  def __init__(self, script, callback, auto_restart = True):
     threading.Thread.__init__(self)
     self.logger = logging.getLogger("procmon(%s)" % (script))
     self.logger.setLevel(logging.DEBUG)

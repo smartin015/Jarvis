@@ -19,7 +19,7 @@ class MonitorClient():
 
     try:
       self.target = socket.create_connection((host,port), timeout=self.TIMEOUT)
-      t = threading.Thread(target=self.handle_server, args=(s,))
+      t = threading.Thread(target=self.handle_server)
       t.daemon = True
       t.start()
       self.logger.debug("Connection to %s established" % host)
@@ -29,22 +29,7 @@ class MonitorClient():
     #  self.logger.error("Could not connect to %s:%d" % (host, port))
 
   def __del__(self):
-    for s in self.servers:
-      s.close()
-
-  def get_meta(self):
-    effect_list = get_all_effects()
-    
-    icon_meta = {}
-    for (ename, eclass) in effect_list.items():
-      meta = eclass.get_meta()
-
-      # Create this tab if not already made
-      if not icon_meta.get(meta['tab'], None):
-        icon_meta[meta['tab']] = {}
-      icon_meta[meta['tab']][meta['id']] = meta 
-
-    return icon_meta
+    self.target.close()
 
   def send_to_server(self, msg):
     if not msg:
@@ -62,16 +47,17 @@ class MonitorClient():
       self.target.send(msg+"\n")
     except socket.error, e:
       if isinstance(e.args, tuple) and e[0] == errno.EPIPE:
-        self.logger.error("Remote \"%s\" disconnected" % (s.getpeername()))
+        self.logger.error("Remote \"%s\" disconnected" % (self.target.getpeername()))
       else:
         raise
 
     self.logger.debug("Sent %s to server" % msg)
 
   def handle_server(self):
+    f = self.target.makefile()
     while True: #TODO: could be done better
       try:
-        msg = self.target.recv(2048)
+        msg = f.readline()
         if not msg:
           self.logger.warn("Server connection closed")
           return
@@ -92,5 +78,6 @@ class MonitorClient():
         continue
   
       self.request.ws_stream.send_message(msg, binary=False)
-      self.logger.debug("Sent %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
+      #self.logger.debug("Sent %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
+      self.logger.debug("Sent %s" % msg)
 

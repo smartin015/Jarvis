@@ -4,28 +4,39 @@
 </header>
 <body>
 
-
-  
-	<div id="jarvis">
-  <div id="health" style="width:30px; height:30px; border:#000000 1px solid"></div>
-  <div id="console" style="width: 100%; height:200px; overflow-y: scroll">
+  <div id="processes">
+  	<div id="proc_template" style="display:none">
+      <div id="health" style="width:30px; height:30px; border:#000000 1px solid"></div>
+      <div id="console" style="width: 100%; height:200px; overflow-y: scroll"></div>
+    </div>
   </div>
-
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="http://www.google.com/jsapi"></script>
   <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
   <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
   <script>
+    $(function() {
 
-      function appendLog(text) {
+      function setupProcess(name) {
+        var proc = $("#proc_template").clone();
+        proc.attr("id", name);
+        $("#processes").append(proc);
+        proc.css("display", "block");
+        console.log("Displayed");
+        return proc;
+      }
+
+      function appendLog(procdiv, text, is_err) {
         var lines = text.split("\n");
         for (i in lines) {
           var line = lines[i];
           var logline =  $("<div>" + line + "</div>");
-          $("#console").append(logline);
+          var console = procdiv.children("#console");
+          console.append(logline);
           if (line.indexOf("ERROR") != -1) {
             logline.css("font-weight: bold")
           }
+
         }
       }
       function setHealth(val) {
@@ -44,27 +55,29 @@
         }
       }
       
-      setHealth(2);
-      appendLog("Test message\nTestestest");
+      //setHealth(2);
+      //appendLog("Test message\nTestestest");
        
 
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/status", {
         events: {
-          init: function(e) {
-            console.log(e.data);
-            appendLog(e.data.log); 
-            setHealth(e.data.health);
-          },
           delta: function(e) {
-            console.log(e.data);
-            appendLog(e.data.log);
-            setHealth(e.data.health);
+            var procname = e.name.split('.')[0];
+            var procdiv = $("#"+procname);
+            if (!procdiv.length) {
+              procdiv = setupProcess(procname);
+            }
+            console.log(procdiv);
+
+            console.log("Div done");
+
+            appendLog(procdiv, e.msg, e.iserr);
           }
         }
       });
-     
+    });
 	</script>
 </body>
 </html>

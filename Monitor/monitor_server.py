@@ -56,19 +56,12 @@ class MonitorServer(SocketServer.ThreadingTCPServer, object):
   
   def push_message(self, name, is_error, line):
     #self.logger.debug("Pushing %s %s %s" % (name, is_error, line))
-    self.broadcast(json.dumps({"name": name, "iserr": is_error, "msg": line}))
-
-  #def shutdown(self):
-  #  self.logger.warn("Shutting down")
-  #  #SocketServer.ThreadingTCPServer.shutdown(self)
-  #  self.server_close()
-  #  self.running = False
-  #  self.logger.warn("Stopped")
+    self.broadcast(json.dumps({"type": "delta", "name": name, "iserr": is_error, "msg": line}))
 
   def broadcast(self, data):
-    print data
+    #print json.loads(data)['msg']
     for user in self.userlist:
-      user.send(data)
+      user.send(data+"\n")
      
   def handle(self, data):
     """ Use this for testing/debugging of commands without server """
@@ -79,11 +72,14 @@ if __name__ == "__main__":
 
   srv = MonitorServer()
 
+  def log_msg(name, is_error, line):
+    print line
+
   #TODO: Put in DB
   MONITORS = (
-    #ProcessMonitor("run_tts.py", srv.push_message),
-    #ProcessMonitor("main.py", srv.push_message),
-    ProcessMonitor("run_sockets.py", srv.push_message),
+    ProcessMonitor("run_tts.py", srv.push_message),
+    ProcessMonitor("main.py", srv.push_message),
+    ProcessMonitor("run_sockets.py", log_msg),
   )
 
   print "Starting process daemons"
@@ -94,14 +90,17 @@ if __name__ == "__main__":
   print "Starting up server"
   t = threading.Thread(target = srv.serve_forever)
   t.start()
-  raw_input("Enter to exit")
-  srv.shutdown()
-  srv.server_close()
-  srv.running = False
-  print "Server shut down, waiting for child processes..."
-  for mon in MONITORS:
-    mon.shutdown()
-    mon.join()
+  try:
+    raw_input("Enter to exit")
+  finally:
+    srv.shutdown()
+    srv.server_close()
+    srv.running = False
+    print "Server shut down, waiting for child processes..."
+    for mon in MONITORS:
+      mon.shutdown()
+    for mon in MONITORS:
+      mon.join()
 
 
 
