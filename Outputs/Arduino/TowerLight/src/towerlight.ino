@@ -4,7 +4,7 @@
 #define PIN 6
 #define NLIGHTS 105
 #define NRING 25
-#define DEFAULT_STATE STATE_FADE
+#define DEFAULT_STATE STATE_OFF
 #define MANUAL_DROPOUT_MS 1000
 
 // Parameter 1 = number of pixels in strip

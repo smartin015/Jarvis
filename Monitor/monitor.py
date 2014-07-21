@@ -35,8 +35,9 @@ class LineReader(object):
     lines, self._buf = tmp[:-1], tmp[-1]
     return lines
 
-class ProcessMonitor():
+class ProcessMonitor(threading.Thread):
   def __init__(self, script, host = None, port=PORT, auto_restart = True):
+    threading.Thread.__init__(self)
     self.logger = logging.getLogger(self.__class__.__name__)
     self.logger.setLevel(logging.DEBUG)
     self.script = script
@@ -110,6 +111,9 @@ class ProcessMonitor():
     self.auto_restart = False
     self.stop(block=True)
 
+  def inject(self, txt):
+    self.proc.stdin.write(txt)
+
 if __name__ == "__main__":
   logging.basicConfig()
   
@@ -119,8 +123,11 @@ if __name__ == "__main__":
 
   pmon = ProcessMonitor(sys.argv[1])
   try:
-    pmon.run()
+    pmon.start()
+    while True:
+      pmon.inject(raw_input())
   finally:
     print "Server shut down, waiting for child processes..."
     pmon.shutdown()
+    pmon.join()
     print "All processes exited"

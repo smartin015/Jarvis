@@ -19,7 +19,7 @@ class RGBState():
   CMD_EXIT_MANUAL = 0xfe
 
 class RGBMultiController():
-  def __init__(self, ser, default = RGBState.STATE_FADE):
+  def __init__(self, ser, default = RGBState.STATE_OFF):
     self.ser = ser
     self.default = default
 

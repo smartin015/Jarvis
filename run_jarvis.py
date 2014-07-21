@@ -64,8 +64,13 @@ if __name__ == "__main__":
   outputs = init_outputs()
   brain = JarvisBrain()
   inputs = init_inputs(brain, outputs)
+  time.sleep(2.0)
+  print "Starting towerlights"
 
-  time.sleep(0.2)
+  outputs['tower'].setDefault(RGBState.STATE_FADE)
+  outputs['tower'].defaultState()
+
+  raw_input("Enter to continue")
 
   while True:
     #cmd = raw_input("ROOM:")

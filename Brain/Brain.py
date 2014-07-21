@@ -19,12 +19,12 @@ class JarvisBrain(JarvisBase):
     # TODO: Shift to DB
     # object name -> synonyms
     self.objectMap = {
-      'party': ['party', 'fiesta', 'rave'],
-      'movie': ['movie', 'film', 'video', 'tv', 'television'],
-      'sleep': ['sleep', 'night', 'bed'],
-      'lights': ['lights', 'light', 'lighting'],
+      'party': ['fiesta'],
+      #'movie': ['movie', 'film', 'video', 'tv', 'television'],
+      #'sleep': ['sleep', 'night', 'bed'],
+      'lights': ['lights', 'light'],
       'projector': ['projector', 'screen'],
-      'music': ['music', 'song', 'audio', 'sound'],
+      #'music': ['music', 'song', 'audio', 'sound'],
       'audio': ['audio'],
       'environment': ['ac'],
       'sideprojector': ['auxillary'],
