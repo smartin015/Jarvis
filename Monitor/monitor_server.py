@@ -1,10 +1,10 @@
-from monitor import ProcessMonitor
 import SocketServer
 import logging
 import socket
 import threading
 import json
 
+UDP_PORT = 12304
 PORT = 9195
 
 class MonitorRequestHandler(SocketServer.StreamRequestHandler):
@@ -53,59 +53,29 @@ class MonitorServer(SocketServer.ThreadingTCPServer, object):
     SocketServer.ThreadingTCPServer.__init__(self, server_address, MonitorRequestHandler)
     self.running = True
     self.logger.debug("Initialized")
-  
-  def push_message(self, name, is_error, line):
-    #self.logger.debug("Pushing %s %s %s" % (name, is_error, line))
-    self.broadcast(json.dumps({"type": "delta", "name": name, "iserr": is_error, "msg": line}))
 
   def broadcast(self, data):
     #print json.loads(data)['msg']
+    print "Broadcast: %s" % (data if len(data) <= 40 else data[:37]+"...")
     for user in self.userlist:
       user.send(data+"\n")
      
-  def handle(self, data):
-    """ Use this for testing/debugging of commands without server """
-    raise Exception("Unimplemented")
-
 if __name__ == "__main__":
   logging.basicConfig()
 
   srv = MonitorServer()
-
-  def log_msg(name, is_error, line):
-    print line
-
-  #TODO: Put in DB
-  MONITORS = (
-    ProcessMonitor("run_tts.py", srv.push_message),
-    ProcessMonitor("main.py", srv.push_message),
-    ProcessMonitor("run_sockets.py", log_msg),
-  )
-
-  print "Starting process daemons"
-  for mon in MONITORS:
-    mon.daemon = True
-    mon.start()
-
   print "Starting up server"
   t = threading.Thread(target = srv.serve_forever)
   t.start()
   try:
-    raw_input("Enter to exit")
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.bind((socket.gethostname(), UDP_PORT))
+    while True:
+      # TODO: Timeouts? Count number of requests in time period
+      data, addr = sock.recvfrom(4096) # buffer size is 1024 bytes
+      print data
+      srv.broadcast(data)
   finally:
     srv.shutdown()
     srv.server_close()
     srv.running = False
-    print "Server shut down, waiting for child processes..."
-    for mon in MONITORS:
-      mon.shutdown()
-    for mon in MONITORS:
-      mon.join()
-
-
-
-
-  
-
-  
-

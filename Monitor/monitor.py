@@ -5,6 +5,11 @@ import select
 import threading
 import signal
 import Queue
+import sys
+import socket
+import json
+import time
+from monitor_server import UDP_PORT as PORT
 
 class LineReader(object):
   def __init__(self, fd, is_err=False):
@@ -30,14 +35,16 @@ class LineReader(object):
     lines, self._buf = tmp[:-1], tmp[-1]
     return lines
 
-class ProcessMonitor(threading.Thread):
-  def __init__(self, script, callback, auto_restart = True):
-    threading.Thread.__init__(self)
-    self.logger = logging.getLogger("procmon(%s)" % (script))
+class ProcessMonitor():
+  def __init__(self, script, host = None, port=PORT, auto_restart = True):
+    self.logger = logging.getLogger(self.__class__.__name__)
     self.logger.setLevel(logging.DEBUG)
     self.script = script
-    self.callback = callback
     self.auto_restart = auto_restart
+    self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    self.host = host if host else socket.gethostname()
+    self.port = port
+    self.last_time = time.time()
 
   def run(self):
     self.start_script()
@@ -45,6 +52,11 @@ class ProcessMonitor(threading.Thread):
       self.proc.poll()
       if self.proc.returncode is not None:
         self.logger.warn("Process exited (code %d)" % self.proc.returncode)
+        self.broadcast(json.dumps({
+          "type": "delta", 
+          "name": self.script, 
+          "msg": "Process exited (code %d)" % self.proc.returncode
+        }))
         if self.auto_restart:
           self.start_script()
         else:
@@ -52,16 +64,33 @@ class ProcessMonitor(threading.Thread):
           return
 
       ready, _, _ = select.select(self.readable, [], [], 10.0)
-      if not ready:
-        continue
-      for stream in ready:
-        lines = stream.readlines()
-        if lines is None:
-          # got EOF on this stream
-          self.readable.remove(stream)
-          continue
-        for line in lines:
-          self.callback(self.script, stream.is_error(), line)
+      if ready:
+        for stream in ready:
+          lines = stream.readlines()
+          if lines is None:
+            # got EOF on this stream
+            self.logger.warn("Stream %d closed" % stream.fileno())
+            self.readable.remove(stream)
+            continue
+          for line in lines:
+            if stream.is_error():
+              sys.stderr.write(line+"\n")
+            else:
+              sys.stdout.write(line+"\n")
+            
+            self.last_time = time.time()
+
+            if "WARNING" in line or "ERROR" in line:
+              self.broadcast(json.dumps({"type": "delta", "name": self.script, "msg": line}))
+
+      self.broadcast(json.dumps({
+        "type": "heartbeat", 
+        "name": self.script, 
+        "time": self.last_time
+      }))
+
+  def broadcast(self, txt):
+    self.socket.sendto(txt, (self.host, self.port))
 
   def start_script(self):
     self.logger.info("Starting")
@@ -71,33 +100,27 @@ class ProcessMonitor(threading.Thread):
     proc_stderr = LineReader(self.proc.stderr.fileno(), is_err=True)
     self.readable = [proc_stdout, proc_stderr] 
 
-  def stop(self):
+  def stop(self, block = False):
     self.logger.info("Stopping")
     self.proc.send_signal(signal.SIGINT)   
+    if block:
+      self.proc.wait()
     
   def shutdown(self):
     self.auto_restart = False
-    self.stop()
+    self.stop(block=True)
 
 if __name__ == "__main__":
   logging.basicConfig()
+  
+  if len(sys.argv) != 2:
+    print "Usage: %s <proccess.py>" % sys.argv[0]
+    sys.exit(-1)
 
-  def print_cb(name, is_error, line):
-    print "%s %s %s" % (name, is_error, line)
-      
-  #TODO: Put in DB
-  MONITORS = (
-    #ProcessMonitor("run_tts.py", print_cb),
-    #ProcessMonitor("main.py", print_cb),
-    ProcessMonitor("run_sockets.py", print_cb),
-  )
-
-  # Start each process 
-  for mon in MONITORS:
-    mon.start()
-
-  raw_input("Enter to exit")
-
-  for mon in MONITORS:
-    mon.stop()
-
+  pmon = ProcessMonitor(sys.argv[1])
+  try:
+    pmon.run()
+  finally:
+    print "Server shut down, waiting for child processes..."
+    pmon.shutdown()
+    print "All processes exited"

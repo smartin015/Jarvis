@@ -1,40 +1,41 @@
 <html>
-<header>
+<head>
 	<title>Jarvis System Status</title>
-</header>
+</head>
 <body>
 
-  <div id="processes">
-  	<div id="proc_template" style="display:none">
-      <div id="health" style="width:30px; height:30px; border:#000000 1px solid"></div>
-      <div id="console" style="width: 100%; height:200px; overflow-y: scroll"></div>
-    </div>
+  <h1>Process health:</h1>
+  <div id="healths">
+
   </div>
+
+  <h1>Error log:</h1>
+  <div id="console" style="width: 100%; height:220px; border: 1px black solid;"></div>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
   <script src="http://www.google.com/jsapi"></script>
   <script src="http://jquery-json.googlecode.com/files/jquery.json-2.2.min.js"></script>
   <script src="http://jquery-websocket.googlecode.com/files/jquery.websocket-0.0.1.js"></script>
   <script>
     $(function() {
+      var nlogs = 0;
+      var MAX_LOG = 10;
+      var ALERT_MS = 30000;
+      var procs = {};
 
-      function setupProcess(name) {
-        var proc = $("#proc_template").clone();
-        proc.attr("id", name);
-        $("#processes").append(proc);
-        proc.css("display", "block");
-        console.log("Displayed");
-        return proc;
-      }
-
-      function appendLog(procdiv, text, is_err) {
+      function appendLog(text, is_err) {
         var lines = text.split("\n");
         for (i in lines) {
           var line = lines[i];
           var logline =  $("<div>" + line + "</div>");
-          var console = procdiv.children("#console");
-          console.append(logline);
+          $("#console").append(logline);
           if (line.indexOf("ERROR") != -1) {
             logline.css("font-weight: bold")
+          }
+          nlogs++;
+
+          while (nlogs > MAX_LOG) {
+            $("#console > div:first-child").remove();
+            nlogs--;
           }
 
         }
@@ -54,29 +55,44 @@
             console.log("Bad health state");
         }
       }
-      
-      //setHealth(2);
-      //appendLog("Test message\nTestestest");
-       
-
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/status", {
         events: {
           delta: function(e) {
-            var procname = e.name.split('.')[0];
-            var procdiv = $("#"+procname);
-            if (!procdiv.length) {
-              procdiv = setupProcess(procname);
-            }
-            console.log(procdiv);
-
-            console.log("Div done");
-
-            appendLog(procdiv, e.msg, e.iserr);
+            appendLog(e.msg);
+          },
+          heartbeat: function(e) {
+            var name = e.name.replace(/^.*[\\\/]/, ''); //Remove path prefixes (if any)
+            var procname = name.split('.')[0]; //Remove file extensions (if any)
+            procs[procname] = [e.time*1000, (new Date()).getTime()];
+            console.log("Updated health for " + procname);
           }
         }
       });
+
+      setInterval(function() {
+        for (procname in procs) {
+          var msg_time = procs[procname][0];
+          var beat_time = procs[procname][1];
+
+          var health = $("#healths > #"+procname);
+          if (health.size() == 0) {
+            health = $("<div id=\""+procname+"\">"+procname+"</div>");
+            health.appendTo("#healths");
+          }
+
+          var t = (new Date()).getTime();
+          
+          if (t - beat_time > ALERT_MS) {
+            health.css("background-color", "FF0000");
+          } else if (t - msg_time > ALERT_MS) {
+            health.css("background-color", "FFFF00");
+          } else {
+            health.css("background-color", "00FF00");
+          }
+        }
+      }, 3000);
     });
 	</script>
 </body>

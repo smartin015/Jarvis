@@ -12,7 +12,7 @@ class MonitorClient():
 
   def __init__(self, ws_request, host, port=PORT):
     self.logger = logging.getLogger(self.__class__.__name__)
-    self.logger.setLevel(logging.DEBUG)
+    self.logger.setLevel(logging.INFO)
     self.servers = []
     self.q = Queue.Queue()
     self.request = ws_request
@@ -62,13 +62,23 @@ class MonitorClient():
           self.logger.warn("Server connection closed")
           return
 
-        self.logger.debug("Got %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
+        self.logger.debug(((msg[:40] + '..') if len(msg) > 40 else msg))
         self.logger.debug("Adding message to queue")
         self.q.put(msg)
 
       except socket.timeout:
         continue
   
+  def handle_print(self):
+    # Use when testing, no websockets
+    while True:
+      try:
+        msg = self.q.get(True, 5.0)
+      except Queue.Empty:
+        continue
+
+      print msg
+
   def handle_ws(self):
     self.receiver = MessageReceiver(self.request, self.send_to_server)
     while not self.receiver._stop_requested:
@@ -81,3 +91,8 @@ class MonitorClient():
       #self.logger.debug("Sent %s" % ((msg[:40] + '..') if len(msg) > 40 else msg))
       self.logger.debug("Sent %s" % msg)
 
+
+if __name__ == "__main__":
+  logging.basicConfig()
+  con = MonitorClient(None, socket.gethostname())
+  con.handle_print()
