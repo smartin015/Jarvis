@@ -1,3 +1,3 @@
 from remote_client import send_remote_cmd
 
-send_remote_cmd("TheMothership", "run_holodeck.py Scott")
+send_remote_cmd("TheMothership", "holodeck|run_holodeck.py Scott")

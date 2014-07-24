@@ -126,9 +126,9 @@ class HolodeckBase(HolodeckServer):
     return self.tween_blend(self.tbot, prev, mid, final)
 
   def sound(self, sounds):
-    """
     (ambient, effects) = sounds
     (last_ambient, last_effects) = self.last_sounds
+
     for s in effects:
       if s not in last_effects:
         print "playing", s
@@ -149,5 +149,3 @@ class HolodeckBase(HolodeckServer):
         print "stopping", s
         self.devices['audio'].fadeout_fast(s)
     self.last_sounds = sounds
-    """
-    pass
