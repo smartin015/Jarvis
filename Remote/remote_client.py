@@ -14,9 +14,9 @@ def get_port_for(host):
   
   raise Exception("Remote \"%s\" not found in config" % host)
 
-def send_remote_cmd(host, cmd):    
+def send_remote_cmd(host, name, cmd):    
   s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  s.sendto(cmd, (host, get_port_for(host)))
+  s.sendto(name + RemoteClient.SEP + cmd, (host, get_port_for(host)))
 
 class RemoteClient(threading.Thread):
   def __init__(self):

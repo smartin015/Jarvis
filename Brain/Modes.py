@@ -87,7 +87,7 @@ class HolodeckMode(ModeObject):
    h.setup()
 
    # Start holodeck on Scott PC
-   send_remote_cmd("TheMothership", "run_holodeck.py Scott")
+   send_remote_cmd("TheMothership", "holodeck", "run_holodeck.py Scott")
 
    while self.mode_on:
      h.update()
