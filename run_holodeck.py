@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import logging
 import sys
+import time
 
 if __name__ == "__main__":
 
@@ -18,8 +19,10 @@ if __name__ == "__main__":
   if deckname == "Jarvis":
     from run_jarvis import init_outputs
     outputs = init_outputs()
+    time.sleep(2.0)
 
   mod = __import__('Holodeck.Decks', globals(), locals(), [deckname], -1)
   h = getattr(mod, sys.argv[1]).Holodeck(outputs)
+  h.setup()
   h.mainloop()
 

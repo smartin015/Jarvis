@@ -1,4 +1,5 @@
 from JarvisBase import JarvisBase
+from Remote.remote_client import send_remote_cmd
 from Holodeck.Decks.Jarvis import Holodeck
 import threading
 
@@ -80,11 +81,13 @@ class HolodeckMode(ModeObject):
   }
 
   def run(self, outputs, words, origin, objects):
+
    # Start holodeck on Jarvis
    h = Holodeck(outputs)
    h.setup()
 
-   # TODO: Start holodeck on Scott PC
+   # Start holodeck on Scott PC
+   send_remote_cmd("TheMothership", "run_holodeck.py Scott")
 
    while self.mode_on:
      h.update()

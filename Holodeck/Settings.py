@@ -1,5 +1,5 @@
 
-SERVER_LIST = ["Jarvis", "ToddTrooper", "TheMothership"]
+SERVER_LIST = ["Jarvis", "TheMothership"]
 SERVER_PORT = 9601
 
 MASTER_SERVER = "Jarvis"
