@@ -17,7 +17,7 @@ class Holodeck(HolodeckServer):
   EMPTY_IMG = ["", "clear", "day"]
 
   def __init__(self, devices):
-    self.devices = devices['livingroom']
+    self.devices = devices
     self.devices['proj'] = scl()
 
     time.sleep(2.0) # Need delay at least this long for arduino to startup
@@ -144,9 +144,10 @@ class Holodeck(HolodeckServer):
 
 
 if __name__ == "__main__":
-  from main import init_outputs
+  from run_jarvis import init_outputs
   devices = init_outputs()
   # TODO: Base this on arduino communication to the computer
   h = Holodeck(devices) 
+  h.setup()
   h.mainloop()
 

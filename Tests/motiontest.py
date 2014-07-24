@@ -3,17 +3,16 @@ import serial
 import time
 logging.basicConfig()
 
+from Inputs.USBDiscovery import get_connected_usb_devices
 from Outputs.RFController import RFController
 
-ser = serial.Serial("/dev/ttyUSB5", 9600)
-con = RFController(serial.Serial("/dev/ttyUSB1", 115200), "hackspace")
+USB_ID = "A602KAB4"
+path = get_connected_usb_devices()[USB_ID]
 
-MAX_LEVEL = 128
-MIN_LEVEL = 0
-level = MIN_LEVEL
-target = MIN_LEVEL
-TIMEOUT = 10.0
-last_on = 0
+
+
+ser = serial.Serial(path, 9600)
+con = RFController(serial.Serial("/dev/ttyUSB1", 115200), "hackspace")
 while True:
   delta = target - level
   currtime = time.time()

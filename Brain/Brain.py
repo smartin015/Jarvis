@@ -14,17 +14,16 @@ class JarvisBrain(JarvisBase):
     JarvisBase.__init__(self)
     self.l = threading.Lock()
     self.last_command_time = datetime.datetime.now()
+    self.commanded_mode = None #Used to suppress non-mode commands when mode is running
     self.logger.info("Initializing Jarvis Virtual Control Matrix")
     
     # TODO: Shift to DB
     # object name -> synonyms
     self.objectMap = {
       'party': ['fiesta'],
-      #'movie': ['movie', 'film', 'video', 'tv', 'television'],
       #'sleep': ['sleep', 'night', 'bed'],
       'lights': ['lights', 'light'],
       'projector': ['projector', 'screen'],
-      #'music': ['music', 'song', 'audio', 'sound'],
       'audio': ['audio'],
       'environment': ['ac'],
       'sideprojector': ['auxillary'],
@@ -57,15 +56,29 @@ class JarvisBrain(JarvisBase):
     c = datetime.datetime.now() - self.last_command_time 
     return (c.days * 24 * 60 * 60 + c.seconds) * 1000 + c.microseconds / 1000.0
 
-  def processInput(self, outputs, command):
+  def processInput(self, outputs, command, origin):
     target = self.findTarget(command)
     #TODO: Potential concurrency issues - should really be using a lock here.
     self.l.acquire(True)
     if target and self.timeDelta() > JarvisBrain.ABSORB_MS:
       self.last_command_time = datetime.datetime.now()
       self.l.release()
+
+      if self.commanded_mode and self.commanded_mode != target:
+        self.logger.info("Suppressing command (still in mode %s)" % self.commanded_mode)
+        return False
+
       self.logger.info("Commanding " + target)
-      t = threading.Thread(target=self.objects[target].parse, args=(outputs, command))
+      if hasattr(self.objects[target], "MODE"):
+        args=(outputs, command, origin, self.objects)
+
+        if self.commanded_mode:
+          self.commanded_mode = None
+        else:
+          self.commanded_mode = target
+      else:
+        args=(outputs, command, origin)
+      t = threading.Thread(target=self.objects[target].parse, args=args)
       t.daemon = True
       t.start()
       return True
@@ -79,6 +92,6 @@ if __name__ == "__main__":
   
   cmd = raw_input('Your command, sir: ')
   while cmd != "":
-    jarvis.processInput(None, cmd.split(" "))
+    jarvis.processInput(None, cmd.split(" "), "console")
     cmd = raw_input('Your command, sir: ')
   

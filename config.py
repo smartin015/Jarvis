@@ -12,7 +12,7 @@ PATHS = _dict_from_query(_session.query(Path), 'id', 'path')
 
 REMOTES = _session.query(Remote).all()
 
-OUTPUTS = _session.query(USBOutput).all()
+OUTPUTS = _session.query(USBDevice).all()
 
 TTS = _session.query(TTSInput).all()
 

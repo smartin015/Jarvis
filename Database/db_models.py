@@ -27,8 +27,8 @@ class RFModule(Base):
   id = Column(String(RF_ID_LEN), primary_key=True)
   room_id = Column(String)
 
-class USBOutput(Base):
-  __tablename__ = 'usb_outputs'
+class USBDevice(Base):
+  __tablename__ = 'usb_devices'
 
   id = Column(String, primary_key=True)
   name = Column(String)

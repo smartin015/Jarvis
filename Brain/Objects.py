@@ -2,68 +2,92 @@
 from JarvisBase import JarvisBase
 from Outputs.RGBMultiController import RGBState
 import time
+from config import RF
 
-class BinaryObject(JarvisBase):
-  def __init__(self):
-    JarvisBase.__init__(self)
-    self.state = 0
-  
+class ToggleObject(JarvisBase):
   def isValid(self, words):
-   return ('on' in words) or ('off' in words)
-     
-  def parse(self, outputs, words):
+    return True
+
+  def parse(self, outputs, words, origin):
     outputs['tower'].setState(RGBState.STATE_CHASE)
     t = time.time()
-    self.play_sound("confirm.wav")
-    if not self.state:
-      self.turnOn(outputs)
-      self.state = 1
+
+    if origin != 'console':
+      self.play_sound("confirm.wav")
+
+    self.toggle(outputs, words, origin)
+    self.logger.debug("Toggled")
+
+    while (time.time() - t < 1.0):
+      time.sleep(0.1)
+    outputs['tower'].defaultState()
+
+  def toggle(self, outputs, words, origin):
+    raise Exception("Unimplemented")
+
+class BinaryObject(JarvisBase):
+  ON = "on"
+  OFF = "off"
+
+  def __init__(self):
+    JarvisBase.__init__(self)
+    self.state = self.OFF
+  
+  def isValid(self, words):
+   return True
+  
+  def setState(self, state, outputs, words, origin):
+    if state == self.ON:
+      if self.state == self.OFF:
+        self.turnOn(outputs, words, origin)
+        self.state = self.ON
+      else:
+        self.logger.info("Already on")
+    elif state == self.OFF:
+      if self.state == self.ON:
+        self.turnOff(outputs, words, origin)
+        self.state = self.OFF
+      else:
+        self.logger.info("Already off")
     else:
-      self.turnOff(outputs)
-      self.state = 0
+      raise Exception("Invalid state")
+
+  def getState(self):
+    return self.state
+
+  def parse(self, outputs, words, origin):
+    outputs['tower'].setState(RGBState.STATE_CHASE)
+    t = time.time()
+
+    if origin != 'console':
+      self.play_sound("confirm.wav")
+
+    if self.state == self.OFF:
+      self.turnOn(outputs, words, origin)
+      self.state = self.ON
+    else:
+      self.turnOff(outputs, words, origin)
+      self.state = self.OFF
 
     while (time.time() - t < 1.0):
       time.sleep(0.1)
     outputs['tower'].defaultState()
       
-  def turnOff(self, outputs):
-    self.logger.error("TODO: Implement turnOff")
+  def turnOff(self, outputs, words, origin):
+    raise Exception("Unimplemented")
 
-  def turnOn(self, outputs):
-    self.logger.error("TODO: Implement turnOn")
+  def turnOn(self, outputs, words, origin):
+    raise Exception("Unimplemented")
 
-class AC(BinaryObject):
-  def isValid(self, words):
-    return True
-
-  def parse(self, outputs, words):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    self.play_sound("confirm.wav")
-    rf = outputs['RF']
-    rf.send_IR("AirConditionerPower.txt")
-    self.logger.debug("Toggled")
-    outputs['tower'].defaultState()
-
-class MainLight(BinaryObject):
-  def isValid(self, words):
-    return True
-
-  def parse(self, outputs, words):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    self.play_sound("confirm.wav")
-    outputs['tracklight'].toggle()
-    time.sleep(1.0)
-    self.logger.debug("Toggled")
-    outputs['tower'].defaultState()
+class AC(ToggleObject):
+  def toggle(self, outputs, words, origin):
+    outputs['RF'].send_IR("AirConditionerPower.txt")
       
 class Audio(BinaryObject):
-  def isValid(self, words):
-    return True
-
-  def turnOff(self, outputs):
+  def turnOff(self, outputs, words, origin):
     self.chan(1, outputs['RF'])
 
-  def turnOn(self, outputs):
+  def turnOn(self, outputs, words, origin):
     self.chan(2, outputs['RF'])
 
   def chan(self, c, rf):
@@ -73,29 +97,20 @@ class Audio(BinaryObject):
     time.sleep(0.5)
 
 class AuxProjector(BinaryObject):
-  def isValid(self, words):
-    return True
-
-  def turnOn(self, outputs):
-    self.togglePower(outputs)
-
-  def turnOff(self, outputs):
-    self.togglePower(outputs)
-
-  def togglePower(self, outputs):
+  def toggle(self, outputs, words, origin):
     rf = outputs['RF']
     rf.send_IR("SideProjectorPower.txt")
     time.sleep(0.5)
     rf.send_IR("SideProjectorPower.txt")
-    
+
+  def turnOn(self, outputs, words, origin):
+    self.toggle(outputs, words, origin)
+
+  def turnOff(self, outputs, words, origin):
+    self.toggle(outputs, words, origin)
 
 class Projector(BinaryObject):
-  name = "Projector"
-
-  def isValid(self, words):
-    return True
-
-  def parse(self, outputs, words):
+  def parse(self, outputs, words, origin):
     outputs['tower'].setState(RGBState.STATE_CHASE)
     self.play_sound("confirm.wav")
 
@@ -103,28 +118,32 @@ class Projector(BinaryObject):
 
     if "screen" in words:
       # Just do screen, not projector
-      if not self.state:
+      if self.state == self.OFF:
         self.screendown(rf)
+        self.state = self.ON
       else:
         self.screenup(rf)
+        self.state = self.OFF
     else:
-      if not self.state:
-        self.turnOn(rf)
+      if self.state == self.OFF:
+        self.turnOn(outputs, words, origin)
+        self.state = self.ON
       else:
-        self.turnOff(rf)
-    self.state = 1 - self.state
+        self.turnOff(outputs, words, origin)
+        self.state = self.OFF
 
     outputs['tower'].defaultState()
 
-
-  def turnOn(self, rf):
+  def turnOn(self, outputs, words, origin):
+    rf = outputs['RF']
     self.logger.info("Pressing power button")
     self.powerbtn(rf)
     self.logger.info("Lowering screen")
     self.screendown(rf)
     self.logger.info("Done")
 
-  def turnOff(self, rf):
+  def turnOff(self, outputs, words, origin):
+    rf = outputs['RF']
     self.logger.info("Pressing power button")
     self.powerbtn(rf)
     self.logger.info("Raising screen")
@@ -142,4 +161,26 @@ class Projector(BinaryObject):
   def powerbtn(self, rf):
     rf.send_IR("ProjectorPower.txt")
     rf.send_IR("ProjectorPower.txt")
+
+class MainLight(BinaryObject):
+  def __init__(self):
+    BinaryObject.__init__(self)
+    self.hacklight = False
+
+  def turnOn(self, outputs, words, origin):
+    self.toggle(outputs, words, origin)
+
+  def turnOff(self, outputs, words, origin):
+    self.toggle(outputs, words, origin)
+
+  def toggle(self, outputs, words, origin):
+    if origin == "livingroom":
+      outputs['tracklight'].toggle()
+    elif origin == "hackspace" or "hack" in words:
+      self.toggle_hacklight(outputs)
+
+  def toggle_hacklight(self, outputs):
+    val = 255 if self.hacklight else 0
+    outputs['RF'].send_cmd(RFController.FET1, val, RF["hackspace"])
+    self.hacklight = not self.hacklight
 

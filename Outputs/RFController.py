@@ -36,8 +36,11 @@ class RFController(Controller):
     self.set_default_target(default_target)
 
   def set_default_target(self, tgt):
-    self.default_target = RF[tgt]
-    self.write(self.default_target)
+    self.default_target = tgt
+    self.set_target(self.default_target)
+
+  def set_target(self,tgt):
+    self.write(RF[tgt])
 
   def send_cmd(self, cmd, val, target = None):
     if val == "ON":
@@ -45,14 +48,14 @@ class RFController(Controller):
     elif val == "OFF":
       val = 0x00
 
-    if target:
+    if target and target != self.default_target:
       self.set_target(target)
     
     self.logger.debug("Sending " + str(cmd) + str(val))
     chars = chr(cmd) + struct.pack('>h', int(val)) + ('\0' * (self.DATA_LEN - 3))
     self.write(chars)
 
-    if target:
+    if target and target != self.default_target:
       self.set_target(self.default_target)
 
   def send_IR(self, fil, target = None):

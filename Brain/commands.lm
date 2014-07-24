@@ -1,4 +1,4 @@
-Language model created by QuickLM on Mon Jul 21 14:25:45 EDT 2014
+Language model created by QuickLM on Wed Jul 23 17:37:59 EDT 2014
 Copyright (c) 1996-2010 Carnegie Mellon University and Alexander I. Rudnicky
 
 The model is in standard ARPA format, designed by Doug Paul while he was at MITRE.
@@ -7,73 +7,66 @@ The code that was used to produce this language model is available in Open Sourc
 Please visit http://www.speech.cs.cmu.edu/tools/ for more information
 
 The (fixed) discount mass is 0.5. The backoffs are computed using the ratio method.
-This model based on a corpus of 13 sentences and 15 words
+This model based on a corpus of 12 sentences and 13 words
 
 \data\
-ngram 1=15
-ngram 2=26
-ngram 3=15
+ngram 1=13
+ngram 2=23
+ngram 3=13
 
 \1-grams:
--0.7999 </s> -0.3010
--0.7999 <s> -0.2197
--1.9138 AC -0.2261
--1.9138 AIR -0.2957
--1.9138 AUDIO -0.2261
--1.9138 AUXILLARY -0.2261
--1.9138 CONDITIONING -0.2261
--1.9138 FIESTA -0.2261
--1.9138 JARVIS -0.2261
--1.9138 LIGHT -0.2261
--1.9138 LIGHTS -0.2261
--1.9138 MUSIC -0.2261
--1.9138 PARTY -0.2261
--1.6128 PROJECTOR -0.2133
--1.6128 SCREEN -0.2261
+-0.7901 </s> -0.3010
+-0.7901 <s> -0.2171
+-1.8692 AC -0.2242
+-1.8692 AUDIO -0.2242
+-1.8692 AUXILLARY -0.2242
+-1.8692 FIESTA -0.2242
+-1.8692 HOLODECK -0.2242
+-1.8692 JARVIS -0.2242
+-1.8692 LIGHT -0.2242
+-1.8692 LIGHTS -0.2242
+-1.8692 MUSIC -0.2242
+-1.5682 PROJECTOR -0.2099
+-1.5682 SCREEN -0.2242
 
 \2-grams:
--1.4150 <s> AC 0.0000
--1.4150 <s> AIR 0.0000
--1.4150 <s> AUDIO 0.0000
--1.4150 <s> AUXILLARY 0.0000
--1.4150 <s> FIESTA 0.0000
--1.4150 <s> JARVIS 0.0000
--1.4150 <s> LIGHT 0.0000
--1.4150 <s> LIGHTS 0.0000
--1.4150 <s> MUSIC 0.0000
--1.4150 <s> PARTY 0.0000
--1.1139 <s> PROJECTOR 0.0000
--1.4150 <s> SCREEN 0.0000
+-1.3802 <s> AC 0.0000
+-1.3802 <s> AUDIO 0.0000
+-1.3802 <s> AUXILLARY 0.0000
+-1.3802 <s> FIESTA 0.0000
+-1.3802 <s> HOLODECK 0.0000
+-1.3802 <s> JARVIS 0.0000
+-1.3802 <s> LIGHT 0.0000
+-1.3802 <s> LIGHTS 0.0000
+-1.3802 <s> MUSIC 0.0000
+-1.0792 <s> PROJECTOR 0.0000
+-1.3802 <s> SCREEN 0.0000
 -0.3010 AC </s> -0.3010
--0.3010 AIR CONDITIONING 0.0000
 -0.3010 AUDIO </s> -0.3010
 -0.3010 AUXILLARY </s> -0.3010
--0.3010 CONDITIONING </s> -0.3010
 -0.3010 FIESTA </s> -0.3010
+-0.3010 HOLODECK </s> -0.3010
 -0.3010 JARVIS </s> -0.3010
 -0.3010 LIGHT </s> -0.3010
 -0.3010 LIGHTS </s> -0.3010
 -0.3010 MUSIC </s> -0.3010
--0.3010 PARTY </s> -0.3010
 -0.6021 PROJECTOR </s> -0.3010
 -0.6021 PROJECTOR SCREEN 0.0000
 -0.3010 SCREEN </s> -0.3010
 
 \3-grams:
 -0.3010 <s> AC </s>
--0.3010 <s> AIR CONDITIONING
 -0.3010 <s> AUDIO </s>
 -0.3010 <s> AUXILLARY </s>
 -0.3010 <s> FIESTA </s>
+-0.3010 <s> HOLODECK </s>
 -0.3010 <s> JARVIS </s>
 -0.3010 <s> LIGHT </s>
 -0.3010 <s> LIGHTS </s>
 -0.3010 <s> MUSIC </s>
--0.3010 <s> PARTY </s>
 -0.6021 <s> PROJECTOR </s>
 -0.6021 <s> PROJECTOR SCREEN
 -0.3010 <s> SCREEN </s>
--0.3010 AIR CONDITIONING </s>
 -0.3010 PROJECTOR SCREEN </s>
 
 \end\

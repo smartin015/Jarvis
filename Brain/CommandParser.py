@@ -13,7 +13,7 @@ import gst
 from JarvisBase import JarvisBase
 
 class CommandParser(JarvisBase):
-  INJECTION_DELAY = 0.05
+  INJECTION_DELAY = 0.1
   SPEECH_TIMEOUT = 0.5
 
   def __init__(self, isValid, callback, trigger="jarvis", maxlength=10):

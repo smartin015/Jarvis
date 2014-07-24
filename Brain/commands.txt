@@ -3,11 +3,10 @@ jarvis
 lights
 light
 projector
-party
 fiesta
-air conditioning
 AC
 screen
 projector screen
 audio
 auxillary
+holodeck
