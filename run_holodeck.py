@@ -12,7 +12,14 @@ if __name__ == "__main__":
   if len(sys.argv) != 2:
     raise Exception("Usage: %s <holodeck>" % sys.argv[0])
 
-  mod = __import__('Holodeck.Decks', globals(), locals(), [sys.argv[1]], -1)
-  h = getattr(mod, sys.argv[1]).Holodeck(init_outputs())
+  # TODO: Should probably have an init profile per-machine. Maybe a class per machine, as in Decks?
+  deckname = sys.argv[1]
+  outputs = {}
+  if deckname == "Jarvis":
+    from run_jarvis import init_outputs
+    outputs = init_outputs()
+
+  mod = __import__('Holodeck.Decks', globals(), locals(), [deckname], -1)
+  h = getattr(mod, sys.argv[1]).Holodeck(outputs)
   h.mainloop()
 
