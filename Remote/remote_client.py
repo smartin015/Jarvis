@@ -3,7 +3,7 @@ import threading
 import socket
 import logging
 import threading
-import os
+import subprocess
 from config import REMOTES
 
 def get_port_for(host):
@@ -33,7 +33,9 @@ class RemoteClient(threading.Thread):
       self.s.close()
 
   def execute(self, cmd):
-    print os.popen("python Scripts/%s" % cmd).read()
+    (out, err) = subprocess.Popen(["python"] + cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+    print out
+    print err
       
   def run(self):
     try:

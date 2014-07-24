@@ -10,7 +10,7 @@ from Holodeck.Server import HolodeckServer
 import time
 
 class Holodeck(HolodeckServer):
-  def __init__(self):
+  def __init__(self, devices):
     self.devices = {
     }
     HolodeckServer.__init__(self)

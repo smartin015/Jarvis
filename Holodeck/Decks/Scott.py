@@ -12,11 +12,11 @@ from Holodeck.Server import HolodeckServer
 import time
 
 class Holodeck(HolodeckServer):
-  def __init__(self):
-    self.devices = {
-      "proj": scl(),
-      "audio": AudioController(asset_path="Holodeck/Sounds/"),
-    }
+  def __init__(self, devices={}):
+    self.devices = devices
+    self.devices['proj'] = scl()
+    self.devices['audio'] = AudioController(asset_path="Holodeck/Sounds/")
+    
     self.last_sounds = ([],[])
     self.img_path = "Holodeck/Images/"
 
