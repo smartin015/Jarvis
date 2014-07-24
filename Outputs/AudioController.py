@@ -35,11 +35,20 @@ class AudioController(Controller):
   def get_asset_list(self):
     return self.sounds.keys()
 
+  def check_sound(self, snd):
+    if not self.sounds.get(snd):
+      self.logger.error("Could not find sound %s" % snd)
+      return False
+    else:
+      return True
+    
   def play(self, snd):
+    if not self.check_sound(snd): return
     self.logger.info("Playing %s" % snd)
     self.sounds[snd].play() 
 
   def fadein(self, snd, loops=-1):
+    if not self.check_sound(snd): return
     self.logger.info("Playing ambient %s" % snd)
     self.sounds[snd].play(loops=loops, fade_ms=self.FADE_MS) 
     
@@ -47,10 +56,12 @@ class AudioController(Controller):
     raise Exception("Unimplemented")
 
   def fadeout_fast(self, snd):
+    if not self.check_sound(snd): return
     self.logger.info("Fading out %s" % snd)
     self.sounds[snd].fadeout(self.FADE_FAST_MS)
     
   def fadeout(self, snd):
+    if not self.check_sound(snd): return
     self.logger.info("Fading out %s" % snd)
     self.sounds[snd].fadeout(self.FADE_MS)
 
@@ -59,6 +70,7 @@ class AudioController(Controller):
     pygame.mixer.stop()
 
   def is_playing(self, snd):
+    if not self.check_sound(snd): return
     return (self.sounds[snd].get_num_channels() > 0)
 
   

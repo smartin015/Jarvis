@@ -96,7 +96,7 @@ class ProcessMonitor(threading.Thread):
   def start_script(self):
     self.logger.info("Starting")
     PIPE = subprocess.PIPE
-    self.proc = subprocess.Popen(["/usr/bin/python", self.script], bufsize=0, stdout=PIPE, stderr=PIPE, stdin=PIPE)
+    self.proc = subprocess.Popen(["python"] + self.script.split(), bufsize=0, stdout=PIPE, stderr=PIPE, stdin=PIPE)
     proc_stdout = LineReader(self.proc.stdout.fileno())
     proc_stderr = LineReader(self.proc.stderr.fileno(), is_err=True)
     self.readable = [proc_stdout, proc_stderr] 
