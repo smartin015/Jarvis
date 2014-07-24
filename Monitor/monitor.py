@@ -81,7 +81,7 @@ class ProcessMonitor(threading.Thread):
             
             self.last_time = time.time()
 
-            if "WARNING" in line or "ERROR" in line:
+            if "DEBUG" not in line and "INFO" not in line:
               self.broadcast(json.dumps({"type": "delta", "name": self.script, "msg": line}))
 
       self.broadcast(json.dumps({
@@ -96,7 +96,7 @@ class ProcessMonitor(threading.Thread):
   def start_script(self):
     self.logger.info("Starting")
     PIPE = subprocess.PIPE
-    self.proc = subprocess.Popen(["/usr/bin/python", self.script], bufsize=0, stdout=PIPE, stderr=PIPE)
+    self.proc = subprocess.Popen(["/usr/bin/python", self.script], bufsize=0, stdout=PIPE, stderr=PIPE, stdin=PIPE)
     proc_stdout = LineReader(self.proc.stdout.fileno())
     proc_stderr = LineReader(self.proc.stderr.fileno(), is_err=True)
     self.readable = [proc_stdout, proc_stderr] 
@@ -118,7 +118,7 @@ if __name__ == "__main__":
   logging.basicConfig()
   
   if len(sys.argv) != 2:
-    print "Usage: %s <proccess.py>" % sys.argv[0]
+    print "Usage: %s <process.py>" % sys.argv[0]
     sys.exit(-1)
 
   pmon = ProcessMonitor(sys.argv[1])

@@ -48,8 +48,8 @@ void loop(){
       // If we have more than DATA_LEN in data, 
       // we must be trying to set TADDR
       Mirf.setTADDR((byte *)data);
-      Serial.print("SET TARGET TO ");
-      Serial.println(data);
+      //Serial.print("SET TARGET TO ");
+      //Serial.println(data);
       for (int i = 0; i < SERIAL_LEN; i++) {
         data[i] = 0;
       }

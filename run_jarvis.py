@@ -23,6 +23,7 @@ from Outputs.RFController import RFController
 from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState
+from Outputs.RunnerLightsController import RunnerLightsController
 from serial import Serial
 
 def init_outputs():
@@ -41,14 +42,16 @@ def init_outputs():
 def init_inputs(brain, outputs):
   logger.info("Initializing input devices")
 
-  def cb(data):
-    return brain.processInput(outputs, data)
+  def gen_cb(room_id):
+    def cb(data):
+      return brain.processInput(outputs, data, room_id)
+    return cb
 
   inputs = {}
   for i in config.TTS:
     if not inputs.get(i.room_id):
       inputs[i.room_id] = {
-        "parser": CommandParser(brain.isValid, cb),
+        "parser": CommandParser(brain.isValid, gen_cb(i.room_id)),
         "tts": []
       }
 
@@ -57,6 +60,12 @@ def init_inputs(brain, outputs):
     t.start()
     
     inputs[i.room_id]['tts'].append(t)
+  
+  # Allow custom input for keyboards
+  inputs['console'] = {
+    "parser": CommandParser(brain.isValid, gen_cb('console')),
+  }
+
     
   return inputs
 
@@ -65,12 +74,16 @@ if __name__ == "__main__":
   brain = JarvisBrain()
   inputs = init_inputs(brain, outputs)
   time.sleep(2.0)
-  print "Starting towerlights"
+
+  logging.warn("Starting runnerlights")
+  outputs['runnerlights'].enable(outputs['RF'])
+
+  logging.warn("Starting towerlights")
 
   outputs['tower'].setDefault(RGBState.STATE_FADE)
   outputs['tower'].defaultState()
 
-  raw_input("Enter to continue")
+  logging.warn("Entering command loop")
 
   while True:
     #cmd = raw_input("ROOM:")
@@ -80,6 +93,6 @@ if __name__ == "__main__":
       logger.warn("Exiting...")
       break
     else:
-      inputs['livingroom']['parser'].inject(cmd)
+      inputs['console']['parser'].inject(cmd)
 
 

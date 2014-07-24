@@ -46,35 +46,41 @@ session.add_all([
     room_id="extra",
   ),
 
-  USBOutput(
+  USBDevice(
     id="A9MDTZJF", 
     name="RF", 
     controller="RFController", 
     rate=115200,
   ),
-  USBOutput(
+  USBDevice(
     id="A602QORA", 
     name="tracklight", 
     controller="RelayController", 
     rate=9600,
   ),
-  USBOutput(
+  USBDevice(
     id="A9MX5JNZ", 
     name="windowlight", 
     controller="RGBSingleController", 
     rate=9600,
   ),
-  USBOutput(
+  USBDevice(
     id="A70257T7", 
     name="couchlight", 
     controller="RGBSingleController", 
     rate=9600,
   ),
-  USBOutput(
+  USBDevice(
     id="A9OZNP19", 
     name="tower", 
     controller="RGBMultiController", 
     rate=115200,
+  ),
+  USBDevice(
+    id="A602KAB4",
+    name="runnerlights",
+    controller="RunnerLightsController",
+    rate=9600,
   ),
 
   TTSInput(
