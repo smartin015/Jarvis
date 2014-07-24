@@ -18,6 +18,7 @@ class Holodeck(HolodeckServer):
       "audio": AudioController(asset_path="Holodeck/Sounds/"),
     }
     self.last_sounds = ([],[])
+    self.img_path = "Holodeck/Images/"
 
     HolodeckServer.__init__(self)
 
@@ -47,6 +48,7 @@ class Holodeck(HolodeckServer):
     self.devices['proj'].set_scrn(scl.loadimg(self.img_path + scrn[0] + "/" + scrn[1] + "_" + scrn[2] + "_" + scrn[3] + ".jpg"))
      
   def sound(self, sounds):
+    """
     (ambient, effects) = sounds
     (last_ambient, last_effects) = self.last_sounds
     for s in effects:
@@ -69,7 +71,8 @@ class Holodeck(HolodeckServer):
         print "stopping", s
         self.devices['audio'].fadeout_fast(s)
     self.last_sounds = sounds
-    
+    """
+    pass
   
 
 if __name__ == "__main__":

@@ -8,6 +8,12 @@ class Room(Base):
   
   id = Column(String, primary_key=True)
 
+class Remote(Base):
+  __tablename__ = 'remotes'
+  
+  host = Column(String, primary_key=True)
+  port = Column(Integer)  
+  
 class Path(Base):
   __tablename__ = 'paths'
 

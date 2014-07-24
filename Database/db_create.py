@@ -33,6 +33,8 @@ session.add_all([
   Room(id="livingroom"),
   Room(id="hackspace"),
 
+  Remote(host="TheMothership", port=9995),
+  
   RFModule(
     id="livrm",
     room_id="livingroom", 
