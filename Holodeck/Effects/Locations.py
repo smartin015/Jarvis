@@ -35,19 +35,14 @@ def flicker(rgb, flicker = 3):
   return rgb
 
 class LocationTemplate(EffectTemplate):
-  TRANSITION_TIME = 120
+  TRANSITION_TIME = 3.0
   
   def __init__(self, pipes, active_effects, remove_cb):
     EffectTemplate.__init__(self, pipes, active_effects, remove_cb)
     self.steady_mapping = dict(
       [(k,c[0]) for (k,c) in self.get_mapping().items()]
     )
-    self.screen_transition = None
-    self.ttop = 0
-    self.tbot = 0
-    self.tfloor = 0
-    self.transition = False
-    self.prev_window_bot = None
+    self.transition_timer = time.time()
     self.handle_blacklist()
 
   def location_mapping(self):
@@ -63,11 +58,8 @@ class LocationTemplate(EffectTemplate):
         continue
       result.append(c)
     return result
-      
-  def trans_audio(self, prev):
-    prev[1].append("swoosh")
-    return prev
-    
+         
+   
   def wall_img_default(self, prev):
     prev[0] = classname_to_id(self.__class__.__name__)
     return prev
@@ -77,8 +69,16 @@ class LocationTemplate(EffectTemplate):
     return prev
     
   def audio_default(self, prev):
-    prev[0].append(classname_to_id(self.__class__.__name__))
-    return prev
+    if not self.transition_timer:
+      # Ambient audio
+      prev[0].append(classname_to_id(self.__class__.__name__))
+      return prev
+    else:
+      # Transition audio
+      prev[1].append("swoosh")
+      if self.transition_timer + self.TRANSITION_TIME < time.time():
+        self.transition_timer = None
+      return prev
   
 class ForestEffect(LocationTemplate):
 
@@ -111,6 +111,7 @@ class PlainsEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -137,6 +138,7 @@ class TundraEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -162,6 +164,7 @@ class RiverEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -187,6 +190,7 @@ class DesertEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -201,10 +205,6 @@ class DesertEffect(LocationTemplate):
   def window_bot(self, prev):
     return SAND
 
-
-
-
-    
 class WaterEffect(LocationTemplate):
 
   def setup(self):
@@ -222,6 +222,7 @@ class WaterEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
 
@@ -244,6 +245,7 @@ class JungleEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -269,6 +271,7 @@ class BeachEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):
@@ -290,6 +293,7 @@ class MountainEffect(LocationTemplate):
       P.WINDOWBOT: (self.window_bot, 1),
       P.WALLIMG: (self.wall_img_default, 1),
       P.WINDOWIMG: (self.window_img_default, 1),
+      P.SOUND: (self.audio_default, 1),
     }
 
   def floor(self, prev):

@@ -5,6 +5,7 @@ import logging
 import threading
 import subprocess
 from config import REMOTES
+from Monitor.monitor import ProcessMonitor
 
 def get_port_for(host):
   port = None
@@ -19,6 +20,8 @@ def send_remote_cmd(host, name, cmd):
   s.sendto(name + RemoteClient.SEP + cmd, (host, get_port_for(host)))
 
 class RemoteClient(threading.Thread):
+  SEP = '|'
+
   def __init__(self):
     super(RemoteClient,self).__init__()
     self.logger = logging.getLogger(self.__class__.__name__)
@@ -27,15 +30,23 @@ class RemoteClient(threading.Thread):
     self.s = None
     self.host = socket.gethostname()
     self.port = get_port_for(self.host)
+    
+    self.procs = {}
       
   def __del__(self):
     if self.s:
       self.s.close()
 
   def execute(self, cmd):
-    (out, err) = subprocess.Popen(["python"] + cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-    print out
-    print err
+    (name, cmd) = cmd.split(self.SEP)
+    if self.procs.get(name):
+      if cmd != "QUIT":
+        print "Process already running!"
+      else:
+        self.procs[name].shutdown()
+    else:
+      self.procs[name] = ProcessMonitor(cmd)
+      self.procs[name].start()
       
   def run(self):
     try:

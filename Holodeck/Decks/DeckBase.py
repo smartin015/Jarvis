@@ -148,4 +148,10 @@ class HolodeckBase(HolodeckServer):
       if s not in effects:
         print "stopping", s
         self.devices['audio'].fadeout_fast(s)
-    self.last_sounds = sounds
+        
+    # Do list-copy to prevent getting just a reference    
+    self.last_sounds = (list(ambient), list(effects))
+    
+    # Clear the sound array for the next pass through
+    del ambient[:]
+    del effects[:]
