@@ -12,8 +12,8 @@ logger.setLevel(logging.DEBUG)
 from Tests.TestSerial import TestSerial
 
 from Inputs.USBDiscovery import get_connected_usb_devices
-from Inputs.Kaicong.KaicongAudioGst import KaicongAudioSource
-from Inputs.Kaicong.KaicongVideo import KaicongVideo
+#from Inputs.Kaicong.KaicongAudioGst import KaicongAudioSource
+#from Inputs.Kaicong.KaicongVideo import KaicongVideo
 from Inputs.TTSClient import TTSClient
 
 from Brain.Brain import JarvisBrain
