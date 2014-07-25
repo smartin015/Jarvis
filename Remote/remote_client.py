@@ -6,6 +6,8 @@ import threading
 import subprocess
 from config import REMOTES
 from Monitor.monitor import ProcessMonitor
+import win32api
+import win32con
 
 def get_port_for(host):
   port = None
@@ -39,14 +41,27 @@ class RemoteClient(threading.Thread):
 
   def execute(self, cmd):
     (name, cmd) = cmd.split(self.SEP)
+    self.logger.warn("[%s] Running \"%s\"" % (name, cmd))
     if self.procs.get(name):
       if cmd != "QUIT":
         print "Process already running!"
       else:
-        self.procs[name].shutdown()
+        #self.procs[name].shutdown() # Only works in linux
+        try:
+          print "TODO: Graceful shutdown"
+          # This doesn't work.
+          win32api.GenerateConsoleCtrlEvent(win32con.CTRL_C_EVENT, 0)
+          self.procs[name].proc.wait()
+        except KeyboardInterrupt:
+          print "ignoring ctrl c"
+        self.procs[name].join()
+        del self.procs[name]
     else:
-      self.procs[name] = ProcessMonitor(cmd)
-      self.procs[name].start()
+      if cmd == "QUIT":
+        print "Process wasn't started!"
+      else:
+        self.procs[name] = ProcessMonitor(cmd, auto_restart=False)
+        self.procs[name].start()
       
   def run(self):
     try:
@@ -67,7 +82,6 @@ class RemoteClient(threading.Thread):
         self.logger.warn("Connection closed")
         return
       
-      self.logger.warn("Running \"%s\"" % msg)
       self.execute(msg)
       
         

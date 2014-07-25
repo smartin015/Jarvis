@@ -11,31 +11,16 @@ import json
 import time
 from monitor_server import UDP_PORT as PORT
 
-class LineReader(object):
-  def __init__(self, fd, is_err=False):
-    self._fd = fd
-    self._buf = ''
-    self.is_err = is_err
-
-  def is_error(self):
-    return self.is_err
-
-  def fileno(self):
-    return self._fd
-
-  def readlines(self):
-    data = os.read(self._fd, 4096)
-    if not data:
-        # EOF
-        return None
-    self._buf += data
-    if '\n' not in data:
-        return []
-    tmp = self._buf.split('\n')
-    lines, self._buf = tmp[:-1], tmp[-1]
-    return lines
+ON_POSIX = 'posix' in sys.builtin_module_names
+def enqueue_output(out, queue):
+  for line in iter(out.readline, b''):
+    queue.put((out,line))
+  queue.put((None,out))
+  out.close()
 
 class ProcessMonitor(threading.Thread):
+  TIMEOUT = 10.0
+
   def __init__(self, script, host = None, port=PORT, auto_restart = True):
     threading.Thread.__init__(self)
     self.logger = logging.getLogger(self.__class__.__name__)
@@ -46,7 +31,8 @@ class ProcessMonitor(threading.Thread):
     self.host = host if host else socket.gethostname()
     self.port = port
     self.last_time = time.time()
-
+    self.q = Queue.Queue()
+    
   def run(self):
     self.start_script()
     while True:
@@ -64,26 +50,23 @@ class ProcessMonitor(threading.Thread):
           self.logger.warn("Process monitor exiting")
           return
 
-      ready, _, _ = select.select(self.readable, [], [], 10.0)
-      if ready:
-        for stream in ready:
-          lines = stream.readlines()
-          if lines is None:
-            # got EOF on this stream
-            self.logger.warn("Stream %d closed" % stream.fileno())
-            self.readable.remove(stream)
-            continue
-          for line in lines:
-            if stream.is_error():
-              sys.stderr.write(line+"\n")
-            else:
-              sys.stdout.write(line+"\n")
-            
-            self.last_time = time.time()
+      try:
+        (fd, line) = self.q.get(timeout=self.TIMEOUT)
+        if not fd:
+          self.logger.warn("FD %d exited" % fd)
+        
+        if fd == self.proc.stderr:
+          sys.stderr.write(line+"\n")
+        else:
+          sys.stdout.write(line+"\n")
+        
+        self.last_time = time.time()
 
-            if "DEBUG" not in line and "INFO" not in line:
-              self.broadcast(json.dumps({"type": "delta", "name": self.script, "msg": line}))
-
+        if "DEBUG" not in line and "INFO" not in line:
+          self.broadcast(json.dumps({"type": "delta", "name": self.script, "msg": line}))
+      except Queue.Empty: 
+        pass
+        
       self.broadcast(json.dumps({
         "type": "heartbeat", 
         "name": self.script, 
@@ -96,10 +79,13 @@ class ProcessMonitor(threading.Thread):
   def start_script(self):
     self.logger.info("Starting")
     PIPE = subprocess.PIPE
-    self.proc = subprocess.Popen(["python"] + self.script.split(), bufsize=0, stdout=PIPE, stderr=PIPE, stdin=PIPE)
-    proc_stdout = LineReader(self.proc.stdout.fileno())
-    proc_stderr = LineReader(self.proc.stderr.fileno(), is_err=True)
-    self.readable = [proc_stdout, proc_stderr] 
+    self.proc = subprocess.Popen(["python"] + self.script.split(), stdout=PIPE, stderr=PIPE, stdin=PIPE, bufsize=1, close_fds=ON_POSIX)
+    proc_stdout = threading.Thread(target=enqueue_output, args=(self.proc.stdout, self.q))
+    proc_stdout.daemon = True
+    proc_stderr = threading.Thread(target=enqueue_output, args=(self.proc.stderr, self.q))
+    proc_stderr.daemon = True
+    proc_stdout.start()
+    proc_stderr.start()
 
   def stop(self, block = False):
     self.logger.info("Stopping")
