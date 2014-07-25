@@ -10,14 +10,14 @@ from Holodeck.Server import HolodeckServer
 import time
 
 class HolodeckBase(HolodeckServer):
-  EMPTY_IMG = ["", "clear", "day"]
+  DEFAULT_IMG = ["", "clear", "day"]
   IMG_PATH = None
   IMG_TRANSITION = None
 
   def __init__(self, devices):
     self.devices = devices
     self.devices['proj'] = scl()
-    self.last_img = self.EMPTY_IMG
+    self.last_img = self.DEFAULT_IMG
     self.last_img_screen = scl.get_black_image()
     self.last_sounds = ([],[])
     self.screen_transition = None
@@ -72,6 +72,7 @@ class HolodeckBase(HolodeckServer):
     self.devices['tracklight'].set_state(is_on)
 
   def scrn(self, scrn):
+    # TODO: Interrupted screen transitions would be EPIC
     if self.screen_transition is not None:
       try:
         self.screen_transition.next()
@@ -80,19 +81,27 @@ class HolodeckBase(HolodeckServer):
         print "Transition complete"
         self.screen_transition = None
     elif self.last_img != scrn:
-      print "Transitioning"
-      if scrn == self.EMPTY_IMG:  
-        self.devices['proj'].set_scrn(scl.get_black_image())
+      if scrn[0] == self.DEFAULT_IMG[0]:  
+        next_img = scl.get_black_image()
+        print "Transitioning to empty screen"
       else:
         path = "%s%s_%s_%s.jpg" % tuple([self.IMG_PATH] + scrn)
+        print "Transitioning to", path
         next_img = scl.loadimg(path)
-        self.screen_transition = self.img_trans[self.IMG_TRANSITION](
-          self.last_img_screen, 
-          next_img, 
-          self.devices['proj'].screen
-        )
-        self.last_img_screen = next_img
-        self.last_img = list(scrn)
+
+      self.screen_transition = self.img_trans[self.IMG_TRANSITION](
+        self.last_img_screen, 
+        next_img, 
+        self.devices['proj'].screen
+      )
+      
+      self.last_img_screen = next_img
+      self.last_img = list(scrn)
+  
+    # Manual clear of screen data
+    for i in xrange(len(self.DEFAULT_IMG)):
+      scrn[i] = self.DEFAULT_IMG[i]
+
 
   def linear_blend(self, i, rgb1, rgb2):
     blend_amount = min( float(i) / self.TRANSITION_TIME, 1 )

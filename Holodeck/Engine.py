@@ -153,11 +153,13 @@ class HolodeckEngine(object):
       self.pipelines[pipe] = []
       self.initial_pipe_values[pipe] = pipelines[pipe]
 
+    self.threads = []
     self.running = True
 
   def shutdown(self):
-    # TODO: Blocking join?
     self.running = False
+    for t in self.threads:
+      t.join()
 
   def compose(self, pipe_names):
     # Composes each controller pipeline into a single environment
@@ -179,6 +181,7 @@ class HolodeckEngine(object):
       t = threading.Thread(target = self.update, args=(deps, func, 30))
       t.daemon = True
       t.start()
+      self.threads.append(t)
     
   def update(self, deps, callback, max_fps):
     c = Clock()
