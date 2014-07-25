@@ -7,15 +7,14 @@ import time
 class Holodeck(HolodeckBase):
   EMPTY_IMG = ["", "clear", "day"]
   IMG_PATH = "Holodeck/Images/front/"
-  IMG_TRANSITION = "zoom"
 
   def __init__(self, devices):
     devices['audio'] = AudioController(asset_path="Holodeck/Sounds/")
-    HolodeckBase.__init__(self, devices)
+    HolodeckBase.__init__(self)
 
   def get_pipeline_handlers(self):
     return [
-      ([P.WINDOWIMG], self.scrn),
+      ([P.WINDOWIMG], self.window_scrn),
       ([P.SOUND], self.sound),
     ]
 

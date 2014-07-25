@@ -7,8 +7,8 @@ class BattleEffect(EffectTemplate):
 
   def get_mapping(self):
     return {
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1)
+      P.WINDOWTOP: (self.window_top, 100),
+      P.WINDOWBOT: (self.window_bot, 100)
     }
 
   def window_top(self, prev):
@@ -27,9 +27,9 @@ class LightningEffect(EffectTemplate):
 
   def get_mapping(self): 
     return {
-      P.TOWER: (self.tower, 1),
-      P.RING: (self.ring, 1),
-      P.SOUND: (self.audio, 1),
+      P.TOWER: (self.tower, 100),
+      P.RING: (self.ring, 100),
+      P.SOUND: (self.audio, 100),
     }
 
   def tower(self, prev):

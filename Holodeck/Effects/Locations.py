@@ -45,9 +45,6 @@ class LocationTemplate(EffectTemplate):
     self.transition_timer = time.time()
     self.handle_blacklist()
 
-  def location_mapping(self):
-    raise Exception("Unimplemented")
-
   def get_blacklist(self):
     cs = inspect.getmembers(sys.modules[__name__], inspect.isclass)    
     result = []
@@ -58,7 +55,6 @@ class LocationTemplate(EffectTemplate):
         continue
       result.append(c)
     return result
-         
    
   def wall_img_default(self, prev):
     prev[0] = classname_to_id(self.__class__.__name__)
@@ -79,29 +75,6 @@ class LocationTemplate(EffectTemplate):
       if self.transition_timer + self.TRANSITION_TIME < time.time():
         self.transition_timer = None
       return prev
-  
-class ForestEffect(LocationTemplate):
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
-  def floor(self, prev):
-    return [102, 55, 0]
-
-  def window_top(self, prev):
-    return SKY
-
-  def window_bot(self, prev):
-    return [102, 155, 0]
-
-class PlainsEffect(LocationTemplate):
 
   def get_mapping(self):
     return {
@@ -113,10 +86,23 @@ class PlainsEffect(LocationTemplate):
       P.WINDOWIMG: (self.window_img_default, 1),
       P.SOUND: (self.audio_default, 1),
     }
+  
+class ForestEffect(LocationTemplate):
+  def floor(self, prev):
+    return [102, 55, 0]
 
+  def tower(self, prev):
+    return prev
+
+  def window_top(self, prev):
+    return SKY
+
+  def window_bot(self, prev):
+    return [102, 155, 0]
+
+class PlainsEffect(LocationTemplate):
   def floor(self, prev):
     return GRASS
-    #return [255, 255, 0]
     
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
@@ -126,21 +112,8 @@ class PlainsEffect(LocationTemplate):
 
   def window_bot(self, prev):
     return [0, 128, 0]
-    #return [0, 255, 255]
 
 class TundraEffect(LocationTemplate):
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
   def floor(self, prev):
     return [255,255,255]
     
@@ -154,21 +127,8 @@ class TundraEffect(LocationTemplate):
     return [255,255,255]
     
 class RiverEffect(LocationTemplate):
-
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
   def floor(self, prev):
-    return [0,0,255]
+    return [50,50,200]
 
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
@@ -181,18 +141,6 @@ class RiverEffect(LocationTemplate):
     
     
 class DesertEffect(LocationTemplate):
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
   def floor(self, prev):
     return SAND
     
@@ -206,29 +154,11 @@ class DesertEffect(LocationTemplate):
     return SAND
 
 class WaterEffect(LocationTemplate):
-
-  def setup(self):
-    self.count = 0
+  def floor(self, prev):
+    return [0,0,255]
 
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
-
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
-
-
-  def floor(self, prev):
-    return [0,0,255]
 
   def window_top(self, prev):
     return SKY
@@ -237,19 +167,11 @@ class WaterEffect(LocationTemplate):
     return [0,0,255]
 50 
 class JungleEffect(LocationTemplate):
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
   def floor(self, prev):
     return [102, 55, 0]
+  
+  def tower(self, prev):
+    return prev
 
   def window_top(self, prev):
     return [0, 125, 0]
@@ -258,24 +180,11 @@ class JungleEffect(LocationTemplate):
     return [0, 125, 0]
 
 class BeachEffect(LocationTemplate): 
+  def floor(self, prev):
+    return SAND
 
   def tower(self, prev):
     return [(list(SKY)) for i in xrange(NTOWER)]
-
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
-  def floor(self, prev):
-    return SAND
 
   def window_top(self, prev):
     return SKY
@@ -284,18 +193,6 @@ class BeachEffect(LocationTemplate):
     return SAND
 
 class MountainEffect(LocationTemplate):
-
-  def get_mapping(self):
-    return {
-      P.FLOOR: (self.floor, 1),
-      P.TOWER: (self.tower, 1),
-      P.WINDOWTOP: (self.window_top, 1),
-      P.WINDOWBOT: (self.window_bot, 1),
-      P.WALLIMG: (self.wall_img_default, 1),
-      P.WINDOWIMG: (self.window_img_default, 1),
-      P.SOUND: (self.audio_default, 1),
-    }
-
   def floor(self, prev):
     return [255,255,255]
     

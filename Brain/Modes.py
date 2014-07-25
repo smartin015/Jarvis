@@ -87,11 +87,15 @@ class HolodeckMode(ModeObject):
    h.setup()
 
    # Start holodeck on Scott PC
+   send_remote_cmd("TheMothership", "audio", "Remote/setaudio.py speaker")
    send_remote_cmd("TheMothership", "holodeck", "run_holodeck.py Scott")
 
    while self.mode_on:
      h.update()
 
    h.shutdown()
+
+   send_remote_cmd("TheMothership", "holodeck", "QUIT")
+   send_remote_cmd("TheMothership", "audio", "QUIT")
    
 
