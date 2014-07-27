@@ -2,7 +2,7 @@ nosetests
 code=$?
 
 if [ "$code" == "0" ]; then
-exit 0
+exit -1
 fi
 
 echo -n "Not all tests pass. Commit (y/n): "
