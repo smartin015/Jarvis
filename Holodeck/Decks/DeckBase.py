@@ -64,8 +64,8 @@ class HolodeckBase(HolodeckServer):
     self.devices['couchlight'].write(rgb)
   
   def tower_ring(self, trgb, rrgb):
-    for (i,c) in enumerate(trgb+rrgb):
-      self.devices['tower'].manual_write(i, c)
+    out = map(lambda i, (r,g,b): chr(i)+chr(r)+chr(g)+chr(b), xrange(len(trgb)+len(rrgb)), trgb+rrgb)
+    self.devices['tower'].manual_write("".join(out))
     self.devices['tower'].manual_update()
 
   def lights(self, is_on):

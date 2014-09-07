@@ -67,11 +67,10 @@ class RGBMultiController(Controller):
     assert(self.ser.read(1) == 'S')
 
   def manual_update(self):
-    self.manual_write(RGBState.CMD_UPDATE, [0]*3)
+    self.manual_write(chr(RGBState.CMD_UPDATE) + "\0"*3)
     assert(self.ser.read(1) == 'A')
 
-  def manual_write(self, i, rgb):
-    cmd = chr(i) + "".join([chr(c) for c in rgb])
+  def manual_write(self, cmd):
     self.ser.write(cmd)
 
   def manual_exit(self):
