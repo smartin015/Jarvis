@@ -11,9 +11,8 @@ class JarvisBrain(JarvisBase):
   ABSORB_MS = 3000
   HIGH_ACTIVITY = 0.3
 
-  def __init__(self, outputs):
+  def __init__(self):
     JarvisBase.__init__(self)
-    self.outputs = outputs
     self.l = threading.Lock()
     self.last_command_time = datetime.datetime.now()
     self.commanded_mode = None #Used to suppress non-mode commands when mode is running
@@ -81,14 +80,14 @@ class JarvisBrain(JarvisBase):
 
       self.logger.info("Commanding " + target)
       if hasattr(self.objects[target], "MODE"):
-        args=(self.outputs, command, origin, self.objects)
+        args=(command, origin, self.objects)
 
         if self.commanded_mode:
           self.commanded_mode = None
         else:
           self.commanded_mode = target
       else:
-        args=(self.outputs, command, origin)
+        args=(command, origin)
       t = threading.Thread(target=self.objects[target].handle, args=args)
       t.daemon = True
       t.start()
@@ -103,9 +102,9 @@ class JarvisBrain(JarvisBase):
     else:
       tower_default = RGBState.STATE_FADE
 
-    self.logger.debug("Set tower default to %d" % tower_default)
-    self.outputs['tower'].setDefault(tower_default, keepalive=True)
-    self.outputs['tower'].setState(tower_default)
+    self.logger.debug("TODO: Set tower default to %d" % tower_default)
+    #self.outputs['tower'].setDefault(tower_default, keepalive=True)
+    #self.outputs['tower'].setState(tower_default)
 
         
 if __name__ == "__main__":

@@ -19,57 +19,7 @@ from Inputs.TTSClient import TTSClient
 from Brain.Brain import JarvisBrain
 from Brain.CommandParser import CommandParser
 
-from Outputs.RFController import RFController
-from Outputs.RelayController import RelayController
-from Outputs.RGBSingleController import RGBSingleController
-from Outputs.RGBMultiController import RGBMultiController, RGBState
-from Outputs.RunnerLightsController import RunnerLightsController
-from Outputs.SpeakerController import SpeakerController
-from serial import Serial
-
-class ThreadSafeSerial(Serial):
-
-  def __init__(self, *args, **kwargs):
-    Serial.__init__(self, *args, **kwargs)
-    self._writelock = threading.Lock()
-    self._readlock = threading.Lock()
-
-  def write(self, *args, **kwargs):
-    self._writelock.acquire()
-    rtn = Serial.write(self, *args, **kwargs)
-    self._writelock.release()
-    return rtn
-
-  def read(self, *args, **kwargs):
-    self._readlock.acquire()
-    rtn = Serial.read(self, *args, **kwargs)
-    self._readlock.release()
-    return rtn
-
-    
-
-def init_outputs():
-  logger.info("Initializing output devices")
-  usb_devices = get_connected_usb_devices()
-
-  # TODO: Error speech indicating if devices are missing 
-  outputs = {}
-  for o in config.USB:
-    logger.info(o.id + " - " + o.name)
-    cls = reduce(getattr, o.controller.split("."), sys.modules[__name__])
-    try:
-      outputs[o.name] = cls(ThreadSafeSerial(usb_devices[o.id], o.rate))
-    except KeyError:
-      logger.error("Could not find USB host %s (for %s)" % (o.id, o.name))
-      sys.exit(-1)
-
-  # Initialize non-USB outputs
-  outputs['speaker'] = SpeakerController()
-
-  logger.info("Outputs initialized")
-  return outputs
-    
-def init_inputs(brain, outputs):
+def init_inputs(brain):
   logger.info("Initializing input devices")
 
   def gen_cb(room_id):
@@ -100,19 +50,8 @@ def init_inputs(brain, outputs):
   return inputs
 
 if __name__ == "__main__":
-  outputs = init_outputs()
-  time.sleep(2.0)
-
-  logging.warn("Starting runnerlights")
-  outputs['runnerlights'].enable(outputs['RF'])
-
-  logging.warn("Starting towerlights")
-
-  outputs['tower'].setDefault(RGBState.STATE_FADE, keepalive=True)
-
-
-  brain = JarvisBrain(outputs)
-  inputs = init_inputs(brain, outputs)
+  brain = JarvisBrain()
+  inputs = init_inputs(brain)
 
   logging.warn("Entering command loop")
 

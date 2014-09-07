@@ -18,7 +18,7 @@ from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState
 from Outputs.RunnerLightsController import RunnerLightsController
 from Outputs.SpeakerController import SpeakerController
-from Outputs.Controller import ControllerServer, ControllerClient
+from Outputs.Controller import ControllerServer, ControllerStateServer, ControllerClient
 from serial import Serial
 
 class ThreadSafeSerial(Serial):
@@ -68,10 +68,11 @@ if __name__ == "__main__":
   logging.warn("Starting runnerlights")
   outputs['runnerlights'].enable(outputs['RF'])
 
-  server_address = (gethostname(), 9996)
+  server_address = (gethostname(), ControllerServer.DEFAULT_PORT)
 
   logging.warn("Starting control server")
   srv = ControllerServer(server_address, outputs)
+  statesrv = ControllerStateServer((gethostname(), ControllerStateServer.DEFAULT_PORT), outputs)
 
   logging.warn("Entering command loop")
   cli = ControllerClient(server_address)

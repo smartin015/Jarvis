@@ -82,6 +82,7 @@ class RobustJSONClient():
     self.logger.setLevel(logging.DEBUG)
     self.server_address = server_address
     self.connected = threading.Event()
+    self.lock = threading.Lock()
     self.connect()
 
   def connect(self):
@@ -100,13 +101,17 @@ class RobustJSONClient():
     self.connected.set()
 
   def send(self, data):
-    self.connected.wait()
     msg = json.dumps(data)
+    self.connected.wait()
+    self.lock.acquire()
     self.s.send(msg)
+    self.lock.release()
     
   def recv(self, maxlen=65535):
     self.connected.wait()
+    self.lock.acquire()
     msg = self.s.recv(maxlen)
+    self.lock.release()
     return json.loads(msg)
 
   def sendrcv(self, data, maxlen=65535):

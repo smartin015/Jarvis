@@ -2,8 +2,9 @@ import subprocess
 import threading
 import os
 from config import PATHS
+from Outputs.Controller import Controller
 
-class SpeakerController:
+class SpeakerController(Controller):
         
     def _play_sound_process(self, fil):
       print subprocess.call(["/usr/bin/aplay", fil])
