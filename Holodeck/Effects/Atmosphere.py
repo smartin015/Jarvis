@@ -192,6 +192,7 @@ class RainEffect(WeatherTemplate):
       P.WINDOWIMG: (self.window_img_default, 1),
       P.WINDOWTOP: (self.window_top, 50),
       P.LIGHTS: (self.lights, 50),
+      P.SOUND: (self.sound, 50),
     }
 
   def window_top(self, prev):
@@ -219,12 +220,17 @@ class RainEffect(WeatherTemplate):
 
   def lights(self, prev):
     return False
+  
+  def sound(self, prev):
+    prev[0].append("rain")
+    return prev
 
 class FireEffect(EffectTemplate):
 
   def get_mapping(self):
     return {
       P.FLOOR: (self.floor, 50),
+      P.SOUND: (self.sound, 50),
     } 
 
   RED_MAX = 150
@@ -239,6 +245,10 @@ class FireEffect(EffectTemplate):
     self.increment = 1
     self.count = 0;
 
+  def sound(self, prev):
+    prev[0].append("fire")
+    return prev
+    
   def floor(self, prev):
     if self.count < 50:
       if self.red < (self.RED_MAX - self.increment):
