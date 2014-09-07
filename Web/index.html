@@ -67,6 +67,12 @@
 
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
+        open: function() {
+          console.log("Socket opened");
+        },
+        close: function() {
+          console.log("Socket closed");
+        },
         events: {
           init: function(e) {
             dataTEMP = e.data;
@@ -149,14 +155,14 @@
         if (swiping) return;
         var cID ={}
         if (!$(this).hasClass("on")) {
-			cID[$(this).data("effect")] = true;
-			// TODO uncomment when less glitchy $(this).addClass("on");
+			    cID[$(this).data("effect")] = true;
+    			// TODO uncomment when less glitchy $(this).addClass("on");
         } else {
-			cID[$(this).data("effect")] = false;
-			// TODO uncomment when less glitchy $(this).removeClass("on");
+    			cID[$(this).data("effect")] = false;
+    			// TODO uncomment when less glitchy $(this).removeClass("on");
         }
         console.log(cID);
-		ws.send('cmd',cID);
+		    ws.send('cmd',cID);
         return false;
       });
 

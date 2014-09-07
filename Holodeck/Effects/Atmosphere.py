@@ -19,7 +19,6 @@ class TimeTemplate(EffectTemplate):
       if not issubclass(c, TimeTemplate):
         continue
       result.append(c)
-    print "Time blacklist", result
     return result
     
   def wall_img_default(self, prev):

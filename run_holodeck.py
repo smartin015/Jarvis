@@ -16,7 +16,7 @@ if __name__ == "__main__":
   deckname = sys.argv[1]
   outputs = {}
   if deckname == "Jarvis":
-    from run_jarvis import init_outputs
+    from run_controller import init_outputs
     outputs = init_outputs()
     time.sleep(2.0)
 

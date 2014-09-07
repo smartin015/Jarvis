@@ -19,32 +19,12 @@ from Inputs.TTSClient import TTSClient
 from Brain.Brain import JarvisBrain
 from Brain.CommandParser import CommandParser
 
-from Outputs.RFController import RFController
-from Outputs.RelayController import RelayController
-from Outputs.RGBSingleController import RGBSingleController
-from Outputs.RGBMultiController import RGBMultiController, RGBState
-from Outputs.RunnerLightsController import RunnerLightsController
-from serial import Serial
-
-def init_outputs():
-  logger.info("Initializing output devices")
-  usb_devices = get_connected_usb_devices()
-
-  # TODO: Error speech indicating if devices are missing 
-  outputs = {}
-  for o in config.OUTPUTS:
-    cls = reduce(getattr, o.controller.split("."), sys.modules[__name__])
-    outputs[o.name] = cls(Serial(usb_devices[o.id], o.rate))
-
-  logger.info("Outputs initialized")
-  return outputs
-    
-def init_inputs(brain, outputs):
+def init_inputs(brain):
   logger.info("Initializing input devices")
 
   def gen_cb(room_id):
     def cb(data):
-      return brain.processInput(outputs, data, room_id)
+      return brain.processInput(data, room_id)
     return cb
 
   inputs = {}
@@ -55,7 +35,7 @@ def init_inputs(brain, outputs):
         "tts": []
       }
 
-    t = TTSClient(i.id, i.host, i.port, inputs[i.room_id]['parser'].inject)
+    t = TTSClient(i.id, i.host, i.port, inputs[i.room_id]['parser'].inject, brain.update_connection_status)
     t.daemon = True
     t.start()
     
@@ -70,18 +50,8 @@ def init_inputs(brain, outputs):
   return inputs
 
 if __name__ == "__main__":
-  outputs = init_outputs()
   brain = JarvisBrain()
-  inputs = init_inputs(brain, outputs)
-  time.sleep(2.0)
-
-  logging.warn("Starting runnerlights")
-  outputs['runnerlights'].enable(outputs['RF'])
-
-  logging.warn("Starting towerlights")
-
-  outputs['tower'].setDefault(RGBState.STATE_FADE)
-  outputs['tower'].defaultState()
+  inputs = init_inputs(brain)
 
   logging.warn("Entering command loop")
 

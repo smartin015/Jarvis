@@ -43,4 +43,5 @@ class TTSInput(Base):
   device = Column(String)
   host = Column(String)
   port = Column(Integer)
+  gain = Column(Integer)
 

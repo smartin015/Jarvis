@@ -1,51 +1,68 @@
 #!/usr/bin/env python
 from JarvisBase import JarvisBase
 from Outputs.RGBMultiController import RGBState
+from Outputs.Controller import send_cmd
 import time
+import datetime
 from config import RF
+import random
 
-class ToggleObject(JarvisBase):
+NOVOICE_END = datetime.time(9,0)
+NOVOICE_BEGIN = datetime.time(23,0)
+
+class CommandObject(JarvisBase):
+  RESPONSES = ["confirm.wav", "confirm2.wav"]
+
   def isValid(self, words):
     return True
 
-  def parse(self, outputs, words, origin):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    t = time.time()
+  def handle(self, words, origin):
+    self.init_response(origin)
+    self.parse(words, origin)
+    self.end_response(origin)
 
-    if origin != 'console':
-      self.play_sound("confirm.wav")
+  def init_response(self, origin):
+    send_cmd('tower', 'setState', [RGBState.STATE_CHASE])
+    self.response_start_time = time.time()
+    now = datetime.datetime.now().time()
+    if origin != 'console' and now > NOVOICE_END and now < NOVOICE_BEGIN:
+      send_cmd('speaker', 'play_sound', ['confirm.wav'])
+  
+  def end_response(self, origin):
+    while (time.time() - self.response_start_time < 1.0):
+      time.sleep(0.1)
+    send_cmd('tower', 'defaultState')
 
-    self.toggle(outputs, words, origin)
+  def parse(self, words, origin):
+    raise Exception("unimplemented")
+
+class ToggleObject(CommandObject):
+
+  def parse(self, words, origin):
+    self.toggle(words, origin)
     self.logger.debug("Toggled")
 
-    while (time.time() - t < 1.0):
-      time.sleep(0.1)
-    outputs['tower'].defaultState()
-
-  def toggle(self, outputs, words, origin):
+  def toggle(self, words, origin):
     raise Exception("Unimplemented")
 
-class BinaryObject(JarvisBase):
+class BinaryObject(CommandObject):
   ON = "on"
   OFF = "off"
 
   def __init__(self):
-    JarvisBase.__init__(self)
+    CommandObject.__init__(self)
     self.state = self.OFF
   
-  def isValid(self, words):
-   return True
-  
-  def setState(self, state, outputs, words, origin):
+  def setState(self, state, words, origin):
     if state == self.ON:
       if self.state == self.OFF:
-        self.turnOn(outputs, words, origin)
+        self.turnOn(words, origin)
         self.state = self.ON
       else:
         self.logger.info("Already on")
     elif state == self.OFF:
       if self.state == self.ON:
-        self.turnOff(outputs, words, origin)
+        self.turnOff(words, origin)
         self.state = self.OFF
       else:
         self.logger.info("Already off")
@@ -55,132 +72,116 @@ class BinaryObject(JarvisBase):
   def getState(self):
     return self.state
 
-  def parse(self, outputs, words, origin):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    t = time.time()
-
-    if origin != 'console':
-      self.play_sound("confirm.wav")
-
+  def parse(self, words, origin):
     if self.state == self.OFF:
-      self.turnOn(outputs, words, origin)
+      self.turnOn(words, origin)
       self.state = self.ON
     else:
-      self.turnOff(outputs, words, origin)
+      self.turnOff(words, origin)
       self.state = self.OFF
-
-    while (time.time() - t < 1.0):
-      time.sleep(0.1)
-    outputs['tower'].defaultState()
       
-  def turnOff(self, outputs, words, origin):
+  def turnOff(self, words, origin):
     raise Exception("Unimplemented")
 
-  def turnOn(self, outputs, words, origin):
+  def turnOn(self, words, origin):
     raise Exception("Unimplemented")
 
 class AC(ToggleObject):
-  def toggle(self, outputs, words, origin):
-    outputs['RF'].send_IR("AirConditionerPower.txt")
+  def toggle(self, words, origin):
+    send_cmd('RF', 'send_IR', ["AirConditionerPower.txt"])
+    pass
       
 class Audio(BinaryObject):
-  def turnOff(self, outputs, words, origin):
-    self.chan(1, outputs['RF'])
+  def turnOff(self, words, origin):
+    self.chan(1)
 
-  def turnOn(self, outputs, words, origin):
-    self.chan(2, outputs['RF'])
+  def turnOn(self, words, origin):
+    self.chan(2)
 
-  def chan(self, c, rf):
-    rf.send_IR("SoundSystemA%d.txt" % c)
+  def chan(self, c):
+    send_cmd('RF', 'send_IR', ["SoundSystemA%d.txt" % c])
     time.sleep(0.5)
-    rf.send_IR("SoundSystemB%d.txt" % c)
+
+    send_cmd('RF', 'send_IR', ["SoundSystemB%d.txt" % c])
     time.sleep(0.5)
 
 class AuxProjector(BinaryObject):
-  def toggle(self, outputs, words, origin):
-    rf = outputs['RF']
-    rf.send_IR("SideProjectorPower.txt")
+  def toggle(self, words, origin):
+    send_cmd('RF', 'send_IR', ["SideProjectorPower.txt"])
     time.sleep(0.5)
-    rf.send_IR("SideProjectorPower.txt")
+    send_cmd('RF', 'send_IR', ["SideProjectorPower.txt"])
 
-  def turnOn(self, outputs, words, origin):
-    self.toggle(outputs, words, origin)
+  def turnOn(self, words, origin):
+    self.toggle(words, origin)
 
-  def turnOff(self, outputs, words, origin):
-    self.toggle(outputs, words, origin)
+  def turnOff(self, words, origin):
+    self.toggle(words, origin)
 
 class Projector(BinaryObject):
-  def parse(self, outputs, words, origin):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    self.play_sound("confirm.wav")
-
-    rf = outputs['RF']
+  def parse(self, words, origin):
 
     if "screen" in words:
       # Just do screen, not projector
       if self.state == self.OFF:
-        self.screendown(rf)
+        self.screendown()
         self.state = self.ON
       else:
-        self.screenup(rf)
+        self.screenup()
         self.state = self.OFF
     else:
       if self.state == self.OFF:
-        self.turnOn(outputs, words, origin)
+        self.turnOn(words, origin)
         self.state = self.ON
       else:
-        self.turnOff(outputs, words, origin)
+        self.turnOff(words, origin)
         self.state = self.OFF
 
-    outputs['tower'].defaultState()
-
-  def turnOn(self, outputs, words, origin):
-    rf = outputs['RF']
+  def turnOn(self, words, origin):
     self.logger.info("Pressing power button")
-    self.powerbtn(rf)
+    self.powerbtn()
     self.logger.info("Lowering screen")
-    self.screendown(rf)
+    self.screendown()
     self.logger.info("Done")
 
-  def turnOff(self, outputs, words, origin):
-    rf = outputs['RF']
+  def turnOff(self, words, origin):
     self.logger.info("Pressing power button")
-    self.powerbtn(rf)
+    self.powerbtn()
     self.logger.info("Raising screen")
-    self.screenup(rf)
+    self.screenup()
     self.logger.info("Done")
 
-  def screenup(self, rf):
-    rf.send_IR("ProjectorScreenStop.txt")
-    rf.send_IR("ProjectorScreenUp.txt")
+  def screenup(self):
+    send_cmd('RF', 'send_IR', ["ProjectorScreenStop.txt"])
+    send_cmd('RF', 'send_IR', ["ProjectorScreenUp.txt"])
 
-  def screendown(self, rf):
-    rf.send_IR("ProjectorScreenStop.txt")
-    rf.send_IR("ProjectorScreenDown.txt")
 
-  def powerbtn(self, rf):
-    rf.send_IR("ProjectorPower.txt")
-    rf.send_IR("ProjectorPower.txt")
+  def screendown(self):
+    send_cmd('RF', 'send_IR', ["ProjectorScreenStop.txt"])
+    send_cmd('RF', 'send_IR', ["ProjectorScreenDown.txt"])
+
+  def powerbtn(self):
+    send_cmd('RF', 'send_IR', ["ProjectorPower.txt"])
+    send_cmd('RF', 'send_IR', ["ProjectorPower.txt"])
 
 class MainLight(BinaryObject):
   def __init__(self):
     BinaryObject.__init__(self)
     self.hacklight = False
 
-  def turnOn(self, outputs, words, origin):
-    self.toggle(outputs, words, origin)
+  def turnOn(self, words, origin):
+    self.toggle(words, origin)
 
-  def turnOff(self, outputs, words, origin):
-    self.toggle(outputs, words, origin)
+  def turnOff(self, words, origin):
+    self.toggle(words, origin)
 
-  def toggle(self, outputs, words, origin):
-    if origin == "livingroom":
-      outputs['tracklight'].toggle()
+  def toggle(self, words, origin):
+    if origin in ["livingroom", "console"]:
+      send_cmd('tracklight', 'toggle')
     elif origin == "hackspace" or "hack" in words:
-      self.toggle_hacklight(outputs)
+      self.toggle_hacklight()
 
-  def toggle_hacklight(self, outputs):
+  def toggle_hacklight(self):
     val = 255 if self.hacklight else 0
-    outputs['RF'].send_cmd(RFController.FET1, val, RF["hackspace"])
+    send_cmd('RF', 'send_cmd', [RFController.FET1, val, RF["hackspace"]])
     self.hacklight = not self.hacklight
 

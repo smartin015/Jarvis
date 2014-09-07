@@ -23,12 +23,12 @@ def get_connected_usb_devices():
 
 
 if __name__ == "__main__":
-  from config import OUTPUTS
+  from config import USB
   print "USB Devices:"
   fmt = "{:14s}{:10s}{:10s}"
   print fmt.format("NAME", "USB_ID", "PATH")
   def print_device(uid, path):
-    for o in OUTPUTS:
+    for o in USB:
       if o.id == uid:
         print fmt.format(o.name, uid, path)
         return

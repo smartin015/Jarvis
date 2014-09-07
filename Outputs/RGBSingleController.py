@@ -1,8 +1,10 @@
 import struct
+from Outputs.Controller import Controller
 
-class RGBSingleController():
+class RGBSingleController(Controller):
 
   def __init__(self, ser):
+    Controller.__init__(self)
     self.ser = ser
     self.clear()
 

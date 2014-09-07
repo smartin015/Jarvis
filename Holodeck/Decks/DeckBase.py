@@ -64,8 +64,8 @@ class HolodeckBase(HolodeckServer):
     self.devices['couchlight'].write(rgb)
   
   def tower_ring(self, trgb, rrgb):
-    for (i,c) in enumerate(trgb+rrgb):
-      self.devices['tower'].manual_write(i, c)
+    out = map(lambda i, (r,g,b): chr(i)+chr(r)+chr(g)+chr(b), xrange(len(trgb)+len(rrgb)), trgb+rrgb)
+    self.devices['tower'].manual_write("".join(out))
     self.devices['tower'].manual_update()
 
   def lights(self, is_on):
@@ -80,7 +80,7 @@ class HolodeckBase(HolodeckServer):
       except StopIteration:
         print "Transition complete"
         self.screen_transition = None
-    elif self.last_img != scrn:
+    elif self.last_img != scrn and not (scrn[0] == self.DEFAULT_IMG[0] and self.last_img[0] == self.DEFAULT_IMG[0]):
       if scrn[0] == self.DEFAULT_IMG[0]:  
         next_img = scl.get_black_image()
         print "Transitioning to empty screen"

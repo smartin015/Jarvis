@@ -5,7 +5,6 @@ import string
 from collections import deque
 import Queue
 import threading
-
 import pygst
 pygst.require('0.10')
 import gst
@@ -15,6 +14,8 @@ from JarvisBase import JarvisBase
 class CommandParser(JarvisBase):
   INJECTION_DELAY = 0.1
   SPEECH_TIMEOUT = 0.5
+  ACTIVITY_WINDOW = 60 # Track word occurrences for this many seconds previous
+  ACTIVITY_BUFSZ = 30 # Track at max this many word occurrences
 
   def __init__(self, isValid, callback, trigger="jarvis", maxlength=10):
     JarvisBase.__init__(self)
@@ -28,6 +29,11 @@ class CommandParser(JarvisBase):
     # Stores full transcription (or timed-out partial transcription) data
     # for eventual processing by the worker thread
     self.buf = deque(maxlen = self.maxlen)
+
+    # Stores timestamps of the last 10 words spoken - gives us an idea of 
+    # the level of word activity in the room so we can make commands more 
+    # difficult.
+    self.activity_buf = deque(maxlen = self.ACTIVITY_BUFSZ)
 
     # Stores unbuffered partial transcription data
     self.partial = []
@@ -105,11 +111,17 @@ class CommandParser(JarvisBase):
       buf = buf[:trig_i]
      
     cmd_slice = [w for w in buf if w != self.trigger]
-    if len(cmd_slice) and self.isValid(cmd_slice):
+    if len(cmd_slice) and self.isValid(cmd_slice, self.activity_level()):
       return (cmd_slice, len(buf))
     else:
       return (None, len(buf))
     # POSTCONDITION: Exactly one trigger in the buffer has been consumed
+
+  def activity_level(self):
+    evts = list(self.activity_buf)
+    now = time.time()
+    level = float(sum([(e > now - self.ACTIVITY_WINDOW) for e in evts])) / self.ACTIVITY_BUFSZ
+    return level
 
   def process_buffer(self):
     while True:
@@ -135,6 +147,7 @@ class CommandParser(JarvisBase):
         self.buf.popleft()
       
   def inject(self, text, uttid = None):
+    self.activity_buf.append(time.time())
     self.inj_queue.put(([word.strip(string.punctuation).lower() for word in text.split()], uttid))
 
 if __name__ == "__main__":

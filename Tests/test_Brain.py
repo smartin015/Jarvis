@@ -1,6 +1,5 @@
-from Brain import JarvisBrain
+from Brain.Brain import JarvisBrain
 
-#TODO: Create test jarvis for each test
 jarvis = JarvisBrain()
 
 def test_binary_on():

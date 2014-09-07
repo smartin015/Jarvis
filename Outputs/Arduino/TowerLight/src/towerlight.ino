@@ -5,7 +5,7 @@
 #define NLIGHTS 105
 #define NRING 25
 #define DEFAULT_STATE STATE_OFF
-#define MANUAL_DROPOUT_MS 1000
+#define RETURN_TO_DEFAULT_DELAY 30000
 
 // Parameter 1 = number of pixels in strip
 // Parameter 2 = Arduino pin number (most are valid)
@@ -36,6 +36,7 @@ typedef enum State {
   STATE_RAINBOW,
   STATE_RAINBOWCHASE,
   STATE_PARTY, 
+  STATE_ERROR,
   STATE_MANUAL,
   NSTATES
 };
@@ -52,6 +53,7 @@ const FuncPtr updaters[NSTATES] = {
   update_rainbow,
   update_rainbowchase,
   update_party,
+  update_error,
   update_manual
 };
 const FuncPtr initializers[NSTATES] = {
@@ -64,13 +66,17 @@ const FuncPtr initializers[NSTATES] = {
   init_rainbow,
   init_rainbowchase,
   init_party,
+  init_error,
   init_manual,
 };
 
 #define CMD_UPDATE 0xff
 #define CMD_EXIT_MANUAL 0xfe
 
+unsigned long prev;
 void setup() {
+  prev = millis();
+
   strip.begin();
   strip.show(); // Initialize all pixels to 'off'
 
@@ -82,12 +88,23 @@ void setup() {
 }
 
 void loop() {
-  if (Serial.available() > 0) {
-    state = (State)(Serial.read());
-    if (state > NSTATES || state < 0) {
-      state = STATE_OFF;
-    }
+  // Return to default state if not interacted with recently
+  unsigned long now = millis();
+  if (now > prev + RETURN_TO_DEFAULT_DELAY) {
+    state = DEFAULT_STATE;
     initializers[state]();
+  }
+
+  if (Serial.available() > 0) {
+    prev = now;
+    State newstate = (State)(Serial.read());
+    if (newstate != state) {
+      state = newstate;
+      if (state > NSTATES || state < 0) {
+        state = STATE_OFF;
+      }
+      initializers[state]();
+    }
     Serial.write('S');
   }
   updaters[state]();
@@ -151,6 +168,15 @@ void update_party() {
   }
 }
 
+
+
+void init_error() {
+  for(int i=0; i < NLIGHTS; i++) {
+    strip.setPixelColor(i, 255, 0, 0);
+  }
+}
+void update_error() {
+}
 
 
 void init_off() {}
