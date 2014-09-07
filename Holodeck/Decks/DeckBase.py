@@ -80,7 +80,7 @@ class HolodeckBase(HolodeckServer):
       except StopIteration:
         print "Transition complete"
         self.screen_transition = None
-    elif self.last_img != scrn:
+    elif self.last_img != scrn and not (scrn[0] == self.DEFAULT_IMG[0] and self.last_img[0] == self.DEFAULT_IMG[0]):
       if scrn[0] == self.DEFAULT_IMG[0]:  
         next_img = scl.get_black_image()
         print "Transitioning to empty screen"
