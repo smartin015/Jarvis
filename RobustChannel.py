@@ -24,7 +24,7 @@ class RobustJSONRequestHandler(SocketServer.StreamRequestHandler):
           break
 
         data = json.loads(msg)
-        self.server.handle(msg)
+        self.server.handle(data)
       except socket.timeout:
         if not self.server.running:
           self.logger.warn("Server shutdown, ending handler")
@@ -87,13 +87,14 @@ class RobustJSONClient():
   def connect(self):
     # TODO: Robustify
     while True:
-      self.logger.debug("Attempting to connect to %s..." % str(server_address))
+      self.logger.debug("Attempting to connect to %s..." % str(self.server_address))
       try:
         self.s = socket.create_connection(self.server_address, self.CONNECT_TIMEOUT)
-        self.logger.debug("Connected to %s" % str(server_address))
+        self.logger.debug("Connected to %s" % str(self.server_address))
         break
       except socket.error:
         self.logger.error(traceback.format_exc())
+        self.logger.debug("Trying again in %d seconds..." % self.RECONNECT_DELAY)
         time.sleep(self.RECONNECT_DELAY)
 
     self.connected.set()
