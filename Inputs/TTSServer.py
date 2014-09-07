@@ -29,14 +29,11 @@ class TTSServer(SocketServer.ThreadingTCPServer):
   allow_reuse_address = True
   SEP = '|'
 
-  def __init__(self, name, server_address, audiosrc, lm_path, dict_path):
+  def __init__(self, name, server_address, audiosrc, lm_path, dict_path, gain=15, debug_sink=False):
     self.logger = logging.getLogger(name)
     self.logger.setLevel(logging.DEBUG)
     self.userlist = []
 
-    if not server_address:
-      server_address = (socket.gethostname(), port) 
-    
     self.logger.debug("Using address "+str(server_address))
 
     SocketServer.ThreadingTCPServer.__init__(self, server_address, TTSRequestHandler)
@@ -47,6 +44,7 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     conv = gst.element_factory_make("audioconvert", "audioconv")
     #conv.set_property("noise-shaping", 4)
 
+    """
     cheb = gst.element_factory_make("audiocheblimit")
     cheb.set_property("mode", "high-pass")
     cheb.set_property("cutoff", 200)
@@ -56,9 +54,10 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     cheb2.set_property("mode", "low-pass")
     cheb2.set_property("cutoff", 2500)
     cheb2.set_property("poles", 4)
+    """
 
     amp = gst.element_factory_make("audioamplify", "audioamp")
-    amp.set_property("amplification", 15)
+    amp.set_property("amplification", gain)
 
     res = gst.element_factory_make("audioresample", "audioresamp")
     
@@ -77,10 +76,15 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     # Now tell gstreamer and pocketsphinx to start converting speech!
     asr.set_property('configured', True)
     
-    sink = gst.element_factory_make("fakesink", "fs")
+    if debug_sink:
+      sink = gst.element_factory_make("pulsesink", "ps")
+      pipeline.add(audiosrc, conv, amp, res, sink)
+      gst.element_link_many(audiosrc, conv, amp, res, sink)
+    else:
+      sink = gst.element_factory_make("fakesink", "fs")
+      pipeline.add(audiosrc, conv, amp, res, vader, asr, sink)
+      gst.element_link_many(audiosrc, conv, amp, res, vader, asr, sink)
     
-    pipeline.add(audiosrc, conv, cheb, cheb2, amp, res, vader, asr, sink)
-    gst.element_link_many(audiosrc, conv, amp, res, vader, asr, sink)
     pipeline.set_state(gst.STATE_PLAYING)
     
   def asr_partial_result(self, asr, text, uttid):
@@ -103,15 +107,30 @@ class TTSServer(SocketServer.ThreadingTCPServer):
     
 if __name__ == "__main__":
   import gobject 
+  from config import TTS
+  from Inputs.source_discovery import get_sources
   gobject.threads_init()
   
+  for i in TTS:
+    if i.id == "livingroom_tts":
+      t = i
+      break
+
+  for (src_id, source) in get_sources().items():
+    if t.device == source['path']:
+      src_id = source['id']
+      break
+
+  src = gst.element_factory_make("pulsesrc", "src")
+  src.set_property("device", src_id)
+
   srv = TTSServer(
     "Test",
+    (socket.gethostname(), 64029),
+    src,
+    None, 
     None,
-    gst.element_factory_make("autoaudiosrc", "asrc"), 
-    None, 
-    None, 
-    8005
+    debug_sink=True
   )
 
   import threading
@@ -119,7 +138,7 @@ if __name__ == "__main__":
   g_loop = threading.Thread(target=gobject.MainLoop().run)
   g_loop.daemon = True
   g_loop.start()
-  self.logger.debug("Audio server started")
+  print "Audio server started"
 
   raw_input("Enter to exit")
 

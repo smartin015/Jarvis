@@ -1,4 +1,6 @@
 import time
+import threading
+from Controller import Controller
 
 NTOWER = 105
 NRING = 24
@@ -13,26 +15,54 @@ class RGBState():
   STATE_RAINBOW = 6
   STATE_RAINBOWCHASE = 7
   STATE_PARTY = 8
-  STATE_MANUAL = 9
+  STATE_ERROR = 9
+  STATE_MANUAL = 10
 
   CMD_UPDATE = 0xff
   CMD_EXIT_MANUAL = 0xfe
 
-class RGBMultiController():
+class RGBMultiController(Controller):
   def __init__(self, ser, default = RGBState.STATE_OFF):
+    Controller.__init__(self)
     self.ser = ser
     self.default = default
+    self.keepalive = False
+    self.state = self.default
+    self.lock = threading.Lock()
 
   def __del__(self):
     self.ser.close()
 
-  def setDefault(self, state):
+  def setDefault(self, state, keepalive=False):
     self.default = state
+
+    self.lock.acquire()
+    if keepalive and not self.keepalive:
+      self.keepalive = keepalive
+      self.state = self.default
+      self.logger.debug("Starting RGB keepalive thread")
+      t = threading.Thread(target=self.run_keepalive)
+      t.daemon = True
+      t.start()
+    else:
+      self.keepalive = keepalive
+    self.lock.release()
+
+  def run_keepalive(self):
+    while self.keepalive:
+      try:
+        self.setState(self.state)
+        self.logger.debug("Update Tower RGB")
+      except:
+        self.logger.warn("Couldn't update tower RGB")
+      time.sleep(20.0)
+    self.logger.debug("RGB Keepalive exiting")
 
   def defaultState(self):
     self.setState(self.default)
 
   def setState(self, state):
+    self.state = state
     self.ser.write(chr(state))
     assert(self.ser.read(1) == 'S')
 

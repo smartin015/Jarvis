@@ -68,6 +68,12 @@
       /* =====Web sockets interface====== */
       var ws = $.websocket("ws://"+window.location.hostname+":8880/holodeck", {
         events: {
+          open: function() {
+            console.log("Socket opened");
+          },
+          close: function() { 
+            console.log("Socket closed");
+          },
           init: function(e) {
             dataTEMP = e.data;
             console.log(dataTEMP);

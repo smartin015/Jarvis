@@ -6,13 +6,16 @@ def _dict_from_query(query, key, val):
 
 (_engine, _session) = connect()
 
+if not _engine or not _session:
+  raise Exception("Could not connect to DB!")
+
 RF = _dict_from_query(_session.query(RFModule), 'room_id', 'id')
 
 PATHS = _dict_from_query(_session.query(Path), 'id', 'path')
 
 REMOTES = _session.query(Remote).all()
 
-OUTPUTS = _session.query(USBDevice).all()
+USB = _session.query(USBDevice).all()
 
 TTS = _session.query(TTSInput).all()
 

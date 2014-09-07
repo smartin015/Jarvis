@@ -1,4 +1,5 @@
 from Controller import Controller
+from serial import SerialException
 
 class RelayController(Controller):
   
@@ -18,12 +19,18 @@ class RelayController(Controller):
       self.off()
 
   def on(self):
-    self.ser.write('T')
-    self.is_on = True
+    try:
+      self.ser.write('T')
+      self.is_on = True
+    except SerialException:
+      self.logger.error("Serial exception!") # TODO: Retry?
 
   def off(self):
-    self.ser.write('F')
-    self.is_on = False
+    try:
+      self.ser.write('F')
+      self.is_on = False
+    except SerialException:
+      self.logger.error("Serial exception!") # TODO: Retry?
 
   def toggle(self):
     if self.is_on:

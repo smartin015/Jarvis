@@ -2,39 +2,55 @@
 from JarvisBase import JarvisBase
 from Outputs.RGBMultiController import RGBState
 import time
+import datetime
 from config import RF
+import random
 
-class ToggleObject(JarvisBase):
+NOVOICE_END = datetime.time(9,0)
+NOVOICE_BEGIN = datetime.time(23,0)
+
+class CommandObject(JarvisBase):
+  RESPONSES = ["confirm.wav", "confirm2.wav"]
+
   def isValid(self, words):
     return True
 
-  def parse(self, outputs, words, origin):
+  def handle(self, outputs, words, origin):
+    self.init_response(origin, outputs)
+    self.parse(outputs, words, origin)
+    self.end_response(origin, outputs)
+
+  def init_response(self, origin, outputs):
     outputs['tower'].setState(RGBState.STATE_CHASE)
-    t = time.time()
-
-    if origin != 'console':
-      self.play_sound("confirm.wav")
-
-    self.toggle(outputs, words, origin)
-    self.logger.debug("Toggled")
-
-    while (time.time() - t < 1.0):
+    self.response_start_time = time.time()
+    now = datetime.datetime.now().time()
+    if origin != 'console' and now > NOVOICE_END and now < NOVOICE_BEGIN:
+      outputs['speaker'].play_sound("confirm.wav")
+  
+  def end_response(self, origin, outputs):
+    while (time.time() - self.response_start_time < 1.0):
       time.sleep(0.1)
     outputs['tower'].defaultState()
+
+  def parse(self, outputs, words, origin):
+    raise Exception("unimplemented")
+
+class ToggleObject(CommandObject):
+
+  def parse(self, outputs, words, origin):
+    self.toggle(outputs, words, origin)
+    self.logger.debug("Toggled")
 
   def toggle(self, outputs, words, origin):
     raise Exception("Unimplemented")
 
-class BinaryObject(JarvisBase):
+class BinaryObject(CommandObject):
   ON = "on"
   OFF = "off"
 
   def __init__(self):
-    JarvisBase.__init__(self)
+    CommandObject.__init__(self)
     self.state = self.OFF
-  
-  def isValid(self, words):
-   return True
   
   def setState(self, state, outputs, words, origin):
     if state == self.ON:
@@ -56,22 +72,12 @@ class BinaryObject(JarvisBase):
     return self.state
 
   def parse(self, outputs, words, origin):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    t = time.time()
-
-    if origin != 'console':
-      self.play_sound("confirm.wav")
-
     if self.state == self.OFF:
       self.turnOn(outputs, words, origin)
       self.state = self.ON
     else:
       self.turnOff(outputs, words, origin)
       self.state = self.OFF
-
-    while (time.time() - t < 1.0):
-      time.sleep(0.1)
-    outputs['tower'].defaultState()
       
   def turnOff(self, outputs, words, origin):
     raise Exception("Unimplemented")
@@ -111,9 +117,6 @@ class AuxProjector(BinaryObject):
 
 class Projector(BinaryObject):
   def parse(self, outputs, words, origin):
-    outputs['tower'].setState(RGBState.STATE_CHASE)
-    self.play_sound("confirm.wav")
-
     rf = outputs['RF']
 
     if "screen" in words:
@@ -131,8 +134,6 @@ class Projector(BinaryObject):
       else:
         self.turnOff(outputs, words, origin)
         self.state = self.OFF
-
-    outputs['tower'].defaultState()
 
   def turnOn(self, outputs, words, origin):
     rf = outputs['RF']
@@ -174,7 +175,7 @@ class MainLight(BinaryObject):
     self.toggle(outputs, words, origin)
 
   def toggle(self, outputs, words, origin):
-    if origin == "livingroom":
+    if origin in ["livingroom", "console"]:
       outputs['tracklight'].toggle()
     elif origin == "hackspace" or "hack" in words:
       self.toggle_hacklight(outputs)

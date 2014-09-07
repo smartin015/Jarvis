@@ -39,6 +39,7 @@ if __name__ == "__main__":
       mics[tts.id] = {
         "port": tts.port, 
         "host": tts.host, 
+        "gain": tts.gain,
         "source_id": source['id']
       }
 
@@ -54,7 +55,8 @@ if __name__ == "__main__":
       (mic['host'], mic['port']), 
       src, 
       PATHS['language_model'], 
-      PATHS['language_dict']
+      PATHS['language_dict'],
+      gain=mic['gain']
     )
     t = threading.Thread(target = srv.serve_forever)
     t.daemon = True

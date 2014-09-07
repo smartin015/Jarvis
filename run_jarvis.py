@@ -24,7 +24,29 @@ from Outputs.RelayController import RelayController
 from Outputs.RGBSingleController import RGBSingleController
 from Outputs.RGBMultiController import RGBMultiController, RGBState
 from Outputs.RunnerLightsController import RunnerLightsController
+from Outputs.SpeakerController import SpeakerController
 from serial import Serial
+
+class ThreadSafeSerial(Serial):
+
+  def __init__(self, *args, **kwargs):
+    Serial.__init__(self, *args, **kwargs)
+    self._writelock = threading.Lock()
+    self._readlock = threading.Lock()
+
+  def write(self, *args, **kwargs):
+    self._writelock.acquire()
+    rtn = Serial.write(self, *args, **kwargs)
+    self._writelock.release()
+    return rtn
+
+  def read(self, *args, **kwargs):
+    self._readlock.acquire()
+    rtn = Serial.read(self, *args, **kwargs)
+    self._readlock.release()
+    return rtn
+
+    
 
 def init_outputs():
   logger.info("Initializing output devices")
@@ -32,9 +54,17 @@ def init_outputs():
 
   # TODO: Error speech indicating if devices are missing 
   outputs = {}
-  for o in config.OUTPUTS:
+  for o in config.USB:
+    logger.info(o.id + " - " + o.name)
     cls = reduce(getattr, o.controller.split("."), sys.modules[__name__])
-    outputs[o.name] = cls(Serial(usb_devices[o.id], o.rate))
+    try:
+      outputs[o.name] = cls(ThreadSafeSerial(usb_devices[o.id], o.rate))
+    except KeyError:
+      logger.error("Could not find USB host %s (for %s)" % (o.id, o.name))
+      sys.exit(-1)
+
+  # Initialize non-USB outputs
+  outputs['speaker'] = SpeakerController()
 
   logger.info("Outputs initialized")
   return outputs
@@ -44,7 +74,7 @@ def init_inputs(brain, outputs):
 
   def gen_cb(room_id):
     def cb(data):
-      return brain.processInput(outputs, data, room_id)
+      return brain.processInput(data, room_id)
     return cb
 
   inputs = {}
@@ -55,7 +85,7 @@ def init_inputs(brain, outputs):
         "tts": []
       }
 
-    t = TTSClient(i.id, i.host, i.port, inputs[i.room_id]['parser'].inject)
+    t = TTSClient(i.id, i.host, i.port, inputs[i.room_id]['parser'].inject, brain.update_connection_status)
     t.daemon = True
     t.start()
     
@@ -71,8 +101,6 @@ def init_inputs(brain, outputs):
 
 if __name__ == "__main__":
   outputs = init_outputs()
-  brain = JarvisBrain()
-  inputs = init_inputs(brain, outputs)
   time.sleep(2.0)
 
   logging.warn("Starting runnerlights")
@@ -80,8 +108,11 @@ if __name__ == "__main__":
 
   logging.warn("Starting towerlights")
 
-  outputs['tower'].setDefault(RGBState.STATE_FADE)
-  outputs['tower'].defaultState()
+  outputs['tower'].setDefault(RGBState.STATE_FADE, keepalive=True)
+
+
+  brain = JarvisBrain(outputs)
+  inputs = init_inputs(brain, outputs)
 
   logging.warn("Entering command loop")
 

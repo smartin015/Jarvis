@@ -8,6 +8,7 @@ from config import RF
 class RFController(Controller):
   CMD_FET1 = 0x00
   CMD_FET2 = 0x01
+  CMD_FET3 = 0x03
   CMD_RELAY = 0x02
   CMD_IR_BUFFER = 0x10
   CMD_IR_SEND = 0x11
@@ -20,11 +21,15 @@ class RFController(Controller):
 
   def write(self, chars):
     assert(len(chars) == 5)
-    self.ser.write(chars);
-    v = self.ser.readline()
-    while v.strip() != "":
-      self.logger.warn(v)
+    try:
+      self.ser.write(chars)
       v = self.ser.readline()
+
+      while v.strip() != "":
+        self.logger.warn(v)
+        v = self.ser.readline()
+    except serial.SerialException:
+      self.logger.error("Serial error occurred")
 
   def __init__(self, ser, default_target = 'livingroom', ir_path = "Outputs/IRCommandFiles/"):
     Controller.__init__(self)
@@ -76,9 +81,9 @@ if __name__ == "__main__":
   import logging
   import time
   logging.basicConfig()
-  ser = serial.Serial("/dev/ttyUSB2", 115200)
+  ser = serial.Serial("/dev/ttyUSB1", 115200)
 
-  tgt = raw_input("livingroom or hackspace? ")
+  tgt = raw_input("livingroom or hackspace? or todd?")
   con = RFController(ser, tgt)
 
   while True:
@@ -107,6 +112,8 @@ if __name__ == "__main__":
       con.send_cmd(con.CMD_FET1, val)
     elif cmd == "FET2":
       con.send_cmd(con.CMD_FET2, val)
+    elif cmd == "FET3":
+      con.send_cmd(con.CMD_FET3, val)
     elif cmd == "IR":
       con.send_IR(val)
 

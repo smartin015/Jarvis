@@ -7,13 +7,14 @@ import time
 
 class TTSClient(threading.Thread):
   RETRY_INTERVAL = 5.0
-  def __init__(self, name, host, port, callback):
+  def __init__(self, name, host, port, callback, connection_callback):
     threading.Thread.__init__(self)
     self.logger = logging.getLogger(name)
     self.logger.setLevel(logging.DEBUG)
     self.host = host
     self.port = port
     self.callback = callback
+    self.connection_callback = connection_callback
     self.s = None
 
   def __del__(self):
@@ -25,10 +26,12 @@ class TTSClient(threading.Thread):
     while True:
       try:
         self.s = socket.create_connection((self.host,self.port)).makefile()
+        self.connection_callback(True)
         self.logger.debug("Connected")
         return
       except:
         self.logger.error("Connection failed. Retrying in %d seconds..." % self.RETRY_INTERVAL)
+        self.connection_callback(False) # Notify brain that our connection failed
         time.sleep(self.RETRY_INTERVAL)
         
   def run(self):

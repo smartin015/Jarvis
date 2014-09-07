@@ -1,5 +1,6 @@
 music
 jarvis
+surface
 lights
 light
 projector
@@ -10,3 +11,4 @@ projector screen
 audio
 auxillary
 holodeck
+please

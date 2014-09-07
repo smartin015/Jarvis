@@ -47,6 +47,10 @@ session.add_all([
     id="extra",
     room_id="extra",
   ),
+  RFModule(
+    id="toddz",
+    room_id="todd",
+  ),
 
   USBDevice(
     id="A9MDTZJF", 
@@ -89,6 +93,7 @@ session.add_all([
     id="desk_tts", 
     room_id = "livingroom",
     device="pci-0000:00:1d.7-usb-0:4.7.4:1.0", 
+    gain=15,
     host=hostname, 
     port=9000,
   ),
@@ -97,6 +102,7 @@ session.add_all([
     room_id = "livingroom",
     device="pci-0000:00:1d.7-usb-0:4.6:1.0",
     host=hostname,
+    gain=30,
     port=9001,
   ),
   TTSInput(
@@ -104,6 +110,7 @@ session.add_all([
     room_id="hackspace",
     device="pci-0000:00:1d.7-usb-0:4.5:1.0",
     host=hostname,
+    gain=15,
     port=9002,
   ),
 ])
