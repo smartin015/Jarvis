@@ -6,7 +6,7 @@ import json
 import Queue
 import traceback
 import time
-from mod_pywebsocket.msgutil import MessageReceiver
+
 
 class RobustJSONRequestHandler(SocketServer.StreamRequestHandler):
   timeout = 5
@@ -195,7 +195,7 @@ class RobustWebsocketPassthrough():
       print msg
 
   def handle_ws(self):
-    
+    from mod_pywebsocket.msgutil import MessageReceiver
     self.receiver = MessageReceiver(self.request, self.send_to_server)
     while not self.receiver._stop_requested:
       try:

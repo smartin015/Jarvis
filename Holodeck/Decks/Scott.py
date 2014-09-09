@@ -15,13 +15,13 @@ class Holodeck(HolodeckBase):
 
   def get_pipeline_handlers(self):
     return [
-      ([P.WINDOWIMG], self.scrn),
+      #([P.WINDOWIMG], self.scrn),
       ([P.SOUND], self.sound),
     ]
 
   def get_pipeline_defaults(self):
     return {
-      P.WINDOWIMG:  list(self.EMPTY_IMG),
+      #P.WINDOWIMG:  list(self.EMPTY_IMG),
       P.SOUND:      ([], []),
     }
 

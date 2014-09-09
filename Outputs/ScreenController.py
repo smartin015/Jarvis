@@ -24,7 +24,7 @@ class ScreenController():
     os.environ["SDL_FBDEV"] = "/dev/fb1"
     self.screen = pygame.display.set_mode(
       (SW,SH), 
-      pygame.FULLSCREEN | pygame.HWSURFACE | pygame.DOUBLEBUF
+      pygame.HWSURFACE | pygame.DOUBLEBUF #pygame.FULLSCREEN | 
     )
     self.clock = pygame.time.Clock()
     pygame.mouse.set_visible(False)
